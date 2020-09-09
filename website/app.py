@@ -19,7 +19,7 @@ def do_admin_login():
     if request.form['password'] == 'password' and request.form['username'] == 'admin':
         session['logged_in'] = True
     else:
-        flash('wrong password!')
+        flash('Incorrect login credentials!')
     return home()
 
 @app.route("/logout")

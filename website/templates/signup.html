@@ -2,7 +2,7 @@
 
 <html lang="en">
 <head>
-<title>Sign In Page</title>
+<title>Sign Up Page</title>
 <!--<link rel="icon" href="img/favicon (2).ico">-->
 
 <!-- Stylesheets -->
@@ -22,27 +22,27 @@
 			<div class="hide-mobile">
                 <div class="center">
                     <div class="row">
-                        <h1 style="margin:0">Log On</h1>
+                        <h1 style="margin:0">Sign Up</h1>
                     </div>
 
                     <div class="row">
-                        <p>Enter your credentials below.</p>
+                        <p>Sign Up Below.</p>
                     </div>
 
                     <div class="row">
-                        <input type="text" placeholder="Username" id="textbox" class="tftextinput" name="user" size="10" maxlength="100">
+                        <input type="text" placeholder="Username" id="textbox" class="tftextinput" name="user" size="10" maxlength="100" required>
                     </div>
                     
                     <div class="row">
-                        <input type="text" placeholder="Password" id="textbox" class="tftextinput" name="pass" size="10" maxlength="100">
+                        <input type="password" placeholder="Password" id="textbox" class="tftextinput" name="pass" size="10" maxlength="100" required>
                     </div>
                     
                     <div class="row">
-                        <button onclick="logIn()" id="loginbutton" type="submit" class="tfbutton">Log in</button>
+                        <input type="password" placeholder="Confirm Password" id="textbox" class="tftextinput" name="pass" size="10" maxlength="100" required>
                     </div>
 
                     <div class="row">
-                        <p>No account? <a href="signup.html">Sign up here.</a></p>
+                        <button onclick="signUp()" id="signupbutton" type="submit" class="tfbutton">Sign Up</button>
                     </div>
                 </div>
 			</div>

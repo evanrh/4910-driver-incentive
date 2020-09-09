@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<title>Sign In Page</title>
+<!--<link rel="icon" href="img/favicon (2).ico">-->
+
+<!-- Stylesheets -->
+<link rel="stylesheet" href="static/css/grid_6.css">
+<link rel="stylesheet" href="static/css/main.css">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+</head>
+
+<body>
+
+	<!--Content Start-->
+	<article>
+			
+			<!-- Desktop Version -->
+			<div class="hide-mobile">
+                <div class="center">
+                    <div class="row">
+                        <h1 style="margin:0">Log On</h1>
+                    </div>
+                    
+                    <div class="row">
+                        <p>Enter your credentials below.</p>
+                    </div>
+
+                    {% block body %}
+                    {% if session['logged_in'] %}
+
+                    You're logged in already!
+
+                    {% else %}
+
+                    <form action="/login" method="POST">
+                        <div class="row">
+                            <input type="username" placeholder="Username" class="tftextinput" name="username" required> 
+                        </div>
+                        
+                        <div class="row">
+                            <input type="password" placeholder="Password" class="tftextinput" name="password" required>
+                        </div>
+                        
+                        <div class="row">
+                            <input type="submit" class="tfbutton" value="Log in">
+                        </div>
+                        
+                        <label>
+                            <input type="checkbox" checked="checked" name="remember"> Remember me
+                        </label>
+                    </form>
+                    
+                    {% endif %}
+                    {% endblock %}
+                    {{ endraw }}
+
+                    <div class="row">
+                        <p>No account? <a href="signup.html">Sign up here.</a></p>
+                    </div>
+                </div>
+			</div>
+			
+			<!-- Mobile Version -->
+			<div class="hide-desktop">
+				
+			</div>
+			
+		</div>		
+	</article>
+
+<!-- JavaScript -->
+<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+</body>
+</html>

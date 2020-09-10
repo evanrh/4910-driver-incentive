@@ -1,0 +1,297 @@
+@import url(https://fonts.googleapis.com/css?family=Oxygen);
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+body {
+	font-family: 'Oxygen', sans-serif;
+	height: 100%;
+	padding: 0;
+	background-color: white;
+}
+
+article {
+	background-color: white;
+}
+
+header p{
+	color: white;
+}
+
+.flashes {
+	padding:0;
+	margin:0;
+}
+
+.message_flash {
+	padding:5px;
+	margin: 0px;
+	color: rgb(196, 69, 69);
+}
+
+#tfnewsearch{
+	float:right;
+	padding:4px;
+}
+.tftextinput{
+	height: 35px;
+	width: 300px;
+	margin: 3px;
+	padding: 5px 15px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:14px;
+	border:1px solid #0076a3; 
+	border-top-left-radius: 5px 5px;
+	border-bottom-left-radius: 5px 5px;
+	border-top-right-radius: 5px 5px;
+	border-bottom-right-radius: 5px 5px;
+}
+.tfbutton {
+	height: 35px;
+	width: 80px;
+	margin: 0;
+	padding: 5px 15px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:14px;
+	outline: none;
+	cursor: pointer;
+	text-align: center;
+	text-decoration: none;
+	color: #0076a3;
+	border: solid 1px #0076a3; 
+	border-top-right-radius: 5px 5px;
+	border-bottom-right-radius: 5px 5px;
+	border-top-left-radius: 5px 5px;
+	border-bottom-left-radius: 5px 5px;
+	background-repeat: no-repeat;
+}
+.tfbutton:hover {
+	text-decoration: none;
+	background: #9aa6aa;
+	background-repeat: no-repeat;
+	border: 0;
+}
+/* Fixes submit button height problem in Firefox */
+.tfbutton::-moz-focus-inner {
+  border: 0;
+}
+.tfclear{
+	clear:both;
+}
+	
+.tagline {
+	font-size: 12px;
+	font-style: italic;
+	color: white;
+}
+
+.pricetag {
+	text-align: center;
+	font-size: 30px;
+}
+
+.button {
+	display:block; 
+    width:50%; 
+    margin:0 auto; 
+    position: relative;
+    background-color: blue;
+    border: none;
+    font-size: 16px;
+    color: #FFFFFF;
+    padding: 20px;
+    text-align: center;
+    -webkit-transition-duration: 0.4s;
+    transition-duration: 0.4s;
+    text-decoration: none;
+    overflow: hidden;
+    cursor: pointer;
+	border-radius: 4px;
+}
+
+.button:after {
+    content: "";
+    background: #90EE90;
+    display: block;
+    position: absolute;
+    padding-top: 300%;
+    padding-left: 350%;
+    margin-left: -20px!important;
+    margin-top: -120%;
+    opacity: 0;
+    transition: all 0.8s
+}
+
+.button:active:after {
+    padding: 0;
+    margin: 0;
+    opacity: 1;
+    transition: 0s
+}
+
+.button:hover {
+	box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+.tocart {
+	display:block; 
+    width:50%; 
+    margin:0 auto; 
+    position: relative;
+    background-color: blue;
+    border: none;
+    font-size: 16px;
+    color: #FFFFFF;
+    padding: 15px;
+    text-align: center;
+    text-decoration: none;
+    overflow: hidden;
+    cursor: pointer;
+	border-radius: 4px;
+}
+
+.logo {
+	max-width: 5%;
+}
+
+.cart {
+	margin-top: 28.14px;
+}
+
+nav a:hover {
+    background-color: #EEEEEE;
+}
+
+footer p{
+	color: white;
+}
+
+footer {
+	background-color: #00526E;
+	width: 100%;
+    height: 250px;
+    z-index: 10;
+    position: relative;
+    clear: both;
+}
+
+h1 {
+	text-align: left;
+	color: #00B8CC;
+	font-family: 'Roboto', sans-serif;
+	font-weight: 1200; 
+	text-transform: uppercase; 
+	font-size: 55px;
+}
+
+h2 {
+	color: #ac3b2d;
+	font-family: 'Roboto', sans-serif;
+	font-weight: 900; 
+	text-transform: uppercase;
+	font-size: 21px;
+	line-height: 26px;
+	margin-bottom: 0px;
+    margin-top: 18px;
+}
+
+footer h2 {
+	color: white;
+	font-family: 'Roboto', sans-serif; 
+	font-weight: 800; 
+	text-transform: uppercase;
+	font-size: 25px;
+	line-height: 31px;
+}
+
+h3 {
+	color: white;
+	font-family: 'Roboto', sans-serif; 
+	text-transform: uppercase;
+	font-weight: 600;
+	font-size: 22px;
+	line-height: 27px;
+}
+
+p {
+	padding:5px;
+	margin:5px;
+	font-family: 'Gotham Narrow A','Gotham Narrow B', sans-serif;
+}
+
+h4 {
+	color: white;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+}
+
+.row > * {
+    padding: 5px;
+    position: relative;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 1000px;
+}
+
+.container2 {
+	padding: 40px;
+	width:65%;
+	margin:0 auto;
+}
+
+img  {
+	max-width: 100%;
+}
+
+a {
+	color: #00526E;
+}
+a:link {
+	text-decoration: none;
+	color: #00526E;
+}
+
+a:visited {
+	text-decoration: none;
+	color: inherit;
+}
+
+a:hover {
+	color: #aaaaaa;
+}
+
+@media screen and (max-width: 600px) {
+	.logo {
+		width: 100%
+	}
+	.container2 {
+		padding: 40px;
+		width:100%;
+	}
+	h2 {
+		line-height: 110%;
+	}
+	.tftextinput {
+		width: 80%;
+	}
+	.searchheader {
+		margin: 0 auto;
+	}
+	.full-mobile {
+		width: 100%;
+	}
+	body {
+		margin: 4px;
+	}
+	label {
+		display:inline;
+	}
+	input {
+		margin: 10px;
+		padding: 10px;
+		display: inline;
+	}
+}

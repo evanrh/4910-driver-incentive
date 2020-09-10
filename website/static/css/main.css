@@ -12,12 +12,19 @@ article {
 	background-color: white;
 }
 
-header {
-	
-}
-
 header p{
 	color: white;
+}
+
+.flashes {
+	padding:0;
+	margin:0;
+}
+
+.message_flash {
+	padding:5px;
+	margin: 0px;
+	color: rgb(196, 69, 69);
 }
 
 #tfnewsearch{
@@ -39,8 +46,8 @@ header p{
 }
 .tfbutton {
 	height: 35px;
+	width: 80px;
 	margin: 0;
-	margin-left: 5px;
 	padding: 5px 15px;
 	font-family: Arial, Helvetica, sans-serif;
 	font-size:14px;
@@ -52,6 +59,8 @@ header p{
 	border: solid 1px #0076a3; 
 	border-top-right-radius: 5px 5px;
 	border-bottom-right-radius: 5px 5px;
+	border-top-left-radius: 5px 5px;
+	border-bottom-left-radius: 5px 5px;
 	background-repeat: no-repeat;
 }
 .tfbutton:hover {
@@ -203,7 +212,8 @@ h3 {
 }
 
 p {
-	
+	padding:5px;
+	margin:5px;
 	font-family: 'Gotham Narrow A','Gotham Narrow B', sans-serif;
 }
 
@@ -211,44 +221,9 @@ h4 {
 	color: white;
 }
 
-h5 {
-
-}
-
-h6 {
-
-}
-
-p {
-
-}
-
-blockquote {
-
-}
-
-ol {
-
-}
-
-li {
-
-}
-
-table {
-
-}
-
-tr {
-
-}
-
-th {
-
-}
-
-td {
-
+ul {
+	margin: 0;
+	padding: 0;
 }
 
 .row > * {
@@ -288,10 +263,6 @@ a:hover {
 	color: #aaaaaa;
 }
 
-a:active {
-
-}
-	
 @media screen and (max-width: 600px) {
 	.logo {
 		width: 100%

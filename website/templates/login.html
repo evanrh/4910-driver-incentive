@@ -6,8 +6,8 @@
 <!--<link rel="icon" href="img/favicon (2).ico">-->
 
 <!-- Stylesheets -->
-<link rel="stylesheet" href="static/css/grid_6.css">
-<link rel="stylesheet" href="static/css/main.css">
+<link rel="stylesheet" type="text/css" href="static/css/grid_6.css">
+<link rel="stylesheet" type="text/css" href="static/css/main.css">
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="utf-8">
@@ -26,14 +26,14 @@
                     </div>
                     
                     <div class="row">
-                        <p>Enter your credentials below.</p>
+                        <p style="margin:0">Enter your credentials below.</p>
                     </div>
 
                     {% with messages = get_flashed_messages() %}
                     {% if messages %}
-                        <ul class="flashes" style="padding:5px;color:red">
+                        <ul class="flashes" style="padding:5px;margin:0;">
                             {% for message in messages %}
-                            <div class="message_flash">{{ message }}</div>
+                            <div class="message_flash" style="padding:0;margin:0;color: rgb(214, 41, 41);">{{ message }}</div>
                             {% endfor %}
                         </ul>
                     {% endif %}
@@ -60,7 +60,7 @@
                     </form>
 
                     <div class="row">
-                        <p>No account? <a href="signup.html">Sign up here.</a></p>
+                        <p>No account? <a href="{{ url_for('signup') }}">Sign up here.</a></p>
                     </div>
                 </div>
 			</div>

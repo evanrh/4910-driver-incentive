@@ -172,7 +172,6 @@ body {
     left: 15px;
 }
 
-
 /* media queries */ 
 
 @media screen and (max-width: 600px)
@@ -196,7 +195,7 @@ body {
     .hide-mobile {
         display: none;
     }
-    
+
     .static-mobile {
         position: static;
     }

@@ -15,8 +15,19 @@ print("Connected to database")
 cursor = database.cursor()
 
 #execute query
-cursor.execute("INSERT INTO driver VALUES ('Evan', NULL, 'Hastings', 0, 1, 2, '123 clemson boulevard', 5555555555, 'eh@email.com', NULL,  NULL, '2020-09-15', NULL)")
-
+cursor.execute("INSERT INTO driver VALUES ('Evan', \
+                                            NULL, \
+                                            'Hastings', \
+                                            0, \
+                                            1, \
+                                            2, \
+                                            '123 clemson boulevard', \
+                                            5555555555, \
+                                            'eh@email.com', \
+                                            NULL,  \
+                                            NULL, \
+                                            '2020-09-15', \
+                                            NULL)")
 
 #  .commit()  commits the execute to the database (saves it)
 #  without .commit() you can still view what it would look like and view as if it was in the database

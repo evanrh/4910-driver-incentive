@@ -18,7 +18,7 @@ cursor = database.cursor()
 cursor.execute("INSERT INTO driver VALUES ('Evan', \
                                             NULL, \
                                             'Hastings', \
-                                            0, \
+                                            2, \
                                             1, \
                                             2, \
                                             '123 clemson boulevard', \
@@ -26,13 +26,14 @@ cursor.execute("INSERT INTO driver VALUES ('Evan', \
                                             'eh@email.com', \
                                             NULL,  \
                                             NULL, \
-                                            '2020-09-15', \
+                                            NOW(), \
                                             NULL)")
+
 
 #  .commit()  commits the execute to the database (saves it)
 #  without .commit() you can still view what it would look like and view as if it was in the database
 #  however it will not save to the database
-# database.commit() 
+database.commit() 
 
 #execute query
 cursor.execute("SELECT * FROM driver")

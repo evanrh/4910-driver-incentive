@@ -100,7 +100,7 @@ def if_username_exist(user = 'NULL'):
     val = (user, )
     cursor.execute(sql, val)
     row = cursor.fetchone()
-    if( row[0] == None ):
+    if( row == None or row[0] == None ):
         return False
     else:
         return True
@@ -128,6 +128,14 @@ def pwd_check(user = 'NULL', pwd = 'NULL'):
         return True
     else: 
         return False
+
+#gets the role of a specific user
+def get_role(user = 'NULL'):
+    sql = 'SELECT role FROM user WHERE user_name = %s'
+    val = (user, )
+    cursor.execute(sql, val)
+    row = cursor.fetchone()
+    return row[0]
 
 #prints out all of the drivers
 def get_drivers():

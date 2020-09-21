@@ -12,13 +12,8 @@ def home():
 @app.route('/login', methods=['POST'])
 def do_admin_login():
 
-    # TODO Fetch login info from DB
-    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
-    db_hash = 'password'
-    db_id = 'admin'
-
-    if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
-        session['logged_in'] = True
+    if request.form['password'] == 'password' and request.form['username'] == 'admin':
+            session['logged_in'] = True
     else:
         flash('Incorrect login credentials!')
     return redirect(url_for('home'))
@@ -26,7 +21,7 @@ def do_admin_login():
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
-    return redirect(url_for('home'))
+    return home()
 
 @app.route("/signup")
 def signup():

@@ -18,7 +18,7 @@ def home():
 @app.route('/login', methods=['POST'])
 def do_admin_login():
     if request.form['password'] == 'password' and request.form['username'] == 'admin':
-            session['logged_in'] = True
+      session['logged_in'] = True
     password = request.form['password']
     user = request.form['username']
     if if_username_exist(user) and pwd_check(user, password):

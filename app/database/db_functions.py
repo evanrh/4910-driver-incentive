@@ -23,7 +23,7 @@ def add_driver(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL', ad
     driver_id = get_next_driver_id()
     val = (fname, mname, lname, user, driver_id, 0, 0, address, phone, email, pwd, image, "NULL")
     cursor.execute(sql, val)
-    add_to_users(user, 'driver')
+    add_to_users(user, 'driver', driver_id)
     #database.commit()
 
 #adds a sponsor to the database. Parameters are:
@@ -33,9 +33,9 @@ def add_sponsor(title = 'NULL', user = 'NULL', address = 'NULL',
 
     sql = "INSERT INTO sponsor VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
     sponsor_id = get_next_sponsor_id()
-    val = (title, user, 0, address, phone, email, pwd, image, "NULL")
+    val = (title, user, sponsor_id, address, phone, email, pwd, image, "NULL")
     cursor.execute(sql, val)
-    add_to_users(user, 'sponsor')
+    add_to_users(user, 'sponsor', sponsor_id)
     #database.commit()
 
 #adds an admin to the database. Parameters are:
@@ -47,7 +47,7 @@ def add_admin(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL',
     admin_id = get_next_admin_id()
     val = (fname, mname, lname, user, admin_id, phone, email, pwd, "NULL")
     cursor.execute(sql, val)
-    add_to_users(user, 'admin')
+    add_to_users(user, 'admin', admin_id)
     #database.commit()
 
 #gets the next available driver id, returns 1 if no drivers exist
@@ -83,9 +83,16 @@ def get_next_admin_id():
 #adds the username and role of the user to the user table
 #assumes username isn't already in table
 #called on by add_driver, add_sponsor, add_admin
-def add_to_users(user = 'NULL', role = 'unassigned'):
-    sql = "INSERT INTO user VALUES (%s, %s)"
-    val = (user, role)
+def add_to_users(user = 'NULL', role = 'driver', id = 0):
+    if( role == 'driver' ):
+        sql = "INSERT INTO users (UserName, Driver_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())"
+        val = (user, id)
+    elif( role == 'sponsor' ):
+        sql = "INSERT INTO users (UserName, Sponsor_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())"
+        val = (user, id)
+    else:
+        sql = "INSERT INTO users (UserName, Admin_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())"
+        val = (user, id)
     cursor.execute(sql, val)
     #database.commit()
 
@@ -96,11 +103,11 @@ def if_username_exist(user = 'NULL'):
     if( user == 'NULL' ):
         return False
 
-    sql = "SELECT user_name FROM user WHERE user_name = %s"
+    sql = "SELECT * FROM users WHERE UserName = %s"
     val = (user, )
     cursor.execute(sql, val)
     row = cursor.fetchone()
-    if( row == None or row[0] == None ):
+    if( row[0] == None ):
         return False
     else:
         return True
@@ -113,13 +120,18 @@ def pwd_check(user = 'NULL', pwd = 'NULL'):
     if( user == 'NULL' or pwd == 'NULL'):
         return False
 
-    sql = 'SELECT role FROM user WHERE user_name = %s'
+    sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
     val = (user, )
     cursor.execute(sql, val)
-    row = cursor.fetchone()
-    role = row[0]
-
-    sql = 'SELECT pwd FROM ' + role + ' WHERE user = %s'
+    id = cursor.fetchone()
+    if ( id[0] != None ):
+        table = 'driver'
+    elif( id[1] != None ):
+        table = 'sponsor'
+    else:
+        table = 'admin'
+    
+    sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
     val = (user, )
     cursor.execute(sql, val)
     current_password = cursor.fetchone()
@@ -129,38 +141,51 @@ def pwd_check(user = 'NULL', pwd = 'NULL'):
     else: 
         return False
 
-#gets the role of a specific user
-def get_role(user = 'NULL'):
-    sql = 'SELECT role FROM user WHERE user_name = %s'
-    val = (user, )
-    cursor.execute(sql, val)
-    row = cursor.fetchone()
-    return row[0]
-
 #prints out all of the drivers
 def get_drivers():
     cursor.execute("SELECT * FROM driver")
-    row = cursor.fetchall()
-    for r in row:
-        print(r)
+    driver_list = cursor.fetchall()
+    for driver in driver_list:
+        print(driver)
 
 #prints out all of the sponsors
 def get_sponsors():
     cursor.execute("SELECT * FROM sponsor")
-    row = cursor.fetchall()
-    for r in row:
-        print(r)
+    sponsor_list = cursor.fetchall()
+    for sponsor in sponsor_list:
+        print(sponsor)
 
 #prints out all of the admins
 def get_admins():
     cursor.execute("SELECT * FROM admin")
-    row = cursor.fetchall()
-    for r in row:
-        print(r)
+    admin_list = cursor.fetchall()
+    for admin in admin_list:
+        print(admin)
 
 #prints out all of the users 
 def get_users():
-    cursor.execute('SELECT * FROM user ORDER BY role ASC')
+    print("---ADMINS---")
+    cursor.execute('SELECT UserName, Admin_ID, last_in FROM users WHERE Admin_ID > 0 ORDER BY Admin_ID DESC')
     user_list = cursor.fetchall()
     for user in user_list:
         print(user)
+    print("\n---SPONSORS---")
+    cursor.execute('SELECT UserName, Sponsor_ID, last_in FROM users WHERE Sponsor_ID > 0 ORDER BY Sponsor_ID DESC')
+    user_list = cursor.fetchall()
+    for user in user_list:
+        print(user)
+    print("\n---DRIVERS---")
+    cursor.execute('SELECT UserName, Driver_ID, last_in FROM users WHERE Driver_ID > 0 ORDER BY Driver_ID DESC')
+    user_list = cursor.fetchall()
+    for user in user_list:
+        print(user)
+
+#if __name__ == "__main__":
+    #add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
+    #add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
+    #add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
+    #print(if_username_exist('krod'))
+    #get_users()
+    #print(pwd_check('krod', 'cool'))
+    #print(pwd_check('spon', 'password'))
+    #print(pwd_check('admin', 'pwd'))

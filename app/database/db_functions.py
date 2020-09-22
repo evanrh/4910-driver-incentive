@@ -189,7 +189,6 @@ def get_users():
     #print(pwd_check('krod', 'cool'))
     #print(pwd_check('spon', 'password'))
     #print(pwd_check('admin', 'pwd'))
-
+    
     cursor.close()
     database.close()
-    

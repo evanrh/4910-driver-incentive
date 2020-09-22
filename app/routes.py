@@ -26,15 +26,14 @@ def do_admin_login():
         session['role'] = get_role(user)
     else:
         flash('Incorrect login credentials!')
-    return redirect(url_for('home'))
+    return home()
 
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
-    return home()
+    return url_for('home')
 
 @app.route("/signup")
 def signup():
-    # TODO Add in password hash generation to sign up
     return render_template('signup.html')
  

@@ -192,3 +192,4 @@ def get_users():
 
     cursor.close()
     database.close()
+    

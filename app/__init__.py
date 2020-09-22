@@ -1,7 +1,8 @@
 from flask import Flask
+from config import Config
 import os
 
 app = Flask(__name__)
-app.secret_key = os.urandom(12)
+app.config.from_object(Config)
 
 from app import routes

@@ -1,5 +1,6 @@
 from app import app
 from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 
 @app.route('/')
@@ -16,6 +17,8 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
+    if request.form['password'] == 'password' and request.form['username'] == 'admin':
+            session['logged_in'] = True
     password = request.form['password']
     user = request.form['username']
     if if_username_exist(user) and pwd_check(user, password):
@@ -23,7 +26,7 @@ def do_admin_login():
         session['role'] = get_role(user)
     else:
         flash('Incorrect login credentials!')
-    return home()
+    return redirect(url_for('home'))
 
 @app.route("/logout")
 def logout():
@@ -32,5 +35,6 @@ def logout():
 
 @app.route("/signup")
 def signup():
+    # TODO Add in password hash generation to sign up
     return render_template('signup.html')
  

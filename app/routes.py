@@ -17,24 +17,36 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
-    if request.form['password'] == 'password' and request.form['username'] == 'admin':
-            session['logged_in'] = True
-    password = request.form['password']
+
+    db_hash = 'password'
+    db_id = 'admin'
+
+    if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
+        pass
+ 
     user = request.form['username']
-    if if_username_exist(user) and pwd_check(user, password):
+    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
+
+    if if_username_exist(user) and pwd_check(user, pwd_hash):
         session['logged_in'] = True
         session['role'] = get_role(user)
     else:
         flash('Incorrect login credentials!')
+
     return redirect(url_for('home'))
 
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
-    return home()
+    return redirect(url_for('home'))
 
-@app.route("/signup")
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
+
+    if request.method == "POST":
+       username = request.form['user']
+       pwd = request.form['pass']
+       pwd_check = request.form['pass_repeat']
+
     # TODO Add in password hash generation to sign up
     return render_template('signup.html')
- 

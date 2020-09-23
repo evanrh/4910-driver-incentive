@@ -1,8 +1,11 @@
 {% extends "base.html" %}
+{% block header %}
+    <script src="{{ url_for('static', filename='js/signup.js') }}" type="text/javascript" language="javascript">
+    </script>
+{% endblock %}
 {% block content %}
 	<!--Content Start-->
 	<article>
-			
 			<!-- Desktop Version -->
 			<div>
                 <div class="center">
@@ -14,21 +17,25 @@
                         <p style="margin:0">Sign Up Below.</p>
                     </div>
 
-                    <div class="row">
-                        <input type="text" placeholder="Username" id="textbox" class="tftextinput" name="user" size="10" maxlength="100" required>
-                    </div>
-                    
-                    <div class="row">
-                        <input type="password" placeholder="Password" id="textbox" class="tftextinput" name="pass" size="10" maxlength="100" required>
-                    </div>
-                    
-                    <div class="row">
-                        <input type="password" placeholder="Confirm Password" id="textbox" class="tftextinput" name="pass" size="10" maxlength="100" required>
-                    </div>
+                    <form action="{{ url_for('signup') }}" method="POST">
+                       <div class="row">
+                           <input type="text" placeholder="Username" id="textbox" class="tftextinput" name="user" size="10" maxlength="100" required>
+                       </div>
+                       
+                       <div class="row">
+                           <input type="password" placeholder="Password" id="password" class="tftextinput" name="pass" size="10" maxlength="100" onkeyup="checkPassComplexity()" required>
+                           <span id="password-message"></span>
+                       </div>
+                       
+                       <div class="row">
+                           <input type="password" placeholder="Confirm Password" id="confirm" class="tftextinput" name="pass_repeat" size="10" maxlength="100" onkeyup="checkPass()" required>
+                           <span id="confirm-message" class="confirm-message"></span>
+                       </div>
 
-                    <div class="row">
-                        <button onclick="signUp()" id="signupbutton" type="submit" class="tfbutton">Sign Up</button>
-                    </div>
+                       <div class="row">
+                           <button id="signupbutton" type="submit" class="tfbutton" disabled=true>Sign Up</button>
+                       </div>
+                    </form>
                 </div>
 			</div>
 			

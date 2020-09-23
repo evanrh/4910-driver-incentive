@@ -11,14 +11,12 @@ def home():
         return render_template('login.html', user=session.get('user'))
     else:
         session['user'] = request.args.get('user', None)
-        return render_template('template.html', user=session.get('user'))
-
         if session.get('role') == "driver":
-            return "Driver log in successful!  <a href='/logout'>Logout</a>"
+            return render_template('driver/driverHome.html', user=session.get('user'))
         if session.get('role') == "sponsor":
-            return "Sponsor log in successful!  <a href='/logout'>Logout</a>"
+            return render_template('sponsor/sponsorHome.html', user=session.get('user'))
         if session.get('role') == "admin":
-            return "Admin log in successful!  <a href='/logout'>Logout</a>"
+            return render_template('admin/adminHome.html', user=session.get('user'))
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
@@ -32,6 +30,7 @@ def do_admin_login():
     if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
         session['user'] = request.form['username']
         session['logged_in'] = True
+        session['role'] = 'admin'
         return redirect(url_for('home', user=session.get('user')))
     #Temp
 

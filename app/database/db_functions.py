@@ -107,7 +107,7 @@ def if_username_exist(user = 'NULL'):
     val = (user, )
     cursor.execute(sql, val)
     row = cursor.fetchone()
-    if( row[0] == None ):
+    if( row == None or row[0] == None ):
         return False
     else:
         return True

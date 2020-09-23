@@ -17,7 +17,6 @@ body {
 
 .container {
     margin: 0 auto;
-    max-width: 960px;
 }
 
 .center {
@@ -91,39 +90,83 @@ body {
 }
 
 
-/* navbar styles */
+/* top-navbar styles */
 
-.navbar {
-    background-color: #BBBBBB;
+#top-navbar {
+    vertical-align: middle; 
+    overflow: hidden;
+    background-color: #00B8CC;
+    height: 100px;
+    padding: 0 10px 0 10px;
+    top:0;
+    position: fixed;
+    width: 100%;
 }
 
-.navbar ul {
-    display: flex;
-    flex-direction: row;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+#top-navbar-right {
+    height: 100px;
+    float: right;
 }
 
-.navbar li {
-    border-right: 1px solid #777777;
+#top-navbar a {
+    color:white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+    display:inline-block; 
+    vertical-align: middle; 
 }
 
-.navbar li:last-child {
-    border: none;
+#top-navbar a:active {
+    background-color: #00B8CC;
+    color: white;
 }
 
-.navbar a:link, .navbar a:visited {
+#top-navbar a:hover {
+    background-color: #00B8CC;
+    color: black;
+  }
+
+
+
+/* side-navbar styles */
+
+.side-navbar {
+    background-color: #027986;
+    height: 100%; 
+    width: 14%;
+    position: fixed; 
+    z-index: 1; 
+    left: 0;
+    overflow-x: hidden; 
+    padding-top: 20px;
+}
+
+.side-navbar li {
+    color: white;
+}
+
+.side-navbar li:last-child {
+    border: 1px solid white;
+    bottom: 0;
+    padding: 15px;
+    width: 14%;
+    position: fixed;
+    overflow: hidden;
+}
+
+.side-navbar a:link, .side-navbar a:visited {
     display: block;
     padding: 5px 10px;
     text-align: center;
     text-decoration: none;
+    color: white;
 }
 
-.navbar a:hover, .navbar a:active {
+.side-navbar a:hover, .side-navbar a:active {
     background-color: #777777;
 }
-
 
 /* other helper classes */
 

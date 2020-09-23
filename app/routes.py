@@ -8,6 +8,8 @@ def home():
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
+        user = request.args.get('user', None)
+        return render_template('template.html', user=user)
         if session.get('role') == "driver":
             return "Driver log in successful!  <a href='/logout'>Logout</a>"
         if session.get('role') == "sponsor":
@@ -17,16 +19,20 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
+    user = "Username"
+    
     if request.form['password'] == 'password' and request.form['username'] == 'admin':
             session['logged_in'] = True
-    password = request.form['password']
+
     user = request.form['username']
+    password = request.form['password']
+
     if if_username_exist(user) and pwd_check(user, password):
         session['logged_in'] = True
-        session['role'] = get_role(user)
+        #session['role'] = get_role(user)
     else:
         flash('Incorrect login credentials!')
-    return redirect(url_for('home'))
+    return redirect(url_for('home', user=user))
 
 @app.route("/logout")
 def logout():

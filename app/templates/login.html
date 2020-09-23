@@ -1,60 +1,91 @@
 {% extends "base.html" %}
 {% block content %}
-	<!--Content Start-->
-	<article>
-			
-			<!-- Desktop Version -->
-			<div>
-                <div class="center">
-                    <div class="row">
-                        <h1 style="margin:0">Log On</h1>
+	<!--Header Start-->
+	<header>
+        <div id="top-navbar">
+
+            <a href="#home" style="font-size: 50px;">
+                <span>Reward App Logo</span>
+                <!--<img src="{{url_for('static', filename='img/tempLogo.png')}}" style="width:50px; text-align:left; position:absolute;float:left;">-->
+            </a>
+
+            <div id="top-navbar-right">
+                <a>
+                    <img src="{{url_for('static', filename='img/userpic.png')}}" style="width:50px;padding-top:10px;">
+                </a>
+
+                <a style="padding-left:0;">
+                    <span>{{ user.capitalize() }}</span>
+                </a>
+            </div>
+            
+        </div>
+    </header>
+
+    <article>
+        <div class="container">
+                <!--Side Nav Bar Start-->
+
+                <div class="one-fifth">
+                    <ul class="side-navbar">
+                        <li><a class="active" href="{{ url_for('home') }}">Log In</a></li>
+                        <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+                        <li><a href="">About</a></li>
+                        <li>
+                            <a href="">
+                                <img src="{{url_for('static', filename='img/settings.png')}}" style="width:30px;vertical-align:middle;padding-right: 5px;">
+                                <span style="line-height:30px;">Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!--Content Start-->
+                <div class="row">
+
+                        <div class="one-sixth"></div>
+                        <div class="five-sixths">
+                            <div class="row">
+                                <h1 style="margin:0">Log On</h1>
+                            </div>
+                            
+                            <div class="row">
+                                <p style="margin:0">Enter your credentials below.</p>
+                            </div>
+        
+                            {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                <ul class="flashes" style="padding:5px;margin:0;">
+                                    {% for message in messages %}
+                                    <div class="message_flash" style="padding:0;margin:0;color: rgb(214, 41, 41);">{{ message }}</div>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            {% endwith %}
+                            {% block body %}
+                            {% endblock %}
+        
+                            <form action="/login" method="POST">
+                                <div class="row">
+                                    <input type="username" placeholder="Username" class="tftextinput" name="username" required> 
+                                </div>
+                                
+                                <div class="row">
+                                    <input type="password" placeholder="Password" class="tftextinput" name="password" required>
+                                </div>
+                                
+                                <div class="row">
+                                    <input type="submit" class="tfbutton" value="Log in">
+                                </div>
+                                
+                                <label>
+                                    <input type="checkbox" checked="checked" name="remember"> Remember me
+                                </label>
+                            </form>
+                        </div>
                     </div>
                     
-                    <div class="row">
-                        <p style="margin:0">Enter your credentials below.</p>
-                    </div>
-
-                    {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        <ul class="flashes" style="padding:5px;margin:0;">
-                            {% for message in messages %}
-                            <div class="message_flash" style="padding:0;margin:0;color: rgb(214, 41, 41);">{{ message }}</div>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                    {% endwith %}
-                    {% block body %}
-                    {% endblock %}
-
-                    <form action="/login" method="POST">
-                        <div class="row">
-                            <input type="username" placeholder="Username" class="tftextinput" name="username" required> 
-                        </div>
-                        
-                        <div class="row">
-                            <input type="password" placeholder="Password" class="tftextinput" name="password" required>
-                        </div>
-                        
-                        <div class="row">
-                            <input type="submit" class="tfbutton" value="Log in">
-                        </div>
-                        
-                        <label>
-                            <input type="checkbox" checked="checked" name="remember"> Remember me
-                        </label>
-                    </form>
-
-                    <div class="row">
-                        <p>No account? <a href="{{ url_for('signup') }}">Sign up here.</a></p>
-                    </div>
-                </div>
-			</div>
-			
-			<!-- Mobile Version -->
-			<div class="hide-desktop">
-
-			</div>
-			
-		</div>		
-	</article>
+                </div>		
+        </div>
+    </article>
 {% endblock %}

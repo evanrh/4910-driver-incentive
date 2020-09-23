@@ -5,11 +5,14 @@ from app.database.db_functions import *
 
 @app.route('/')
 def home():
+    session['user'] = "Sign Up"
+
     if not session.get('logged_in'):
-        return render_template('login.html')
+        return render_template('login.html', user=session.get('user'))
     else:
-        user = request.args.get('user', None)
-        return render_template('template.html', user=user)
+        session['user'] = request.args.get('user', None)
+        return render_template('template.html', user=session.get('user'))
+
         if session.get('role') == "driver":
             return "Driver log in successful!  <a href='/logout'>Logout</a>"
         if session.get('role') == "sponsor":
@@ -19,28 +22,32 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
-    user = "Username"
-    
-    db_hash = 'password'
+
+    #Temp
     db_id = 'admin'
+    db_hash = 'password'
+
+    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
 
     if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
-        pass
- 
-    user = request.form['username']
-    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
+        session['user'] = request.form['username']
+        session['logged_in'] = True
+        return redirect(url_for('home', user=session.get('user')))
+    #Temp
+
+    user = session.get('user')
 
     if if_username_exist(user) and pwd_check(user, pwd_hash):
         session['logged_in'] = True
         #session['role'] = get_role(user)
     else:
         flash('Incorrect login credentials!')
-    return redirect(url_for('home', user=user))
+    return redirect(url_for('home', user=session.get('user')))
 
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
-    return redirect(url_for('home'))
+    return redirect(url_for('home', user=session.get('user')))
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -51,4 +58,4 @@ def signup():
        pwd_check = request.form['pass_repeat']
 
     # TODO Add in password hash generation to sign up
-    return render_template('signup.html')
+    return render_template('signup.html', user=session.get('user'))

@@ -120,7 +120,7 @@ body {
 
 #top-navbar a:active {
     background-color: #00B8CC;
-    color: white;
+    color: grey;
 }
 
 #top-navbar a:hover {
@@ -166,6 +166,10 @@ body {
 
 .side-navbar a:hover, .side-navbar a:active {
     background-color: #777777;
+}
+
+.side-navbar .active {
+    background-color: grey;
 }
 
 /* other helper classes */

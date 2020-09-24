@@ -11,13 +11,13 @@
 <form action="{{ url_for('signup') }}" method="POST">
     <div class="row">
         <input type="text" placeholder="First Name" id="textbox" class="tftextinput" name="fname" size="10" maxlength="100" required>
-        <input type="text" placeholder="Middle Name" id="textbox" class="tftextinput" name="mname" size="10" maxlength="100" required>
+        <input type="text" placeholder="Middle Name" id="textbox" class="tftextinput" name="mname" size="10" maxlength="100">
         <input type="text" placeholder="Last Name" id="textbox" class="tftextinput" name="lname" size="10" maxlength="100" required>
     </div>
 
     <div class="row">
         <input type="text" placeholder="Address" id="textbox" class="tftextinput" name="address" size="10" maxlength="100" required>
-        <input type="text" placeholder="Phone Number" id="textbox" class="tftextinput" name="phone" size="10" maxlength="100" required>
+        <input type="text" placeholder="Phone Number" id="textbox" class="tftextinput" name="phone" size="10" maxlength="10" required>
     </div>
 
    <div class="row">
@@ -25,12 +25,12 @@
    </div>
    
    <div class="row">
-       <input type="password" placeholder="Password" id="password" class="tftextinput" name="pass" size="10" maxlength="100" onkeyup="checkPassComplexity()" required>
+       <input type="password" placeholder="Password" id="password" class="tftextinput" name="pass" size="10" maxlength="20" onkeyup="checkPassComplexity()" required>
        <span id="password-message"></span>
    </div>
    
    <div class="row">
-       <input type="password" placeholder="Confirm Password" id="confirm" class="tftextinput" name="pass_repeat" size="10" maxlength="100" onkeyup="checkPass()" required>
+       <input type="password" placeholder="Confirm Password" id="confirm" class="tftextinput" name="pass_repeat" size="10" maxlength="20" onkeyup="checkPass()" required>
        <span id="confirm-message" class="confirm-message"></span>
    </div>
 

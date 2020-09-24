@@ -7,14 +7,14 @@ from app.database.db_functions import *
 def home():
     if not session.get('logged_in'):
         session['user'] = "Sign Up"
-        return render_template('landing/login.html', user=session.get('user'))
+        return render_template('landing/login.html')
     else:
         if session.get('role') == "driver":
-            return render_template('driver/driverHome.html', user=session.get('user'))
+            return render_template('driver/driverHome.html')
         if session.get('role') == "sponsor":
-            return render_template('sponsor/sponsorHome.html', user=session.get('user'))
+            return render_template('sponsor/sponsorHome.html')
         if session.get('role') == "admin":
-            return render_template('admin/adminHome.html', user=session.get('user'))
+            return render_template('admin/adminHome.html')
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
@@ -29,7 +29,7 @@ def do_admin_login():
         session['user'] = request.form['username']
         session['logged_in'] = True
         session['role'] = 'admin'
-        return redirect(url_for('home', user=session.get('user')))
+        return redirect(url_for('home'))
     #Temp
 
     user = session.get('user')
@@ -39,12 +39,12 @@ def do_admin_login():
         #session['role'] = get_role(user)
     else:
         flash('Incorrect login credentials!')
-    return redirect(url_for('home', user=session.get('user')))
+    return redirect(url_for('home'))
 
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
-    return redirect(url_for('home', user=session.get('user')))
+    return redirect(url_for('home'))
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -55,11 +55,11 @@ def signup():
        pwd_check = request.form['pass_repeat']
 
     # TODO Add in password hash generation to sign up
-    return render_template('landing/signup.html', user=session.get('user'))
+    return render_template('landing/signup.html')
 
 @app.route("/about")
 def about():
-    return render_template('landing/about.html', user=session.get('user'))
+    return render_template('landing/about.html')
 
 # Route that does nothing, used in the templates for now until routes are made.
 @app.route("/na")

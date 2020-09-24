@@ -168,7 +168,7 @@ body {
     background-color: #777777;
 }
 
-.side-navbar .active {
+.side-navbar a.active {
     background-color: grey;
 }
 

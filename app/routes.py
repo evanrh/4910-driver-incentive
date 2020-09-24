@@ -5,12 +5,10 @@ from app.database.db_functions import *
 
 @app.route('/')
 def home():
-    session['user'] = "Sign Up"
-
     if not session.get('logged_in'):
-        return render_template('login.html', user=session.get('user'))
+        session['user'] = "Sign Up"
+        return render_template('landing/login.html', user=session.get('user'))
     else:
-        session['user'] = request.args.get('user', None)
         if session.get('role') == "driver":
             return render_template('driver/driverHome.html', user=session.get('user'))
         if session.get('role') == "sponsor":
@@ -57,4 +55,13 @@ def signup():
        pwd_check = request.form['pass_repeat']
 
     # TODO Add in password hash generation to sign up
-    return render_template('signup.html', user=session.get('user'))
+    return render_template('landing/signup.html', user=session.get('user'))
+
+@app.route("/about")
+def about():
+    return render_template('landing/about.html', user=session.get('user'))
+
+# Route that does nothing, used in the templates for now until routes are made.
+@app.route("/na")
+def na():
+    return ('', 204)

@@ -4,7 +4,7 @@
 	<header>
         <div id="top-navbar">
 
-            <a href="#home" style="font-size: 50px;">
+            <a href="{{ url_for('home') }}" style="font-size: 50px;">
                 <span>Reward App Logo</span>
                 <!--<img src="{{url_for('static', filename='img/tempLogo.png')}}" style="width:50px; text-align:left; position:absolute;float:left;">-->
             </a>
@@ -15,7 +15,7 @@
                 </a>
 
                 <a style="padding-left:0;">
-                    <span>{{ user.capitalize() }}</span>
+                    <span>{{ session['user'].capitalize() }}</span>
                 </a>
 
                 <a href="/logout">
@@ -28,14 +28,22 @@
     <article>
         <div class="container">
                 <!--Side Nav Bar Start-->
+                {% macro nav_link(endpoint, name) %}
+                {% if request.endpoint.endswith(endpoint) %}
+                    <li class="active"><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+                {% else %}
+                    <li><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+                {% endif %}
+                {% endmacro %}
 
                 <div class="one-fifth">
                     <ul class="side-navbar">
-                        <li><a href="">Points Leaderboard</a></li>
-                        <li><a href="">View Driver Profiles</a></li>
-                        <li><a href="">System Settings</a></li>
-                        <li><a href="">Notifications</a></li>
-                        <li><a href="">Profile</a></li>
+                        {{ nav_link('home', 'Home') }}
+                        {{ nav_link('na', 'Points Leaderboard') }}
+                        {{ nav_link('na', 'View Driver Profiless') }}
+                        {{ nav_link('na', 'System Settings') }}
+                        {{ nav_link('na', 'Notifications') }}
+                        {{ nav_link('na', 'Profile') }}
                         <li>
                             <a href="">
                                 <img src="{{url_for('static', filename='img/settings.png')}}" style="width:30px;vertical-align:middle;padding-right: 5px;">

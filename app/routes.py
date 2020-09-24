@@ -60,11 +60,12 @@ def signup():
           return render_template('signup.html')
        
        fname = form['fname']
-       mname = form['mname']
+       mname = form['mname'] or 'NULL'
        lname = form['lname']
-       address = form['address'] # Need to look into address fetching
+       address = form['address'] or 'NULL' # Need to look into address fetching
        phone = form['phone']
-       pwd_hash = generate_password_hash(pwd);
+       pwd_hash = generate_password_hash(pwd, method='sha256');
+
 
     # TODO Add in password hash generation to sign up
     return render_template('landing/signup.html')

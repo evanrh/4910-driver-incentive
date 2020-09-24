@@ -6,33 +6,39 @@ from app.database.db_functions import *
 @app.route('/')
 def home():
     if not session.get('logged_in'):
-        return render_template('login.html')
+        session['user'] = "Sign Up"
+        return render_template('landing/login.html')
     else:
         if session.get('role') == "driver":
-            return "Driver log in successful!  <a href='/logout'>Logout</a>"
+            return render_template('driver/driverHome.html')
         if session.get('role') == "sponsor":
-            return "Sponsor log in successful!  <a href='/logout'>Logout</a>"
+            return render_template('sponsor/sponsorHome.html')
         if session.get('role') == "admin":
-            return "Admin log in successful!  <a href='/logout'>Logout</a>"
+            return render_template('admin/adminHome.html')
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
 
-    db_hash = 'password'
+    #Temp
     db_id = 'admin'
+    db_hash = 'password'
+
+    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
 
     if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
-        pass
- 
-    user = request.form['username']
-    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
+        session['user'] = request.form['username']
+        session['logged_in'] = True
+        session['role'] = 'admin'
+        return redirect(url_for('home'))
+    #Temp
+
+    user = session.get('user')
 
     if if_username_exist(user) and pwd_check(user, pwd_hash):
         session['logged_in'] = True
-        session['role'] = get_role(user)
+        #session['role'] = get_role(user)
     else:
         flash('Incorrect login credentials!')
-
     return redirect(url_for('home'))
 
 @app.route("/logout")
@@ -60,4 +66,14 @@ def signup():
        phone = form['phone']
        pwd_hash = generate_password_hash(pwd);
 
-    return render_template('signup.html')
+    # TODO Add in password hash generation to sign up
+    return render_template('landing/signup.html')
+
+@app.route("/about")
+def about():
+    return render_template('landing/about.html')
+
+# Route that does nothing, used in the templates for now until routes are made.
+@app.route("/na")
+def na():
+    return ('', 204)

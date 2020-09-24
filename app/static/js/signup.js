@@ -18,7 +18,7 @@ function checkPassComplexity()
     {
         pwd.style.backgroundColor = bad_color;
         message.style.color = bad_color;
-        message.innerHTML = "<p>Password needs to contain 1 number, 1 uppercase, 1 lowercase, and 1 special</p>";
+        message.innerHTML = "<p>Password needs to contain 1 Number, 1 Uppercase, 1 Lowercase, and 1 Special Character (!@#$%)</p>";
         submit.disabled = true;
     }
 }

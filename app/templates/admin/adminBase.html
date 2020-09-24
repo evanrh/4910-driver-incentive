@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+	<!--Header Start-->
+	<header>
+        <div id="top-navbar">
+
+            <a href="#home" style="font-size: 50px;">
+                <span>Reward App Logo</span>
+                <!--<img src="{{url_for('static', filename='img/tempLogo.png')}}" style="width:50px; text-align:left; position:absolute;float:left;">-->
+            </a>
+
+            <div id="top-navbar-right">
+                <a>
+                    <img src="{{url_for('static', filename='img/userpic.png')}}" style="width:50px;padding-top:10px;">
+                </a>
+
+                <a style="padding-left:0;">
+                    <span>{{ session['user'].capitalize() }}</span>
+                </a>
+
+                <a href="/logout">
+                    <img src="{{url_for('static', filename='img/logout.png')}}" style="width:50px;padding-top:10px;">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <article>
+        <div class="container">
+                <!--Side Nav Bar Start-->
+                {% macro nav_link(endpoint, name) %}
+                {% if request.endpoint.endswith(endpoint) %}
+                    <li class="active"><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+                {% else %}
+                    <li><a href="{{ url_for(endpoint) }}">{{name}}</a></li>
+                {% endif %}
+                {% endmacro %}
+
+                <div class="one-fifth">
+                    <ul class="side-navbar">
+                        {{ nav_link('home', 'Home') }}
+                        {{ nav_link('na', 'Generate Reports') }}
+                        {{ nav_link('na', 'Points Leaderboard') }}
+                        {{ nav_link('na', 'System Settings') }}
+                        {{ nav_link('na', 'Manage Accounts') }}
+                        {{ nav_link('na', 'Notifications') }}
+                        {{ nav_link('na', 'Inbox') }}
+                        <li>
+                            <a href="">
+                                <img src="{{url_for('static', filename='img/settings.png')}}" style="width:30px;vertical-align:middle;padding-right: 5px;">
+                                <span style="line-height:30px;">Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!--Content Start-->
+                <div class="row">
+                    <div class="one-sixth"></div>
+                    <div class="five-sixths">
+                        {% block adminContent %}
+
+                        {% endblock %}
+                    </div>
+                </div>
+        </div>
+    </article>
+{% endblock %}

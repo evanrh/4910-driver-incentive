@@ -44,9 +44,20 @@ def logout():
 def signup():
 
     if request.method == "POST":
-       username = request.form['user']
-       pwd = request.form['pass']
-       pwd_check = request.form['pass_repeat']
+       form = request.form
+       username = form['user']
+       pwd = form['pass']
+       pwd_check = form['pass_repeat']
 
-    # TODO Add in password hash generation to sign up
+       if pwd != pwd_check:
+          flash('Passwords do not match!')
+          return render_template('signup.html')
+       
+       fname = form['fname']
+       mname = form['mname']
+       lname = form['lname']
+       address = form['address'] # Need to look into address fetching
+       phone = form['phone']
+       pwd_hash = generate_password_hash(pwd);
+
     return render_template('signup.html')

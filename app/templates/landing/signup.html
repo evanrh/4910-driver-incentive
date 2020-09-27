@@ -2,6 +2,16 @@
 {% block landingContent %}
 <div class="row">
     <h1>Sign Up</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
 </div>
 
 <div class="row">
@@ -20,6 +30,7 @@
         <input type="text" placeholder="Phone Number" id="textbox" 
                class="tftextinput" name="phone" size="10" maxlength="10" 
                pattern="[0-9]{10}" required>
+        <input type="email" placeholder="E-mail" id="textbox" class="tftextinput" name="email" size="10" maxlength="100" required>
     </div>
 
    <div class="row">

@@ -2,6 +2,7 @@ from app import app
 from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
+from app.database.db_users import Driver
 
 @app.route('/')
 def home():
@@ -64,8 +65,15 @@ def signup():
        lname = form['lname']
        address = form['address'] or 'NULL' # Need to look into address fetching
        phone = form['phone']
+       email = form['email'] or 'NULL'
        pwd_hash = generate_password_hash(pwd, method='sha256');
 
+       user = Driver(fname, mname, lname, username, address, phone, email, pwd_hash)
+
+       if user.check_username_available():
+           user.add_user()
+       else:
+           flash('Username taken!')
 
     # TODO Add in password hash generation to sign up
     return render_template('landing/signup.html')

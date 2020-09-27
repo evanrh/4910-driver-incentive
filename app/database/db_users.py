@@ -6,6 +6,7 @@ except Exception:
 import os
 from abc import ABC
 from abc import abstractmethod
+from werkzeug.security import check_password_hash
 
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
@@ -83,5 +84,56 @@ class Sponsor(AbsUser):
         pass
 
 class Driver(AbsUser):
-    def __init__(self):
+    def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
+                 address='NULL', phone='NULL', email='NULL', pwd='NULL', image='NULL'):
+        self.properties = {}
+        self.properties['fname'] = fname
+        self.properties['mname'] = mname
+        self.properties['lname'] = lname
+        self.properties['user'] = user
+        self.properties['address'] = address
+        self.properties['phone'] = phone
+        self.properties['email'] = email
+        self.properties['pwd'] = pwd
+        self.properties['image'] = image
+
+        self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
+                                      self.DB_USER, self.DB_PASS)
+
+    def get_next_id(self):
+        query = 'SELECT MAX(driver_id) FROM driver'
+        rows = self.database.query(query)
+        
+        if rows[0][0] == None:
+            return 1
+        else:
+            return rows[0][0] + 1
+
+    def add_user(self):
+        self.properties['driver_id'] = self.get_next_id()
+        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(driver_id)s, 0, 0, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
+        self.properties['END'] = 'NULL'
+
+        try:
+            self.database.insert(query, params=self.properties)
+            self.database.commit()
+
+        except Exception as e:
+            raise Exception(e)
+
+    def check_password(self, pwd_hash):
+        query = "SELECT pwd FROM driver WHERE user=%s"
+        db_pwd = self.database.query(query, self.properties['user'])
+
+        return check_password_hash(pwd_hash, db_pwd)
+
+    def check_username_available(self):
+        query = "SELECT COUNT(*) FROM driver WHERE user=\"{}\"".format(self.properties['user'])
+        print(query)
+
+        out = self.database.query(query) 
+        print(out)
+        return out[0][0] == 0
+
+    def get_users(self):
         pass

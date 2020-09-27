@@ -28,7 +28,7 @@ def do_admin_login():
     if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
         session['user'] = request.form['username']
         session['logged_in'] = True
-        session['role'] = 'admin'
+        session['role'] = 'driver'
         return redirect(url_for('home'))
     #Temp
 
@@ -57,7 +57,7 @@ def signup():
 
        if pwd != pwd_check:
           flash('Passwords do not match!')
-          return render_template('signup.html')
+          return render_template('landing/signup.html')
        
        fname = form['fname']
        mname = form['mname'] or 'NULL'
@@ -73,6 +73,73 @@ def signup():
 @app.route("/about")
 def about():
     return render_template('landing/about.html')
+
+# Driver Page Routes
+@app.route("/driverPointsLeader")
+def driverPointsLeader():
+    return render_template('driver/driverPointsLeader.html')
+
+@app.route("/driverNotification")
+def driverNotification():
+    return render_template('driver/driverNotification.html')
+
+@app.route("/driverManagePurchase")
+def driverManagePurchase():
+    return render_template('driver/driverManagePurchase.html')
+
+@app.route("/driverProfile")
+def driverProfile():
+    return render_template('driver/driverProfile.html')
+
+@app.route("/driverInbox")
+def driverInbox():
+    return render_template('driver/driverInbox.html')
+
+# Sponsor Page Routes
+@app.route("/sponsorNotification")
+def sponsorNotification():
+    return render_template('sponsor/sponsorNotification.html')
+
+@app.route("/sponsorPointsLeader")
+def sponsorPointsLeader():
+    return render_template('sponsor/sponsorPointsLeader.html')
+
+@app.route("/sponsorProfile")
+def sponsorProfile():
+    return render_template('sponsor/sponsorProfile.html')
+
+@app.route("/sponsorSystemSettings")
+def sponsorSystemSettings():
+    return render_template('sponsor/sponsorSystemSettings.html')
+
+@app.route("/sponsorViewDriver")
+def sponsorViewDriver():
+    return render_template('sponsor/sponsorViewDriver.html')
+
+# Admin Page Routes
+@app.route("/adminInbox")
+def adminInbox():
+    return render_template('admin/adminInbox.html')
+
+@app.route("/adminManageAcc")
+def adminManageAcc():
+    return render_template('admin/adminManageAcc.html')
+
+@app.route("/adminNotifications")
+def adminNotifications():
+    return render_template('admin/adminNotifications.html')
+
+@app.route("/adminPointsLeader")
+def adminPointsLeader():
+    return render_template('admin/adminPointsLeader.html')
+
+@app.route("/adminReports")
+def adminReports():
+    return render_template('admin/adminReports.html')
+
+@app.route("/adminSysSettings")
+def adminSysSettings():
+    return render_template('admin/adminSysSettings.html')
 
 # Route that does nothing, used in the templates for now until routes are made.
 @app.route("/na")

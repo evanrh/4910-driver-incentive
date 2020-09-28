@@ -35,6 +35,11 @@ class AbsUser(ABC):
         """ Returns a list of all users in the DB """
         pass
 
+    @abstractmethod
+    def update_info(self) -> None:
+        """ Updates a user's account info, e.g password, email, etc."""
+        pass
+
 
 class Admin(AbsUser):
     def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
@@ -86,6 +91,7 @@ class Sponsor(AbsUser):
 class Driver(AbsUser):
     def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  address='NULL', phone='NULL', email='NULL', pwd='NULL', image='NULL'):
+        # Dictionary to keep track of driver data
         self.properties = {}
         self.properties['fname'] = fname
         self.properties['mname'] = mname
@@ -99,6 +105,8 @@ class Driver(AbsUser):
 
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
+
+        self.properties['driver_id'] = self.get_current_id()
 
     def get_next_id(self):
         query = 'SELECT MAX(driver_id) FROM driver'
@@ -135,5 +143,48 @@ class Driver(AbsUser):
         print(out)
         return out[0][0] == 0
 
+    def get_current_id(self):
+        query = "SELECT driver_id FROM driver WHERE email=\"{}\" AND user=\"{}\""
+        query = query.format(self.properties['email'], self.properties['user'])
+
+        try:
+            d_id = self.database.query(query)
+            if not d_id:
+                return None
+
+            return d_id
+        except Exception as e:
+            raise Exception(e)
+
+    def update_info(self, data: dict):
+        """ Updates user info using current state of user 
+            data expects a dictionary in the following format:
+                each key is a named attribute of driver, and is followed by a key that is not None
+        """
+        
+        query = "UPDATE driver SET "
+
+        # Generate list of items to update in query
+        q_list = []
+        for key in data.keys():
+            q_list.append("{} = %s".format(key))
+
+        # Add items to update in query and add in WHERE to find correct user
+        query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
+        print(query)
+
+        try:
+            self.database.query(query, params=list(data.values()))
+            self.database.commit()
+
+        except Exception as e:
+            raise Exception(e)
+
     def get_users(self):
-        pass
+        query = "SELECT * FROM driver"
+
+        try:
+            out = self.database.query(query)
+            return out
+        except Exception as e:
+            raise Exception(e)

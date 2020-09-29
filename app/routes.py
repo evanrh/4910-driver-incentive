@@ -95,7 +95,7 @@ def driverNotification():
 def driverManagePurchase():
     return render_template('driver/driverManagePurchase.html')
 
-@app.route("/driverProfile")
+@app.route("/driverProfile", methods=["GET","POST"])
 def driverProfile():
     return render_template('driver/driverProfile.html')
 

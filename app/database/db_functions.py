@@ -112,6 +112,20 @@ def if_username_exist(user = 'NULL'):
     else:
         return True
 
+#returns id and table that the user is in
+def get_table_id(user):
+    sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
+    val = (user, )
+    cursor.execute(sql, val)
+    id = cursor.fetchone()
+    if id[0] != None:
+        return id[0], 'driver'
+    elif id[1] != None:
+        return id[1], 'sponsor'
+    else:
+        return id[2], 'admin'
+
+
 #checks to see if the password entered by the user matches password with that username
 #searches through user table for username and role
 #uses role to search through specific table for username and password
@@ -120,26 +134,26 @@ def pwd_check(user = 'NULL', pwd = 'NULL'):
     if( user == 'NULL' or pwd == 'NULL'):
         return False
 
-    sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
-    val = (user, )
-    cursor.execute(sql, val)
-    id = cursor.fetchone()
-    if ( id[0] != None ):
-        table = 'driver'
-    elif( id[1] != None ):
-        table = 'sponsor'
-    else:
-        table = 'admin'
+    id, table = get_table_id(user)
     
     sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
     val = (user, )
     cursor.execute(sql, val)
     current_password = cursor.fetchone()
 
-    if( pwd == current_password[0] ):
+    if pwd == current_password[0]:
         return True
     else: 
         return False
+
+#changes the password for a user
+#any username of any role can be passed into this function
+def change_password(user, pwd):
+    id, table = get_table_id(user)
+
+    sql = 'UPDATE ' + table + ' SET pwd = %s WHERE user = %s'
+    val = (pwd, user)
+    cursor.execute(sql, val)
 
 #prints out all of the drivers
 def get_drivers():
@@ -180,15 +194,19 @@ def get_users():
     for user in user_list:
         print(user)
 
-#if __name__ == "__main__":
-    #add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
-    #add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
-    #add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
-    #print(if_username_exist('krod'))
-    #get_users()
-    #print(pwd_check('krod', 'cool'))
-    #print(pwd_check('spon', 'password'))
-    #print(pwd_check('admin', 'pwd'))
+#main used to test functions
+if __name__ == "__main__":
+    add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
+    add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
+    add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
+    print(if_username_exist('krod'))
+    get_users()
+    print(pwd_check('krod', 'cool'))
+    print(pwd_check('spon', 'password'))
+    print(pwd_check('admin', 'pwd'))
+    change_password('krod', 'kool')
+    print(pwd_check('krod', 'kool'))
     
     cursor.close()
     database.close()
+ 

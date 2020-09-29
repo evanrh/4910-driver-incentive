@@ -48,12 +48,3 @@ function checkPass()
       submit.disabled = true;
    }
 }
-
-function showChangePass()
-{
-    button = document.getElementById('button');
-    form = document.getElementById('passForm');
-
-    form.style.visibility = 'visible';
-    button.style.visibility = 'hidden';
-}

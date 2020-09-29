@@ -39,7 +39,7 @@ header p{
 .tftextinput{
 	height: 35px;
 	width: 300px;
-	margin: 3px;
+	margin: 10px;
 	padding: 5px 15px;
 	font-family: Arial, Helvetica, sans-serif;
 	font-size:14px;
@@ -52,7 +52,7 @@ header p{
 .tfbutton {
 	height: 35px;
 	width: 80px;
-	margin: 0;
+	margin: 10px;
 	padding: 5px 15px;
 	font-family: Arial, Helvetica, sans-serif;
 	font-size:14px;
@@ -96,7 +96,7 @@ header p{
 .button {
 	display:block; 
     width:50%; 
-    margin:0 auto; 
+    margin:3px auto; 
     position: relative;
     background-color: blue;
     border: none;

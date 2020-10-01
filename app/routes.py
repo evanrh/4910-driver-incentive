@@ -29,7 +29,7 @@ def do_admin_login():
     if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
         session['user'] = request.form['username']
         session['logged_in'] = True
-        session['role'] = 'driver'
+        session['role'] = 'admin'
         return redirect(url_for('home'))
     #Temp
 
@@ -37,7 +37,7 @@ def do_admin_login():
 
     if if_username_exist(user) and pwd_check(user, pwd_hash):
         session['logged_in'] = True
-        #session['role'] = get_role(user)
+        id, session['role'] = get_table_id(user)
     else:
         flash('Incorrect login credentials!')
     return redirect(url_for('home'))

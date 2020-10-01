@@ -143,6 +143,10 @@ body {
     padding-top: 20px;
 }
 
+.side-navbar .icon {
+    display: none;
+}
+
 .side-navbar li {
     color: white;
 }
@@ -221,40 +225,25 @@ body {
 
 /* media queries */ 
 
-@media screen and (max-width: 600px)
+@media screen and (max-width: 800px)
 {
-
-    .one-sixth,
-    .one-fifth,
-    .one-fourth,
-    .one-third,
-    .two-fifths,
-    .one-half,
-    .three-fifths,
-    .two-thirds,
-    .four-fifths,
-    .five-sixths,
-    .full {
-        padding: 10px;
-        width: 100%;
-    } 
-
-    .hide-mobile {
-        display: none;
-    }
-
-    .static-mobile {
-        position: static;
+    .side-navbar li {display: none;}
+    .side-navbar li.icon {
+      float: left;
+      display: block;
     }
 }
 
-@media (min-width: 601px)
-{
-    .hide-desktop {
-        display: none;
+@media screen and (max-width: 800px) {
+    .side-navbar.responsive {position: relative;}
+    .side-navbar.responsive a.icon {
+      position: absolute;
+      right: 0;
+      top: 0;
     }
-    
-    .static-desktop {
-        position: static;
+    .side-navbar.responsive li {
+      float: none;
+      display: block;
+      text-align: left;
     }
-}
+  }

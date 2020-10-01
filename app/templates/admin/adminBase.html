@@ -37,7 +37,7 @@
                 {% endmacro %}
 
                 <div class="one-fifth">
-                    <ul class="side-navbar">
+                    <ul class="side-navbar" id="sidebar">
                         {{ nav_link('home', 'Home') }}
                         {{ nav_link('adminReports', 'Generate Reports') }}
                         {{ nav_link('adminPointsLeader', 'Points Leaderboard') }}
@@ -45,6 +45,11 @@
                         {{ nav_link('adminManageAcc', 'Manage Accounts') }}
                         {{ nav_link('adminNotifications', 'Notifications') }}
                         {{ nav_link('adminInbox', 'Inbox') }}
+                        <li class="icon">
+                            <a href="javascript:void(0);" onclick="updateNav()">
+                                <i class="fa fa-bars"></i>
+                            </a>
+                        </li>
                         <li>
                             <a href="">
                                 <img src="{{url_for('static', filename='img/settings.png')}}" style="width:30px;vertical-align:middle;padding-right: 5px;">

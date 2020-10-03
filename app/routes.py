@@ -19,13 +19,13 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
-
-    #Temp
+    
     db_id = 'admin'
     db_hash = 'password'
 
     pwd_hash = generate_password_hash(request.form['password'], 'sha256')
 
+    #Temp - remove in final
     if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
         session['user'] = request.form['username']
         session['logged_in'] = True
@@ -95,7 +95,7 @@ def driverNotification():
 def driverManagePurchase():
     return render_template('driver/driverManagePurchase.html')
 
-@app.route("/driverProfile", methods=["GET","POST"])
+@app.route("/driverProfile")
 def driverProfile():
     return render_template('driver/driverProfile.html')
 
@@ -149,6 +149,14 @@ def adminReports():
 def adminSysSettings():
     return render_template('admin/adminSysSettings.html')
 
+@app.route("/settings", methods=["GET","POST"])
+def settings():
+        if session.get('role') == "driver":
+            return render_template('driver/settings.html')
+        if session.get('role') == "sponsor":
+            return render_template('sponsor/settings.html')
+        if session.get('role') == "admin":
+            return render_template('admin/settings.html')
 
 @app.errorhandler(404)
 def not_found(e):

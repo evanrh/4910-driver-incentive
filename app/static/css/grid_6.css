@@ -229,13 +229,17 @@ body {
 {
     .side-navbar li {display: none;}
     .side-navbar li.icon {
-      float: left;
       display: block;
     }
 }
 
 @media screen and (max-width: 800px) {
-    .side-navbar.responsive {position: relative;}
+    .side-navbar.responsive {
+        background-color: #00B8CC;
+        height: 250px;
+        padding: 0 10px 0 10px;
+        width: 100%;
+    }
     .side-navbar.responsive a.icon {
       position: absolute;
       right: 0;

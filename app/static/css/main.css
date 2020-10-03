@@ -78,10 +78,11 @@ header p{
 .tfbutton::-moz-focus-inner {
   border: 0;
 }
+
 .tfclear{
 	clear:both;
 }
-	
+
 .tagline {
 	font-size: 12px;
 	font-style: italic;

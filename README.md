@@ -1,5 +1,10 @@
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+This project is a driver incentive program developed in Python using the Flask framework. It is for Dr. Van Scoy's CPSC 4910 class.
+
+# Dependencies
+* [flask](https://flask.palletsprojects.com/en/1.1.x/)
+* [mysql-connector-python](https://pypi.org/project/mysql-connector-python/)
+* [requests](https://requests.readthedocs.io/en/master/)
 
 # Getting Started
 TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:

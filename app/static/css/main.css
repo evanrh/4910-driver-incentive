@@ -10,7 +10,7 @@ body {
 
 article {
 	background-color: white;
-	padding-top: 100px; 
+	margin-top: 100px;
 }
 
 header {
@@ -156,14 +156,6 @@ header p{
 
 .logo {
 	max-width: 5%;
-}
-
-.cart {
-	margin-top: 28.14px;
-}
-
-nav a:hover {
-    background-color: #EEEEEE;
 }
 
 footer p{

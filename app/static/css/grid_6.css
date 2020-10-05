@@ -13,6 +13,7 @@ html {
 body {
     margin: 0;
     padding: 0;
+    position: static !important;
 }
 
 .container {
@@ -101,6 +102,7 @@ body {
     top:0;
     position: fixed;
     width: 100%;
+    z-index: 100000000;
 }
 
 #top-navbar-right {
@@ -141,6 +143,10 @@ body {
     left: 0;
     overflow-x: hidden; 
     padding-top: 20px;
+}
+
+.side-navbar .icon {
+    display: none;
 }
 
 .side-navbar li {
@@ -221,40 +227,29 @@ body {
 
 /* media queries */ 
 
-@media screen and (max-width: 600px)
+@media screen and (max-width: 800px)
 {
+    .side-navbar li {display: none;}
+    .side-navbar li.icon {
+      display: block;
+    }
+}
 
-    .one-sixth,
-    .one-fifth,
-    .one-fourth,
-    .one-third,
-    .two-fifths,
-    .one-half,
-    .three-fifths,
-    .two-thirds,
-    .four-fifths,
-    .five-sixths,
-    .full {
-        padding: 10px;
+@media screen and (max-width: 800px) {
+    .side-navbar.responsive {
+        background-color: #00B8CC;
+        height: 250px;
+        padding: 0 10px 0 10px;
         width: 100%;
-    } 
-
-    .hide-mobile {
-        display: none;
     }
-
-    .static-mobile {
-        position: static;
+    .side-navbar.responsive a.icon {
+      position: absolute;
+      right: 0;
+      top: 0;
     }
-}
-
-@media (min-width: 601px)
-{
-    .hide-desktop {
-        display: none;
+    .side-navbar.responsive li {
+      float: none;
+      display: block;
+      text-align: left;
     }
-    
-    .static-desktop {
-        position: static;
-    }
-}
+  }

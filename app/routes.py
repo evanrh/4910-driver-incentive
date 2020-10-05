@@ -20,16 +20,16 @@ def home():
 @app.route('/login', methods=['POST'])
 def do_admin_login():
     
-    db_id = 'admin'
+    db_id = ['admin', 'sponsor', 'driver']
     db_hash = 'password'
 
     pwd_hash = generate_password_hash(request.form['password'], 'sha256')
 
     #Temp - remove in final
-    if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
+    if check_password_hash(pwd_hash, db_hash) and request.form['username'] in db_id:
         session['user'] = request.form['username']
         session['logged_in'] = True
-        session['role'] = 'admin'
+        session['role'] = request.form['username']
         return redirect(url_for('home'))
     #Temp
 

@@ -1,6 +1,5 @@
 import mysql.connector
-import datetime
-
+import 
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -85,17 +84,17 @@ def get_next_admin_id():
 #assumes username isn't already in table
 #called on by add_driver, add_sponsor, add_admin
 def add_to_users(user = 'NULL', role = 'driver', id = 0):
-    if( role == 'driver' ):
-        sql = "INSERT INTO users (UserName, Driver_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())"
-        val = (user, id)
-    elif( role == 'sponsor' ):
-        sql = "INSERT INTO users (UserName, Sponsor_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())"
-        val = (user, id)
+    if role == 'driver':
+        role = "Driver_ID"
+    elif role == 'sponsor':
+        role = "Sponsor_ID"
     else:
-        sql = "INSERT INTO users (UserName, Admin_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())"
-        val = (user, id)
-    cursor.execute(sql, val)
-    #database.commit()
+        role = "Admin_ID"
+
+    query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, NOW())'
+    query = query.format(role, user, id)
+    cursor.execute(query)
+
 
 #detirmines if username is in the table
 #returns if username is in user table

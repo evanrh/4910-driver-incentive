@@ -14,6 +14,10 @@ class AbsUser(ABC):
     DB_USER = os.getenv('DB_USER')
     DB_PASS = os.getenv('DB_PASS')
 
+    def __init__(self):
+        self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
+                                      self.DB_USER, self.DB_PASS)
+
     @abstractmethod
     def add_user(self) -> None:
         """ Adds a user to the database """
@@ -40,7 +44,22 @@ class AbsUser(ABC):
         """ Updates a user's account info, e.g password, email, etc."""
         pass
 
+    @abstractmethod
+    def add_to_users(self, username: str, id: int, role: str):
+        
+        if role == 'driver':
+            role = "Driver_ID
+        elif role == 'sponsor':
+            role = "Sponsor_ID"
+        else:
+            role = "Admin_ID"
 
+        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
+        query = query.format(role, user, id)
+        self.database.insert(query)
+
+        
+        
 class Admin(AbsUser):
     def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  phone='NULL', email='NULL', pwd='NULL', image='NULL'):
@@ -74,7 +93,7 @@ class Admin(AbsUser):
         add_query = 'INSERT INTO users (UserName, Admin_ID, last_in) (%s, %s, CURRENT_TIMESTAMP())'
         vals = (self.properties['name'])
         try:
-            self.database.query(query)
+            
 
         except Exception as e:
             raise Exception(e)
@@ -121,6 +140,7 @@ class Sponsor(AbsUser):
 
         try:
             self.database.insert(query, params=self.properties)
+            self.add_to_users(self.properties['user'], self.properties['sponsor_id'], role)
             self.database.commit()
 
         except Exception as e:
@@ -203,12 +223,12 @@ class Driver(AbsUser):
         query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(driver_id)s, 0, 0, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
         self.properties['END'] = 'NULL'
 
-        add_query = 'INSERT INTO users (UserName, Driver_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())'
-        vals = (self.properties['user'], self.properties['driver_id'])
+        """add_query = 'INSERT INTO users (UserName, Driver_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())'
+        vals = (self.properties['user'], self.properties['driver_id'])"""
 
         try:
             self.database.insert(query, params=self.properties)
-            self.database.insert(add_query, params=vals)
+            self.add_to_users(self.properties['user'], self.properties['driver_id'], role)
             self.database.commit()
 
         except Exception as e:

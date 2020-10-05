@@ -1,5 +1,4 @@
 import mysql.connector
-import 
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',

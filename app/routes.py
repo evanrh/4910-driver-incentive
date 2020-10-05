@@ -66,7 +66,7 @@ def signup():
        address = form['address'] or 'NULL' # Need to look into address fetching
        phone = form['phone']
        email = form['email'] or 'NULL'
-       pwd_hash = generate_password_hash(pwd, method='sha256');
+       pwd_hash = generate_password_hash(pwd, method='sha256')
 
        user = Driver(fname, mname, lname, username, address, phone, email, pwd_hash)
 

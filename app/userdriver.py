@@ -14,7 +14,7 @@ database = mysql.connector.connect(
 #See if we connected
 print("Connected to mySQL")
 
-cursor = database.cursor();
+cursor = database.cursor()
 
 print("Enter your UserName")
 Name = input()

@@ -1,4 +1,5 @@
 import mysql.connector
+import datetime
 
 #establish connection
 database = mysql.connector.connect(
@@ -9,7 +10,7 @@ database = mysql.connector.connect(
 )
 
 #cursor for the database
-cursor = database.cursor(buffered=True)
+cursor = database.cursor()
 
 #having database.commit() commented still allows you to see what it would be like if you 
 #modified the database however without commiting you will not change anything in the database
@@ -194,19 +195,171 @@ def get_users():
     for user in user_list:
         print(user)
 
+#this function updates the last log in time of the user
+#will set the time to the current time the user logs in
+def update_last_log_in(user):
+
+    sql = 'UPDATE users SET last_in = CURRENT_TIMESTAMP() WHERE UserName = %s'
+    val = (user, )
+    cursor.execute(sql, val)
+    #database.commit()
+
+
+
+#this function removes the association between a driver and sponsor
+def remove_driver_from_sponsor(driver_username):
+
+    sql = 'UPDATE driver SET sponsor_id = 0 WHERE user = %s'
+    val = (driver_username, )
+
+    cursor.execute(sql, val)
+    #database.commit()
+
+#this function adds a driver to a suspension list and their length of suspension
+def suspend_driver(driver_username, year, month, day):
+
+    cursor.execute('SELECT driver_id, sponsor_id FROM driver WHERE user = %s', (driver_username, ))
+    id = cursor.fetchall()
+
+    if month < 10:
+        month = '0' + str(month)
+    else:
+        month = str(month)
+
+    year = str(year)
+    day = str(day)
+    
+    str_date = year + '-' + month + '-' + day
+
+    sql = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
+    val = (driver_username, id[0][0], id[0][1], str_date)
+    cursor.execute(sql, val)
+    #database.commit()
+
+#this function returns true if a driver is currently suspended
+def is_driver_suspended(user):
+    
+    #this will remove suspended driver's whos suspensions are over
+    cursor.execute('DELETE from suspend WHERE date_return <= NOW()')
+    #database.commit()
+
+    sql = 'SELECT user FROM suspend WHERE user = %s'
+    val = (user, )
+    cursor.execute(sql, val)
+    suspended_user = cursor.fetchone()
+    if suspended_user == None:
+        return False
+    else:
+        return True
+           
+#this function edits the suspension date of the driver
+def edit_driver_suspension(user, year, month, day):
+
+    #delete the driver from the suspended table and add them back with new dates
+    cursor.execute('DELETE FROM suspend WHERE user = %s', (user, ))
+    suspend_driver(user, year, month, day)
+
+#this function cancels a driver's suspension
+def cancel_suspension(user):
+    cursor.execute('DELETE FROM suspend WHERE user = %s', (user, ))
+
+def view_point_leaders(sponsor_id):
+    
+    sql = 'SELECT first_name, mid_name, last_name, user, driver_id, points, image, date_join'
+    sql += ' FROM driver WHERE sponsor_id = %s ORDER BY points DESC'
+    val = (sponsor_id, )
+    cursor.execute(sql, val)
+    drivers = cursor.fetchall()
+    return drivers
+
+def add_points_to_driver(driver_username, sponsor_id, points_to_add):
+
+    sql = 'SELECT points FROM driver WHERE (user = %s AND sponsor_id = %s)'
+    val = (driver_username, sponsor_id)
+    cursor.execute(sql, val)
+    current_points = cursor.fetchone()
+
+    points_to_add += current_points[0]
+
+    sql = 'UPDATE driver SET points = %s WHERE (user = %s AND sponsor_id = %s)'
+    val = (points_to_add, driver_username, sponsor_id)
+    cursor.execute(sql, val)
+    #database.commit()
+
+def sponsorless_drivers():
+    
+    sql = 'SELECT first_name, mid_name, last_name, user, driver_id, points, image, date_join '
+    sql += 'FROM driver WHERE sponsor_id = 0'
+    cursor.execute(sql)
+    return cursor.fetchall()
+
+def assign_driver_to_sponsor(driver_username, sponsor_id):
+
+    sql = 'UPDATE driver SET sponsor_id = %s WHERE user = %s'
+    val = (sponsor_id, driver_username)
+    cursor.execute(sql, val)
+    #database.commit()
+
+def add_points_for_leading_drivers(sponsor_id, first, second, third):
+    sql = 'SELECT COUNT(*) FROM driver WHERE sponsor_id = %s'
+    val = (sponsor_id, )
+    cursor.execute(sql, val)
+    count = cursor.fetchone()[0]
+
+    sql = 'SELECT user FROM driver WHERE sponsor_id = %s ORDER BY points DESC LIMIT 3'
+
+    val = (sponsor_id, )
+    cursor.execute(sql, val)
+    drivers = cursor.fetchall()
+
+    if count > 2:
+        add_points_to_driver(drivers[2][0], sponsor_id, third)
+    if count > 1:
+        add_points_to_driver(drivers[1][0], sponsor_id, second)
+    if count > 0:
+        add_points_to_driver(drivers[0][0], sponsor_id, first)
+    
+    
+
 #main used to test functions
 if __name__ == "__main__":
     add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
+    add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
     print(if_username_exist('krod'))
     get_users()
-    print(pwd_check('krod', 'cool'))
-    print(pwd_check('spon', 'password'))
-    print(pwd_check('admin', 'pwd'))
+
+    drivers = sponsorless_drivers()
+    for row in drivers:
+        print(str(row[3]) +' is sponsorless')
+    assign_driver_to_sponsor('krod', 1)
+    assign_driver_to_sponsor('bean', 1)
+    
+    add_points_to_driver('krod', 1, 50)
+    add_points_to_driver('bean', 1, 100)
+    drivers = view_point_leaders(1)
+    print(str(drivers[0][3]) + ': ' + str(drivers[0][5]))
+    print(str(drivers[1][3]) + ': ' + str(drivers[1][5]))
+
+    print("Add 200 to bean for being in top place, 100 to krod for second")
+
+    add_points_for_leading_drivers(1, 200, 100, 50)
+    drivers = view_point_leaders(1)
+    print(str(drivers[0][3]) + ': ' + str(drivers[0][5]))
+    print(str(drivers[1][3]) + ': ' + str(drivers[1][5]))
+    
+
+    print('krod\'s password \"cool\": ' + str(pwd_check('krod', 'cool')))
+    print('spon\'s password \"password\": ' + str(pwd_check('spon', 'password')))
+    print('admin\'s password \"pwd\": ' + str(pwd_check('admin', 'pwd')))
+
     change_password('krod', 'kool')
-    print(pwd_check('krod', 'kool'))
+    print('krod\'s new password \"kool\": ' + str(pwd_check('krod', 'kool')))
+    print("Suspending krod...")
+    suspend_driver('krod', 2020, 11, 30)
+    print('Is krod suspended: ' + str(is_driver_suspended('krod')))
+    
     
     cursor.close()
     database.close()
- 

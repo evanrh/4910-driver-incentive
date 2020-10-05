@@ -69,6 +69,10 @@ class Admin(AbsUser):
     def add_user(self):
         query = 'INSERT INTO admin VALUES ({}, {}, {}, {}, {}, {}, {}, {}, NOW(), {}'
         query = query.format(*list(self.properties.values()))
+
+        # TODO Clean up admin signup
+        add_query = 'INSERT INTO users (UserName, Admin_ID, last_in) (%s, %s, CURRENT_TIMESTAMP())'
+        vals = (self.properties['name'])
         try:
             self.database.query(query)
 
@@ -85,6 +89,7 @@ class Admin(AbsUser):
         pass
 
 class Sponsor(AbsUser):
+    role = 'sponsor'
     def __init__(self, title='NULL', user='NULL', address='NULL', phone='NULL', 
                     email='NULL', pwd='NULL', image='NULL'):
         self.properties = {}
@@ -164,6 +169,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
 class Driver(AbsUser):
+    role = 'driver'
     def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  address='NULL', phone='NULL', email='NULL', pwd='NULL', image='NULL'):
         # Dictionary to keep track of driver data
@@ -197,8 +203,12 @@ class Driver(AbsUser):
         query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(driver_id)s, 0, 0, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
         self.properties['END'] = 'NULL'
 
+        add_query = 'INSERT INTO users (UserName, Driver_ID, last_in) VALUES (%s, %s, CURRENT_TIMESTAMP())'
+        vals = (self.properties['user'], self.properties['driver_id'])
+
         try:
             self.database.insert(query, params=self.properties)
+            self.database.insert(add_query, params=vals)
             self.database.commit()
 
         except Exception as e:

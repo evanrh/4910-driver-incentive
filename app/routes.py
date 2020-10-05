@@ -23,21 +23,25 @@ def do_admin_login():
     db_id = 'admin'
     db_hash = 'password'
 
-    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
+    pwd = request.form['password']
 
     #Temp - remove in final
-    if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
+    """if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
         session['user'] = request.form['username']
         session['logged_in'] = True
         session['role'] = 'admin'
         return redirect(url_for('home'))
+        """
     #Temp
 
-    user = session.get('user')
+    user = request.form['username']
+    current_hash = get_password(user)
 
-    if if_username_exist(user) and pwd_check(user, pwd_hash):
+    if if_username_exist(user) and check_password_hash(current_hash, pwd):
         session['logged_in'] = True
         id, session['role'] = get_table_id(user)
+        flash('Login successful!')
+        flash('Logged in as: ' + session['role'])
     else:
         flash('Incorrect login credentials!')
     return redirect(url_for('home'))
@@ -72,6 +76,8 @@ def signup():
 
        if user.check_username_available():
            user.add_user()
+           flash('Account created!')
+           return redirect(url_for('home'))
        else:
            flash('Username taken!')
 

@@ -321,6 +321,20 @@ def add_points_for_leading_drivers(sponsor_id, first, second, third):
     
     
 
+def get_password(user='NULL'):
+    if( user == 'NULL'):
+        return ''
+
+    id, table = get_table_id(user)
+    
+    sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
+    val = (user, )
+    cursor.execute(sql, val)
+    current_password = cursor.fetchone()
+
+    return current_password[0]
+
+
 #main used to test functions
 if __name__ == "__main__":
     add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')

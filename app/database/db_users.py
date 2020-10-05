@@ -85,8 +85,83 @@ class Admin(AbsUser):
         pass
 
 class Sponsor(AbsUser):
-    def __init__(self):
-        pass
+    def __init__(self, title='NULL', user='NULL', address='NULL', phone='NULL', 
+                    email='NULL', pwd='NULL', image='NULL'):
+        self.properties = {}
+        self.properties['title'] = title
+        self.properties['user'] = user
+        self.properties['address'] = address
+        self.properties['phone'] = phone
+        self.properties['email'] = email
+        self.properties['pwd'] = pwd
+        self.properties['image'] = image
+        self.properties['sponsor_id'] = self.get_next_id()
+
+        self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
+                                      self.DB_USER, self.DB_PASS)
+
+    
+    def get_next_id(self):
+        query = 'SELECT MAX(sponsor_id) FROM sponsor'
+        rows = self.database.query(query)
+        
+        if rows[0][0] == None:
+            return 1
+        else:
+            return rows[0][0] + 1
+    
+    def add_user(self):
+        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(sponsor_id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
+        self.properties['END'] = 'NULL'
+
+        try:
+            self.database.insert(query, params=self.properties)
+            self.database.commit()
+
+        except Exception as e:
+            raise Exception(e)
+
+    def check_password(self, pwd_hash):
+        query = "SELECT pwd FROM sponsor WHERE user=%s"
+        db_pwd = self.database.query(query, self.properties['user'])
+
+        return check_password_hash(pwd_hash, db_pwd)
+
+
+    def check_username_available(self):
+        query = "SELECT COUNT(*) FROM sponsor WHERE user=\"{}\"".format(self.properties['user'])
+        print(query)
+
+        out = self.database.query(query) 
+        print(out)
+        return out[0][0] == 0
+
+    def update_info(self, data: dict):
+        
+        query = "UPDATE sponsor SET "
+
+        q_list = []
+        for key in data.keys():
+            q_list.append("{} = %s".format(key))
+
+        query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
+        print(query)
+
+        try:
+            self.database.query(query, params=list(data.values()))
+            self.database.commit()
+
+        except Exception as e:
+            raise Exception(e)
+
+    def get_users(self):
+        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor"
+
+        try:
+            out = self.database.query(query)
+            return out
+        except Exception as e:
+            raise Exception(e)
 
 class Driver(AbsUser):
     def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 

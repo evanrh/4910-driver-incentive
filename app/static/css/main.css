@@ -10,7 +10,7 @@ body {
 
 article {
 	background-color: white;
-	padding-top: 100px; 
+	margin-top: 100px;
 }
 
 header {
@@ -78,10 +78,11 @@ header p{
 .tfbutton::-moz-focus-inner {
   border: 0;
 }
+
 .tfclear{
 	clear:both;
 }
-	
+
 .tagline {
 	font-size: 12px;
 	font-style: italic;
@@ -155,14 +156,6 @@ header p{
 
 .logo {
 	max-width: 5%;
-}
-
-.cart {
-	margin-top: 28.14px;
-}
-
-nav a:hover {
-    background-color: #EEEEEE;
 }
 
 footer p{
@@ -249,30 +242,5 @@ img  {
 }
 
 @media screen and (max-width: 600px) {
-	.logo {
-		width: 100%
-	}
-	h2 {
-		line-height: 110%;
-	}
-	.tftextinput {
-		width: 80%;
-	}
-	.searchheader {
-		margin: 0 auto;
-	}
-	.full-mobile {
-		width: 100%;
-	}
-	body {
-		margin: 4px;
-	}
-	label {
-		display:inline;
-	}
-	input {
-		margin: 10px;
-		padding: 10px;
-		display: inline;
-	}
+
 }

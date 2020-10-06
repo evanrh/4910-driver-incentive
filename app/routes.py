@@ -19,25 +19,23 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
-
-    #Temp
-    db_id = 'admin'
+    
+    db_id = ['admin', 'sponsor', 'driver']
     db_hash = 'password'
 
-    pwd_hash = generate_password_hash(request.form['password'], 'sha256')
+    pwd = request.form['password']
 
-    if check_password_hash(pwd_hash, db_hash) and request.form['username'] == db_id:
-        session['user'] = request.form['username']
-        session['logged_in'] = True
-        session['role'] = 'driver'
-        return redirect(url_for('home'))
+    #Temp - remove in final
     #Temp
 
-    user = session.get('user')
+    user = request.form['username']
+    current_hash = get_password(user)
 
-    if if_username_exist(user) and pwd_check(user, pwd_hash):
+    if if_username_exist(user) and check_password_hash(current_hash, pwd):
         session['logged_in'] = True
-        #session['role'] = get_role(user)
+        id, session['role'] = get_table_id(user)
+        flash('Login successful!')
+        flash('Logged in as: ' + session['role'])
     else:
         flash('Incorrect login credentials!')
     return redirect(url_for('home'))
@@ -66,12 +64,14 @@ def signup():
        address = form['address'] or 'NULL' # Need to look into address fetching
        phone = form['phone']
        email = form['email'] or 'NULL'
-       pwd_hash = generate_password_hash(pwd, method='sha256');
+       pwd_hash = generate_password_hash(pwd, method='sha256')
 
        user = Driver(fname, mname, lname, username, address, phone, email, pwd_hash)
 
        if user.check_username_available():
            user.add_user()
+           flash('Account created!')
+           return redirect(url_for('home'))
        else:
            flash('Username taken!')
 
@@ -95,7 +95,7 @@ def driverNotification():
 def driverManagePurchase():
     return render_template('driver/driverManagePurchase.html')
 
-@app.route("/driverProfile", methods=["GET","POST"])
+@app.route("/driverProfile")
 def driverProfile():
     return render_template('driver/driverProfile.html')
 
@@ -149,6 +149,14 @@ def adminReports():
 def adminSysSettings():
     return render_template('admin/adminSysSettings.html')
 
+@app.route("/settings", methods=["GET","POST"])
+def settings():
+        if session.get('role') == "driver":
+            return render_template('driver/settings.html')
+        if session.get('role') == "sponsor":
+            return render_template('sponsor/settings.html')
+        if session.get('role') == "admin":
+            return render_template('admin/settings.html')
 
 @app.errorhandler(404)
 def not_found(e):

@@ -334,7 +334,7 @@ def get_password(user='NULL'):
 
 
 #main used to test functions
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
     add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
@@ -374,4 +374,4 @@ if __name__ == "__main__":
     
     
     cursor.close()
-    database.close()
+    database.close()"""

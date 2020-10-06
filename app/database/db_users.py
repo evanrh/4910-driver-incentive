@@ -48,7 +48,7 @@ class AbsUser(ABC):
     def add_to_users(self, username: str, id: int, role: str):
         
         if role == 'driver':
-            role = "Driver_ID
+            role = "Driver_ID"
         elif role == 'sponsor':
             role = "Sponsor_ID"
         else:

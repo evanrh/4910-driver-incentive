@@ -16,11 +16,7 @@
                 </a>
 
                 <a style="padding-left:0;">
-                    {% if session['points'] %}
-                    <span>Points: {{ session['points'] }}</span>
-                    {% else %}
-                    <span>Points: 0</span>
-                    {% endif %}
+                    <span>Points: {{ session['user'].getPoints() }}</span>
                 </a>
 
                 <a>
@@ -28,7 +24,7 @@
                 </a>
 
                 <a style="padding-left:0;">
-                    <span>{{ session['user'].capitalize() }}</span>
+                    <span>{{ session['user'].getRole().capitalize() }}</span>
                 </a>
 
                 <a href="/logout">

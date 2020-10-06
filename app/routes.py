@@ -3,11 +3,11 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 from app.database.db_users import Driver
+from app import userClass
 
 @app.route('/')
 def home():
     if not session.get('logged_in'):
-        session['user'] = "Sign Up"
         return render_template('landing/login.html')
     else:
         if session.get('role') == "driver":
@@ -19,25 +19,21 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
-    
-    db_id = ['admin', 'sponsor', 'driver']
-    db_hash = 'password'
-
     pwd = request.form['password']
-
-    #Temp - remove in final
-    #Temp
-
     user = request.form['username']
-    current_hash = get_password(user)
 
-    if if_username_exist(user) and check_password_hash(current_hash, pwd):
-        session['logged_in'] = True
-        id, session['role'] = get_table_id(user)
-        flash('Login successful!')
-        flash('Logged in as: ' + session['role'])
-    else:
+    if not if_username_exist(user):
         flash('Incorrect login credentials!')
+    else:
+        current_hash = get_password(user)
+        if check_password_hash(current_hash, pwd):
+            session['logged_in'] = True
+            session['user'] = User(user)
+            flash('Login successful!')
+            flash('Logged in as: ' + session['user'].getRole())
+        else:
+            flash('Incorrect login credentials!')
+
     return redirect(url_for('home'))
 
 @app.route("/logout")
@@ -151,11 +147,11 @@ def adminSysSettings():
 
 @app.route("/settings", methods=["GET","POST"])
 def settings():
-        if session.get('role') == "driver":
+        if session.get('user').getRole() == "driver":
             return render_template('driver/settings.html')
-        if session.get('role') == "sponsor":
+        if session.get('user').getRole() == "sponsor":
             return render_template('sponsor/settings.html')
-        if session.get('role') == "admin":
+        if session.get('user').getRole() == "admin":
             return render_template('admin/settings.html')
 
 @app.errorhandler(404)

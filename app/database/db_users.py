@@ -13,6 +13,9 @@ class AbsUser(ABC):
     DB_NAME = os.getenv('DB_NAME')
     DB_USER = os.getenv('DB_USER')
     DB_PASS = os.getenv('DB_PASS')
+    role = ''
+    user = ''
+    id = -1
 
     def __init__(self):
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
@@ -55,7 +58,7 @@ class AbsUser(ABC):
             role = "Admin_ID"
 
         query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
-        query = query.format(role, user, id)
+        query = query.format(role, username, id)
         self.database.insert(query)
 
         
@@ -72,6 +75,8 @@ class Admin(AbsUser):
         self.properties['email'] = email
         self.properties['pwd'] = pwd
         self.properties['image'] = image
+
+        self.role = 'admin'
 
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
@@ -228,7 +233,7 @@ class Driver(AbsUser):
 
         try:
             self.database.insert(query, params=self.properties)
-            self.add_to_users(self.properties['user'], self.properties['driver_id'], role)
+            self.add_to_users(self.properties['user'], self.properties['driver_id'], self.role)
             self.database.commit()
 
         except Exception as e:
@@ -293,3 +298,6 @@ class Driver(AbsUser):
             return out
         except Exception as e:
             raise Exception(e)
+
+    def add_to_users(self, username: str, id: int, role: str):
+        super().add_to_users(username, id, role)

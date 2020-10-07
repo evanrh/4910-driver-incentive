@@ -26,10 +26,10 @@ steps:
 - task: SSH@0
   inputs:
     sshEndpoint: 'Ansible Control Node'
-    runOptions: 'commands'
-    commands: |
-      cd F20-Team15-Hastings.Gaber.Gleaton.Sherrer
-      git pull
-      cd ..
-      ansible-playbook auto-deploy.yaml
+    runOptions: 'inline'
+    inline: |
+      cd F20-Team15-Hastings.Gaber.Gleaton.Sherrer;
+      git pull;
+      cd ..;
+      ansible-playbook auto-deploy.yaml;
     readyTimeout: '20000'

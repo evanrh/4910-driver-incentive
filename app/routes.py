@@ -10,27 +10,27 @@ def home():
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
-        if session.get('role') == "driver":
+        if session.get('userInfo').getRole() == "driver":
             return render_template('driver/driverHome.html')
-        if session.get('role') == "sponsor":
+        if session.get('userInfo').getRole() == "sponsor":
             return render_template('sponsor/sponsorHome.html')
-        if session.get('role') == "admin":
+        if session.get('userInfo').getRole() == "admin":
             return render_template('admin/adminHome.html')
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
     pwd = request.form['password']
-    user = request.form['username']
+    username = request.form['username']
 
-    if not if_username_exist(user):
+    if not if_username_exist(username):
         flash('Incorrect login credentials!')
     else:
-        current_hash = get_password(user)
+        current_hash = get_password(username)
         if check_password_hash(current_hash, pwd):
             session['logged_in'] = True
-            session['user'] = User(user)
+            session['userInfo'] = User(username) # Transition to ABSUser in the future
             flash('Login successful!')
-            flash('Logged in as: ' + session['user'].getRole())
+            flash('Logged in as: ' + session['userInfo'].getRole())
         else:
             flash('Incorrect login credentials!')
 
@@ -61,11 +61,12 @@ def signup():
        phone = form['phone']
        email = form['email'] or 'NULL'
        pwd_hash = generate_password_hash(pwd, method='sha256')
+       img = 'NULL'
 
-       user = Driver(fname, mname, lname, username, address, phone, email, pwd_hash)
+       newDriver = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
 
-       if user.check_username_available():
-           user.add_user()
+       if newDriver.check_username_available():
+           newDriver.add_user()
            flash('Account created!')
            return redirect(url_for('home'))
        else:
@@ -147,11 +148,11 @@ def adminSysSettings():
 
 @app.route("/settings", methods=["GET","POST"])
 def settings():
-        if session.get('user').getRole() == "driver":
+        if session.get('userInfo').getRole() == "driver":
             return render_template('driver/settings.html')
-        if session.get('user').getRole() == "sponsor":
+        if session.get('userInfo').getRole() == "sponsor":
             return render_template('sponsor/settings.html')
-        if session.get('user').getRole() == "admin":
+        if session.get('userInfo').getRole() == "admin":
             return render_template('admin/settings.html')
 
 @app.errorhandler(404)

@@ -11,6 +11,9 @@ class User:
             self.points = 9999999
         self.sandbox = False
     
+    def setLogIn(self, loggedIn):
+        self.loggedIn = loggedIn
+    
     def getUsername(self):
         return self.username
         

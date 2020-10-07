@@ -28,7 +28,7 @@ steps:
     sshEndpoint: 'Ansible Control Node'
     runOptions: 'inline'
     inline: |
-      cd F20-Team15-Hastings.Gaber.Gleaton.Sherrer;
+      cd project;
       git pull;
       cd ..;
       ansible-playbook auto-deploy.yaml;

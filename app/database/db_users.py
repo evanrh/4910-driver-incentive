@@ -93,7 +93,7 @@ class Admin(AbsUser):
         add_query = 'INSERT INTO users (UserName, Admin_ID, last_in) (%s, %s, CURRENT_TIMESTAMP())'
         vals = (self.properties['name'])
         try:
-            
+            pass
 
         except Exception as e:
             raise Exception(e)

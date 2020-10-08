@@ -104,6 +104,9 @@ class Admin(AbsUser):
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
 
+    def setLogIn(self, loggedIn):
+        self.loggedIn = loggedIn
+
     def get_next_id(self):
         query = 'SELECT MAX(admin_id) FROM admin'
         rows = self.database.query(query)
@@ -237,7 +240,9 @@ class Sponsor(AbsUser):
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
 
-    
+    def setLogIn(self, loggedIn):
+        self.loggedIn = loggedIn
+
     def get_next_id(self):
         query = 'SELECT MAX(sponsor_id) FROM sponsor'
         rows = self.database.query(query)
@@ -379,6 +384,9 @@ class Driver(AbsUser):
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
 
+    def setLogIn(self, loggedIn):
+        self.loggedIn = loggedIn
+        
     def get_next_id(self):
         query = 'SELECT MAX(driver_id) FROM driver'
         rows = self.database.query(query)

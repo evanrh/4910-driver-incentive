@@ -31,7 +31,7 @@ def do_admin_login():
         current_hash = get_password(username)
         if check_password_hash(current_hash, pwd):
             session['logged_in'] = True
-            session['userInfo'] = User(username).__dict__
+            session['userInfo'] = vars(User(username))
             flash('Login successful!')
             flash('Logged in as: ' + session['userInfo']['username'])
         else:

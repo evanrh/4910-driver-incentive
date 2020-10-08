@@ -11,7 +11,7 @@ class User:
             self.points = 9999999
         self.sandbox = "None"
     
-    def setSandBox(self, sandbox):
+    def setSandbox(self, sandbox):
         self.sandbox = sandbox
 
     def getUsername(self):

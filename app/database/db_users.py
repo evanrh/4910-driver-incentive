@@ -490,7 +490,7 @@ class Driver(AbsUser):
         except Exception as e:
             raise Exception(e)
 
-    def add_to_users(self):
+    def add_to_users(self,username,id,role ):
         super().add_to_users(self.properties['user'], self.properties['id'], self.role)
 
     def getUsername(self):

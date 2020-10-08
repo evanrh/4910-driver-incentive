@@ -9,11 +9,11 @@ class User:
             self.points = 0
         else:
             self.points = 9999999
-        self.sandbox = False
+        self.sandbox = "None"
     
-    def setLogIn(self, loggedIn):
-        self.loggedIn = loggedIn
-    
+    def setSandBox(self, sandbox):
+        self.sandbox = sandbox
+
     def getUsername(self):
         return self.username
         
@@ -26,5 +26,3 @@ class User:
     def suspendDriver(self):
         today = datetime.today()
         suspend_driver(username, today.year, today.month, today.day)
-
-    

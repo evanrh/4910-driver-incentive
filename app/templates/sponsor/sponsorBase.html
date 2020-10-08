@@ -10,12 +10,30 @@
             </a>
 
             <div id="top-navbar-right">
+                {% if session['userInfo']['role'] == "admin" %}
+                <div class="dropdown">
+                    <img class="dropbtn" src="{{url_for('static', filename='img/viewChange.png')}}" style="width:50px;padding-top:10px;" title="Change View">
+                    <div class="dropdown-content">
+                        <a href="/returnView">Return View</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if session['userInfo']['role'] == "sponsor" %}
+                <div class="dropdown">
+                    <img class="dropbtn" src="{{url_for('static', filename='img/viewChange.png')}}" style="width:50px;padding-top:10px;" title="Change View">
+                    <div class="dropdown-content">
+                        <a href="/driverView">Driver View</a>
+                    </div>
+                </div>
+                {% endif %}
+                
                 <a>
                     <img src="{{url_for('static', filename='img/userpic.png')}}" style="width:50px;padding-top:10px;">
                 </a>
 
                 <a style="padding-left:0;">
-                    <span>{{ session['user'].getRole().capitalize() }}</span>
+                    <span>{{ session['userInfo']['username'].capitalize() }}</span>
                 </a>
 
                 <a href="/logout">

@@ -3,18 +3,21 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 from app.database.db_users import Driver
-from app import userClass
+from app.User import User
 
 @app.route('/')
 def home():
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
-        if session.get('userInfo').getRole() == "driver":
+        session.pop('_flashes', None)
+        if session['userInfo']['role'] == "driver" or session['userInfo']['sandbox'] == 'driver':
             return render_template('driver/driverHome.html')
-        if session.get('userInfo').getRole() == "sponsor":
+        
+        if session['userInfo']['role'] == "sponsor" or session['userInfo']['sandbox'] == 'sponsor':
             return render_template('sponsor/sponsorHome.html')
-        if session.get('userInfo').getRole() == "admin":
+
+        if session['userInfo']['role'] == "admin":
             return render_template('admin/adminHome.html')
 
 @app.route('/login', methods=['POST'])
@@ -28,9 +31,9 @@ def do_admin_login():
         current_hash = get_password(username)
         if check_password_hash(current_hash, pwd):
             session['logged_in'] = True
-            session['userInfo'] = User(username) # Transition to ABSUser in the future
+            session['userInfo'] = User(username).__dict__
             flash('Login successful!')
-            flash('Logged in as: ' + session['userInfo'].getRole())
+            flash('Logged in as: ' + session['userInfo']['username'])
         else:
             flash('Incorrect login credentials!')
 
@@ -103,56 +106,106 @@ def driverInbox():
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
 def sponsorNotification():
-    return render_template('sponsor/sponsorNotification.html')
+    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+        return redirect(url_for('home'))
+    else:
+        return render_template('sponsor/sponsorNotification.html')
 
 @app.route("/sponsorPointsLeader")
 def sponsorPointsLeader():
-    return render_template('sponsor/sponsorPointsLeader.html')
+    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+        return redirect(url_for('home'))
+    else:
+        return render_template('sponsor/sponsorPointsLeader.html')
 
 @app.route("/sponsorProfile")
 def sponsorProfile():
-    return render_template('sponsor/sponsorProfile.html')
+    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+        return redirect(url_for('home'))
+    else:
+        return render_template('sponsor/sponsorProfile.html')
 
 @app.route("/sponsorSystemSettings")
 def sponsorSystemSettings():
-    return render_template('sponsor/sponsorSystemSettings.html')
+    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+        return redirect(url_for('home'))
+    else:
+        return render_template('sponsor/sponsorSystemSettings.html')
 
 @app.route("/sponsorViewDriver")
 def sponsorViewDriver():
-    return render_template('sponsor/sponsorViewDriver.html')
+    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+        return redirect(url_for('home'))
+    else:
+        return render_template('sponsor/sponsorViewDriver.html')
 
 # Admin Page Routes
 @app.route("/adminInbox")
 def adminInbox():
-    return render_template('admin/adminInbox.html')
+    if not session['userInfo']['role'] == "admin":
+        return redirect(url_for('home'))
+    else:
+        return render_template('admin/adminInbox.html')
 
 @app.route("/adminManageAcc")
 def adminManageAcc():
-    return render_template('admin/adminManageAcc.html')
+    if not session['userInfo']['role'] == "admin":
+        return redirect(url_for('home'))
+    else:
+        return render_template('admin/adminManageAcc.html')
 
 @app.route("/adminNotifications")
 def adminNotifications():
-    return render_template('admin/adminNotifications.html')
+    if not session['userInfo']['role'] == "admin":
+        return redirect(url_for('home'))
+    else:
+        return render_template('admin/adminNotifications.html')
 
 @app.route("/adminPointsLeader")
 def adminPointsLeader():
-    return render_template('admin/adminPointsLeader.html')
+    if not session['userInfo']['role'] == "admin":
+        return redirect(url_for('home'))
+    else:
+        return render_template('admin/adminPointsLeader.html')
 
 @app.route("/adminReports")
 def adminReports():
-    return render_template('admin/adminReports.html')
+    if not session['userInfo']['role'] == "admin":
+        return redirect(url_for('home'))
+    else:
+        return render_template('admin/adminReports.html')
 
 @app.route("/adminSysSettings")
 def adminSysSettings():
-    return render_template('admin/adminSysSettings.html')
+    if not session['userInfo']['role'] == "admin":
+        return redirect(url_for('home'))
+    else:
+        return render_template('admin/adminSysSettings.html')
+
+@app.route("/sponsorView")
+def sponsorView():
+    if session['userInfo']['role'] == "admin":
+        session['userInfo']['sandbox'] = "sponsor"
+    return render_template('sponsor/sponsorHome.html')
+
+@app.route("/driverView")
+def driverView():
+    if session['userInfo']['role'] == ("admin" or "sponsor"):
+        session['userInfo']['sandbox'] = "driver"
+    return render_template('driver/driverHome.html')
+
+@app.route("/returnView")
+def returnView():
+    session['userInfo']['sandbox'] = 'NULL'
+    return redirect(url_for('home'))
 
 @app.route("/settings", methods=["GET","POST"])
 def settings():
-        if session.get('userInfo').getRole() == "driver":
+        if session['userInfo']['role'] == "driver":
             return render_template('driver/settings.html')
-        if session.get('userInfo').getRole() == "sponsor":
+        if session['userInfo']['role'] == "sponsor":
             return render_template('sponsor/settings.html')
-        if session.get('userInfo').getRole() == "admin":
+        if session['userInfo']['role'] == "admin":
             return render_template('admin/settings.html')
 
 @app.errorhandler(404)

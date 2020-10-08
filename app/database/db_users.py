@@ -88,7 +88,7 @@ class Admin(AbsUser):
         self.properties['mname'] = mname
         self.properties['lname'] = lname
         self.properties['user'] = user
-        self.properties['id'] = self.get_next_id()
+        self.properties['id'] = 0
         self.properties['phone'] = phone
         self.properties['email'] = email
         self.properties['pwd'] = pwd
@@ -114,6 +114,7 @@ class Admin(AbsUser):
             return rows[0][0] + 1
 
     def add_user(self):
+        self.properties['id'] = self.get_next_id()
         query = 'INSERT INTO admin VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s)'
 
         try:
@@ -228,7 +229,7 @@ class Sponsor(AbsUser):
         self.properties['email'] = email
         self.properties['pwd'] = pwd
         self.properties['image'] = image
-        self.properties['id'] = self.get_next_id()
+        self.properties['id'] = 0
         self.properties['date_join'] = 'NULL'
 
         self.suspension = False
@@ -250,6 +251,7 @@ class Sponsor(AbsUser):
             return rows[0][0] + 1
     
     def add_user(self):
+        self.properties['id'] = self.get_next_id()
         query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
         self.properties['END'] = 'NULL'
 
@@ -365,7 +367,7 @@ class Driver(AbsUser):
         self.properties['mname'] = mname
         self.properties['lname'] = lname
         self.properties['user'] = user
-        self.properties['id'] = self.get_next_id()
+        self.properties['id'] = 0
         self.properties['sponsor_id'] = 0
         self.properties['points'] = 0
         self.properties['address'] = address
@@ -394,6 +396,7 @@ class Driver(AbsUser):
             return rows[0][0] + 1
 
     def add_user(self):
+        self.properties['id'] = self.get_next_id()
         query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
         self.properties['END'] = 'NULL'
 

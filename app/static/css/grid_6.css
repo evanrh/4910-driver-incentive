@@ -95,7 +95,6 @@ body {
 
 #top-navbar {
     vertical-align: middle; 
-    overflow: hidden;
     background-color: #00B8CC;
     height: 100px;
     padding: 0 10px 0 10px;
@@ -236,6 +235,10 @@ body {
 }
 
 @media screen and (max-width: 800px) {
+    #top-navbar {
+        overflow: hidden;
+    }
+
     .side-navbar.responsive {
         background-color: #00B8CC;
         height: 250px;

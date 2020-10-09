@@ -2,8 +2,23 @@ from app import app
 from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
-from app.database.db_users import Driver
-from app.User import User
+from app.database.db_users import *
+from flask.json import JSONEncoder
+
+# Using this to encode our class to store user data
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, AbsUser):
+            return obj.__dict__
+        else:
+            return ""
+            #JSONEncoder.default(self, obj)
+
+# Set default JSON encoder for Flask to allow for classes
+app.json_encoder = CustomJSONEncoder
+
+# Chooses a class to use for User
+userInfo = Driver()
 
 @app.route('/')
 def home():
@@ -11,29 +26,50 @@ def home():
         return render_template('landing/login.html')
     else:
         session.pop('_flashes', None)
-        if session['userInfo']['role'] == "driver" or session['userInfo']['sandbox'] == 'driver':
+        if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
             return render_template('driver/driverHome.html')
         
-        if session['userInfo']['role'] == "sponsor" or session['userInfo']['sandbox'] == 'sponsor':
+        if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
             return render_template('sponsor/sponsorHome.html')
 
-        if session['userInfo']['role'] == "admin":
+        if userInfo.getRole() == "admin":
             return render_template('admin/adminHome.html')
+
+    return render_template('landing/login.html')
+
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
-    pwd = request.form['password']
-    username = request.form['username']
+    # Using the global class to access data
+    global userInfo
 
+    # Get user input from web page
+    username = request.form['username']
+    pwd = request.form['password']
+
+    # Do basic login verification
     if not if_username_exist(username):
         flash('Incorrect login credentials!')
     else:
         current_hash = get_password(username)
         if check_password_hash(current_hash, pwd):
             session['logged_in'] = True
-            session['userInfo'] = vars(User(username))
+            
+            # Sets the class based on which user role
+            id, role = get_table_id(username)
+            if role == "admin": 
+                userInfo = Admin()
+            elif role == "sponsor":
+                userInfo = Sponsor()
+
+            # Populate our class with data
+            userInfo.populate(username)
+
+            # Flask session data to store data for webpage use
+            session['userInfo'] = userInfo
+
             flash('Login successful!')
-            flash('Logged in as: ' + session['userInfo']['username'])
+            flash('Logged in as: ' + userInfo.getUsername())
         else:
             flash('Incorrect login credentials!')
 
@@ -43,6 +79,7 @@ def do_admin_login():
 def logout():
     session['logged_in'] = False
     return redirect(url_for('home'))
+
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -106,35 +143,35 @@ def driverInbox():
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
 def sponsorNotification():
-    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+    if not userInfo.getRole() == ("admin" or "sponsor"):
         return redirect(url_for('home'))
     else:
         return render_template('sponsor/sponsorNotification.html')
 
 @app.route("/sponsorPointsLeader")
 def sponsorPointsLeader():
-    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+    if not userInfo.getRole() == ("admin" or "sponsor"):
         return redirect(url_for('home'))
     else:
         return render_template('sponsor/sponsorPointsLeader.html')
 
 @app.route("/sponsorProfile")
 def sponsorProfile():
-    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+    if not userInfo.getRole() == ("admin" or "sponsor"):
         return redirect(url_for('home'))
     else:
         return render_template('sponsor/sponsorProfile.html')
 
 @app.route("/sponsorSystemSettings")
 def sponsorSystemSettings():
-    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+    if not userInfo.getRole() == ("admin" or "sponsor"):
         return redirect(url_for('home'))
     else:
         return render_template('sponsor/sponsorSystemSettings.html')
 
 @app.route("/sponsorViewDriver")
 def sponsorViewDriver():
-    if not session['userInfo']['role'] == ("admin" or "sponsor"):
+    if not userInfo.getRole() == ("admin" or "sponsor"):
         return redirect(url_for('home'))
     else:
         return render_template('sponsor/sponsorViewDriver.html')
@@ -142,70 +179,72 @@ def sponsorViewDriver():
 # Admin Page Routes
 @app.route("/adminInbox")
 def adminInbox():
-    if not session['userInfo']['role'] == "admin":
+    if not userInfo.getRole() == "admin":
         return redirect(url_for('home'))
     else:
         return render_template('admin/adminInbox.html')
 
 @app.route("/adminManageAcc")
 def adminManageAcc():
-    if not session['userInfo']['role'] == "admin":
+    if not userInfo.getRole() == "admin":
         return redirect(url_for('home'))
     else:
         return render_template('admin/adminManageAcc.html')
 
 @app.route("/adminNotifications")
 def adminNotifications():
-    if not session['userInfo']['role'] == "admin":
+    if not userInfo.getRole() == "admin":
         return redirect(url_for('home'))
     else:
         return render_template('admin/adminNotifications.html')
 
 @app.route("/adminPointsLeader")
 def adminPointsLeader():
-    if not session['userInfo']['role'] == "admin":
+    if not userInfo.getRole() == "admin":
         return redirect(url_for('home'))
     else:
         return render_template('admin/adminPointsLeader.html')
 
 @app.route("/adminReports")
 def adminReports():
-    if not session['userInfo']['role'] == "admin":
+    if not userInfo.getRole() == "admin":
         return redirect(url_for('home'))
     else:
         return render_template('admin/adminReports.html')
 
 @app.route("/adminSysSettings")
 def adminSysSettings():
-    if not session['userInfo']['role'] == "admin":
+    if not userInfo.getRole() == "admin":
         return redirect(url_for('home'))
     else:
         return render_template('admin/adminSysSettings.html')
 
 @app.route("/sponsorView")
 def sponsorView():
-    if session['userInfo']['role'] == "admin":
-        session['userInfo']['sandbox'] = "sponsor"
+    if userInfo.getRole() == "admin":
+        userInfo.setSandbox("sponsor")
     return render_template('sponsor/sponsorHome.html')
 
 @app.route("/driverView")
 def driverView():
-    if session['userInfo']['role'] == ("admin" or "sponsor"):
-        session['userInfo']['sandbox'] = "driver"
+    if userInfo.getRole() == ("admin" or "sponsor"):
+        userInfo.setSandbox("driver")
     return render_template('driver/driverHome.html')
 
 @app.route("/returnView")
 def returnView():
-    session['userInfo']['sandbox'] = 'NULL'
+    print(session['userInfo'])
+    userInfo.setSandbox("NULL")
     return redirect(url_for('home'))
 
 @app.route("/settings", methods=["GET","POST"])
 def settings():
-        if session['userInfo']['role'] == "driver":
+        userInfo.setSandbox("NULL") 
+        if userInfo.getRole() == "driver":
             return render_template('driver/settings.html')
-        if session['userInfo']['role'] == "sponsor":
+        if userInfo.getRole() == "sponsor":
             return render_template('sponsor/settings.html')
-        if session['userInfo']['role'] == "admin":
+        if userInfo.getRole() == "admin":
             return render_template('admin/settings.html')
 
 @app.errorhandler(404)
@@ -215,8 +254,3 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
-
-# Route that does nothing, used in the templates for now until routes are made.
-@app.route("/na")
-def na():
-    return ('', 204)

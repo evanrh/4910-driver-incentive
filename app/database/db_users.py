@@ -94,9 +94,10 @@ class Admin(AbsUser):
         self.properties['pwd'] = pwd
         self.properties['image'] = image
         self.properties['date_join'] = 'NULL'
-
-        self.suspension = False
-        self.role = 'admin'
+        self.properties['suspension'] = False
+        self.properties['role'] = 'admin'
+        self.properties['sandbox'] = 'NULL'
+        self.properties['points'] = 99999999
 
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
@@ -183,14 +184,20 @@ class Admin(AbsUser):
     def add_to_users(self):
         super().add_to_users(self.properties['user'], self.properties['id'], self.role)
 
+    def setSandbox(self, sandbox):
+        self.properties['sandbox'] = sandbox
+
     def getUsername(self):
         return self.properties['user']
     
     def getRole(self):
-        return self.role
+        return self.properties['role']
+
+    def getSandbox(self):
+        return self.properties['sandbox']
 
     def getPoints(self):
-        return 999999
+        return self.properties['points']
 
     def populate(self, username: str):
         query = 'SELECT first_name, mid_name, last_name, user, admin_id, phone, email, date_join FROM admin WHERE user = %s'
@@ -212,11 +219,6 @@ class Admin(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['date_join'] = data[0][7]
 
-        self.suspension = False
-        self.role = 'admin'
-
-        
-        
 
 class Sponsor(AbsUser):
     def __init__(self, title='NULL', user='NULL', address='NULL', phone='NULL', 
@@ -231,10 +233,10 @@ class Sponsor(AbsUser):
         self.properties['image'] = image
         self.properties['id'] = 0
         self.properties['date_join'] = 'NULL'
-
-        self.suspension = False
-        self.role = 'sponsor'
-
+        self.properties['suspension'] = False
+        self.properties['role'] = 'sponsor'
+        self.properties['sandbox'] = 'NULL'
+        self.properties['points'] = 99999999
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
 
@@ -327,11 +329,17 @@ class Sponsor(AbsUser):
     def add_to_users(self):
         super().add_to_users(self.properties['user'], self.properties['id'], self.role)
 
+    def setSandbox(self, sandbox):
+        self.properties['sandbox'] = sandbox
+
     def getUsername(self):
         return self.properties['user']
     
     def getRole(self):
-        return self.role
+        return  self.properties['role']
+
+    def getSandbox(self):
+        return self.properties['sandbox']
 
     def getPoints(self):
         return 999999
@@ -356,7 +364,6 @@ class Sponsor(AbsUser):
         self.properties['image'] = data[0][6]
         self.properties['date_join'] = data[0][7]
 
-        self.suspension = False
 
 class Driver(AbsUser):
     def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
@@ -376,9 +383,9 @@ class Driver(AbsUser):
         self.properties['pwd'] = pwd
         self.properties['image'] = image
         self.properties['date_join'] = 'NULL'
-
-        self.suspension = False
-        self.role = 'driver'
+        self.properties['suspension'] = False
+        self.properties['role'] = 'driver'
+        self.properties['sandbox'] = 'NULL'
 
         self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
                                       self.DB_USER, self.DB_PASS)
@@ -493,17 +500,23 @@ class Driver(AbsUser):
     def add_to_users(self,username,id,role ):
         super().add_to_users(self.properties['user'], self.properties['id'], self.role)
 
+    def setSandbox(self, sandbox):
+        self.properties['sandbox'] = sandbox
+
     def getUsername(self):
         return self.properties['user']
     
     def getRole(self):
-        return self.role
+        return self.properties['role']
 
     def getPoints(self):
         return self.properties['points']
     
     def getSponsor(self):
         return self.properties['sponsor_id']
+
+    def getSandbox(self):
+        return self.properties['sandbox']
 
     def populate(self, username: str):
         query = 'SELECT first_name, mid_name, last_name, user, driver_id, sponsor_id, points, address, phone, email, image, date_join FROM driver WHERE user = %s'
@@ -528,5 +541,3 @@ class Driver(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['image'] = data[0][10]
         self.properties['date_join'] = data[0][11]
-
-        self.suspension = False

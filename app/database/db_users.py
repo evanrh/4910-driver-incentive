@@ -45,18 +45,8 @@ class AbsUser(ABC):
         pass
 
     @abstractmethod
-    def add_to_users(self, username: str, id: int, role: str):
-        
-        if role == 'driver':
-            role = "Driver_ID"
-        elif role == 'sponsor':
-            role = "Sponsor_ID"
-        else:
-            role = "Admin_ID"
-
-        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
-        query = query.format(role, username, id)
-        self.database.insert(query)
+    def add_to_users(self):
+        """adds to the user table"""
 
     @abstractmethod
     def get_user_data(self):
@@ -120,7 +110,7 @@ class Admin(AbsUser):
 
         try:
             self.database.insert(query, params=self.properties)
-            self.add_to_users(self.properties['user'], self.properties['id'], role)
+            self.add_to_users()
             self.database.commit()
 
         except Exception as e:
@@ -182,7 +172,10 @@ class Admin(AbsUser):
             raise Exception(e)
     
     def add_to_users(self):
-        super().add_to_users(self.properties['user'], self.properties['id'], self.role)
+
+        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
+        query = query.format('Admin_ID', self.properties['user'], self.properties['id'])
+        self.database.insert(query)
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
@@ -259,7 +252,7 @@ class Sponsor(AbsUser):
 
         try:
             self.database.insert(query, params=self.properties)
-            self.add_to_users(self.properties['user'], self.properties['id'], role)
+            self.add_to_users()
             self.database.commit()
 
         except Exception as e:
@@ -327,7 +320,10 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def add_to_users(self):
-        super().add_to_users(self.properties['user'], self.properties['id'], self.role)
+        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
+        query = query.format('Sponsor_ID', self.properties['user'], self.properties['id'])
+        self.database.insert(query)
+
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
@@ -409,7 +405,7 @@ class Driver(AbsUser):
 
         try:
             self.database.insert(query, params=self.properties)
-            self.add_to_users(self.properties['user'], self.properties['id'], self.role)
+            self.add_to_users()
             self.database.commit()
 
         except Exception as e:
@@ -497,8 +493,11 @@ class Driver(AbsUser):
         except Exception as e:
             raise Exception(e)
 
-    def add_to_users(self,username,id,role ):
-        super().add_to_users(self.properties['user'], self.properties['id'], self.role)
+    def add_to_users(self):
+        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
+        query = query.format("Driver_ID", self.properties['user'], self.properties['id'])
+        self.database.insert(query)
+
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox

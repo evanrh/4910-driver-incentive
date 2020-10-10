@@ -20,12 +20,25 @@ app.json_encoder = CustomJSONEncoder
 # Chooses a class to use for User
 userInfo = Driver()
 
+def userLoader():
+    if session['userInfo']['properties']['user']:
+        id, role = get_table_id(username)
+        if role == "admin": 
+            userInfo = Admin()
+        elif role == "sponsor":
+            userInfo = Sponsor()
+        userInfo.populate(session['userInfo']['properties']['user'])
+    
 @app.route('/')
 def home():
+    # Using the global class to access data
+    global userInfo
+
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
         session.pop('_flashes', None)
+        print(userInfo.__dict__)
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
             return render_template('driver/driverHome.html')
         
@@ -174,7 +187,7 @@ def sponsorViewDriver():
     if not userInfo.getRole() == ("admin" or "sponsor"):
         return redirect(url_for('home'))
     else:
-        return render_template('sponsor/sponsorViewDriver.html')
+        return render_template('sponsor/sponsorViewDriver.html', driverTable=getDriverTable())
 
 # Admin Page Routes
 @app.route("/adminInbox")
@@ -189,7 +202,7 @@ def adminManageAcc():
     if not userInfo.getRole() == "admin":
         return redirect(url_for('home'))
     else:
-        return render_template('admin/adminManageAcc.html')
+        return render_template('admin/adminManageAcc.html', userTable=getUserTable())
 
 @app.route("/adminNotifications")
 def adminNotifications():
@@ -233,7 +246,6 @@ def driverView():
 
 @app.route("/returnView")
 def returnView():
-    print(session['userInfo'])
     userInfo.setSandbox("NULL")
     return redirect(url_for('home'))
 
@@ -254,3 +266,70 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
+
+def getDriverTable():
+    html_str = ""
+    html_str = ""
+    html_str += '<form id="view-drivers">'
+    html_str += "<table>"
+    html_str += "<tr>"
+    html_str += "<th>User Name</th>"
+    html_str += "<th>First Name</th>"
+    html_str += "<th>Last Name</th>"
+    html_str += "<th>Suspend</th>"
+    html_str += "<th>Add Points</th>"
+    html_str += "<th>Send Message</th>"
+    html_str += "</tr>"
+
+    for driver in Driver().get_users():
+        html_str += "<tr>"
+        html_str += "<td>" + driver[3] + "</td>"
+        html_str += "<td>" + driver[0] + "</td>"
+        html_str += "<td>" + driver[2] + "</td>"
+        html_str += "<td><button id='suspend'>X</button></td>"
+        html_str += "<td><input id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
+        html_str += "<td><input id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
+        html_str += "</tr>"
+    
+    html_str += "</table></form>"
+    return html_str
+
+def getUserTable():
+    html_str = ""
+    html_str += '<form id="view-drivers">'
+    html_str += "<table>"
+    html_str += "<tr>"
+    html_str += "<h2>Sponsors</h2>"
+    html_str += "<th>User Name</th>"
+    html_str += "<th>First Name</th>"
+    html_str += "<th>Last Name</th>"
+    html_str += "<th>Suspend</th>"
+    html_str += "<th>Add Points</th>"
+    html_str += "<th>Send Message</th>"
+    html_str += "</tr>"
+
+    for sponsor in Sponsor().get_users():
+        html_str += "<tr>"
+        html_str += "<td>" + sponsor[3] + "</td>"
+        html_str += "<td>" + sponsor[0] + "</td>"
+        html_str += "<td>" + sponsor[2] + "</td>"
+        html_str += "<td><button id='suspend'>X</button></td>"
+        html_str += "<td><input id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
+        html_str += "<td><input id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
+        html_str += "</tr>"
+
+    html_str += "<h2> Drivers </h2>"
+
+    for driver in Driver().get_users():
+        html_str += "<tr>"
+        html_str += "<td>" + driver[3] + "</td>"
+        html_str += "<td>" + driver[0] + "</td>"
+        html_str += "<td>" + driver[2] + "</td>"
+        html_str += "<td><button id='suspend'>X</button></td>"
+        html_str += "<td><input id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
+        html_str += "<td><input id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
+        html_str += "</tr>"
+        
+    html_str += "</table></form>"
+
+    return html_str

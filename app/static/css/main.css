@@ -279,6 +279,32 @@ img  {
 	max-width: 100%;
 }
 
+#view-drivers {
+	margin: 20px;
+	padding: 10px;
+}
+
+#view-drivers form {
+	margin-bottom: 20px;
+    overflow: auto;
+}
+
+#view-drivers table{
+    background-color: #FFFFFF;
+    border-spacing: 0;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+#view-drivers th{
+	color:#0076a3;
+	font-size: 18px;
+}
+
+#view-drivers td{
+	text-align: center;
+}
+
 @media screen and (max-width: 600px) {
 
 }

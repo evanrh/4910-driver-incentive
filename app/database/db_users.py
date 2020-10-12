@@ -68,6 +68,10 @@ class AbsUser(ABC):
     def populate(self, username: str):
         """ populates the class with the data from the database"""
 
+    @abstractmethod
+    def delete(self):
+        """ Deletes the user from the database """
+
         
         
 class Admin(AbsUser):
@@ -212,6 +216,19 @@ class Admin(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['date_join'] = data[0][7]
 
+    def delete(self):
+        """ Deletes an admin from the users table and from the admin table """
+        user_query = "DELETE FROM users WHERE Admin_ID=%s"
+        user_vals = (self.properties['id'], )
+
+        query = "DELETE FROM admin WHERE admin_id=%s"
+        vals = (self.properties['id'], )
+        try:
+            self.database.query(user_query, user_vals)
+            self.database.query(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
 
 class Sponsor(AbsUser):
     def __init__(self, title='NULL', user='NULL', address='NULL', phone='NULL', 
@@ -359,6 +376,21 @@ class Sponsor(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['image'] = data[0][6]
         self.properties['date_join'] = data[0][7]
+
+    def delete(self):
+        """ Deletes a sponsor from the users table and from the sponsor table """
+        user_query = "DELETE FROM users WHERE Sponsor_ID=%s"
+        user_vals = (self.properties['id'], )
+
+        query = "DELETE FROM sponsor WHERE sponsor_id=%s"
+        vals = (self.properties['id'], )
+        try:
+            self.database.query(user_query, user_vals)
+            self.database.query(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
 
 
 class Driver(AbsUser):
@@ -540,3 +572,19 @@ class Driver(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['image'] = data[0][10]
         self.properties['date_join'] = data[0][11]
+
+    def delete(self):
+        """ Deletes a driver from the users table and from the driver table """
+        user_query = "DELETE FROM users WHERE Driver_ID=%s"
+        user_vals = (self.properties['id'], )
+
+        query = "DELETE FROM driver WHERE driver_id=%s"
+        vals = (self.properties['id'], )
+        try:
+            self.database.query(user_query, user_vals)
+            self.database.query(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+

@@ -251,13 +251,21 @@ def returnView():
 
 @app.route("/settings", methods=["GET","POST"])
 def settings():
-        userInfo.setSandbox("NULL") 
-        if userInfo.getRole() == "driver":
-            return render_template('driver/settings.html')
-        if userInfo.getRole() == "sponsor":
-            return render_template('sponsor/settings.html')
-        if userInfo.getRole() == "admin":
-            return render_template('admin/settings.html')
+
+    if request.method == 'POST':
+        if 'delete-account' in request.form.keys():
+            userInfo.delete()
+            session['logged_in'] = False
+            flash('Account successfully deleted')
+            return redirect(url_for('home'))
+
+    userInfo.setSandbox("NULL") 
+    if userInfo.getRole() == "driver":
+        return render_template('driver/settings.html')
+    if userInfo.getRole() == "sponsor":
+        return render_template('sponsor/settings.html')
+    if userInfo.getRole() == "admin":
+        return render_template('admin/settings.html')
 
 @app.errorhandler(404)
 def not_found(e):

@@ -482,6 +482,7 @@ class Driver(AbsUser):
         for key in data.keys():
             q_list.append("{} = %s".format(key))
 
+        username = self.properties['user']
     # Add items to update in query and add in WHERE to find correct user
         query += ", ".join(q_list) + " WHERE user=\"{}\"".format(username)
 

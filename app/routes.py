@@ -244,7 +244,30 @@ def adminSysSettings():
 def settings():
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
-        userInfo.setSandbox("NULL") 
+        userInfo.setSandbox("NULL")
+
+        if request.method == 'POST':
+            if 'delete-account' in request.form.keys():
+                userInfo.delete()
+                session['logged_in'] = False
+                flash('Account successfully deleted')
+                return redirect(url_for('home'))
+            if 'change-info' in request.form.keys():
+                
+                # Filter out form items that are not filled in
+                data = dict(filter(lambda elem: elem[1] != '', request.form.items()))
+                
+                # Check if no form boxes were filled in
+                if not len(data):
+                    flash("Please fill in at least one box")
+                    return render_template(userInfo.getRole() + "/settings.html")
+                
+                #print(userInfo.username)
+                # Make sure userInfo is populated
+                #userInfo.populate()
+                userInfo.update_info(data)
+                return render_template(userInfo.getRole() + "/settings.html")
+
         if userInfo.getRole() == "driver":
             return render_template('driver/settings.html')
         if userInfo.getRole() == "sponsor":
@@ -269,24 +292,6 @@ def driverView():
 def returnView():
     userInfo.setSandbox("NULL")
     return redirect(url_for('home'))
-
-@app.route("/settings", methods=["GET","POST"])
-def settings():
-
-    if request.method == 'POST':
-        if 'delete-account' in request.form.keys():
-            userInfo.delete()
-            session['logged_in'] = False
-            flash('Account successfully deleted')
-            return redirect(url_for('home'))
-
-    userInfo.setSandbox("NULL") 
-    if userInfo.getRole() == "driver":
-        return render_template('driver/settings.html')
-    if userInfo.getRole() == "sponsor":
-        return render_template('sponsor/settings.html')
-    if userInfo.getRole() == "admin":
-        return render_template('admin/settings.html')
 
 @app.errorhandler(404)
 def not_found(e):

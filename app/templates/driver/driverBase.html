@@ -12,7 +12,7 @@
 
             <div id="top-navbar-right">
 
-                {% if session['userInfo']['role'] == ("admin" or "sponsor") %}
+                {% if session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
                 <div class="dropdown">
                     <img class="dropbtn" src="{{url_for('static', filename='img/viewChange.png')}}" style="width:50px;padding-top:10px;" title="Change View">
                     <div class="dropdown-content">
@@ -26,7 +26,7 @@
                 </a>
 
                 <a style="padding-left:0;">
-                    <span>Points: {{ session['userInfo']['points'] }}</span>
+                    <span>Points: {{ session['userInfo']['properties']['points'] }}</span>
                 </a>
 
                 <a>
@@ -34,7 +34,7 @@
                 </a>
 
                 <a style="padding-left:0;">
-                    <span>{{ session['userInfo']['username'].capitalize() }}</span>
+                    <span>{{ session['userInfo']['properties']['user'].capitalize() }}</span>
                 </a>
 
                 <a href="/logout">

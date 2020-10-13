@@ -29,6 +29,7 @@ steps:
     runOptions: 'inline'
     inline: |
       cd project;
+      git checkout master;
       git pull;
       cd ..;
       ansible-playbook auto-deploy.yaml;

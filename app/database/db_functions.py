@@ -1,4 +1,5 @@
 import mysql.connector
+import datetime
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -8,7 +9,7 @@ database = mysql.connector.connect(
 )
 
 #cursor for the database
-cursor = database.cursor()
+cursor = database.cursor(buffered=True)
 
 #having database.commit() commented still allows you to see what it would be like if you 
 #modified the database however without commiting you will not change anything in the database
@@ -188,7 +189,12 @@ def get_users():
     for user in user_list:
         print(user)
     print("\n---DRIVERS---")
-    cursor.execute('SELECT UserName, Driver_ID, last_in FROM users WHERE Driver_ID > 0 ORDER BY Driver_ID DESC')
+    cursor.execute('SELECT user, driver_id FROM driver WHERE driver_id > 0 ORDER BY driver_id DESC')
+    user_list = cursor.fetchall()
+    for user in user_list:
+        print(user)
+    print("\n---USERS---")
+    cursor.execute('SELECT * FROM users ORDER BY Admin_ID DESC, Sponsor_ID DESC, Driver_ID ASC')
     user_list = cursor.fetchall()
     for user in user_list:
         print(user)
@@ -234,8 +240,29 @@ def suspend_driver(driver_username, year, month, day):
     cursor.execute(sql, val)
     #database.commit()
 
+#this function adds a driver to a suspension list and their length of suspension
+def suspend_sponsor(sponsor_username, year, month, day):
+
+    cursor.execute('SELECT sponsor_id FROM sponsor WHERE user = %s', (sponsor_username, ))
+    id = cursor.fetchone()
+
+    if month < 10:
+        month = '0' + str(month)
+    else:
+        month = str(month)
+
+    year = str(year)
+    day = str(day)
+    
+    str_date = year + '-' + month + '-' + day
+
+    sql = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
+    val = (sponsor_username, 0, id[0], str_date)
+    cursor.execute(sql, val)
+    #database.commit()
+
 #this function returns true if a driver is currently suspended
-def is_driver_suspended(user):
+def is_suspended(user):
     
     #this will remove suspended driver's whos suspensions are over
     cursor.execute('DELETE from suspend WHERE date_return <= NOW()')
@@ -251,7 +278,7 @@ def is_driver_suspended(user):
         return True
            
 #this function edits the suspension date of the driver
-def edit_driver_suspension(user, year, month, day):
+def edit_suspension(user, year, month, day):
 
     #delete the driver from the suspended table and add them back with new dates
     cursor.execute('DELETE FROM suspend WHERE user = %s', (user, ))
@@ -332,15 +359,79 @@ def get_password(user='NULL'):
 
     return current_password[0]
 
+#generic class for functionality. will get expanded when added to the admin user's class
+def admin_add_driver(first_name='NULL', last_name='NULL', username='NULL', temp_password='temp'):
+    add_driver(first_name, 'NULL', last_name, username, 'NULL', 'NULL', 'NULL', temp_password, 'NULL')
+
+#generic class for functionality. will get expanded when added to the admin user's class
+def admin_add_sponsor(title='NULL', username='NULL', temp_password='temp'):
+    add_sponsor(title, username,'NULL', 'NULL', 'NULL', temp_password, 'NULL')
+
+#generic class for functionality. will get expanded when added to the admin user's class
+def admin_add_admin(title='NULL', username='NULL', temp_password='temp'):
+    add_admin(first_name, 'NULL', last_name, username, 'NULL', 'NULL', 'NULL', temp_password, 'NULL')
+
+def admin_remove_driver(username='NULL'):
+    cursor.execute('DELETE FROM users WHERE UserName = %s', (username, ))
+    cursor.execute('DELETE FROM driver WHERE user = %s', (username, ))
+    if is_suspended(username):
+        cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
+    #database.commit()
+
+def admin_see_drivers_under_sponsor(spon_username):
+    sql = 'SELECT sponsor_id FROM sponsor WHERE user = %s'
+    vals(spon_username, )
+    cursor.execute(sql, vals)
+    spon_id = cursor.fetchone()
+    
+    sql = 'SELECT first_name, mid_name, last_name, user, driver_id, image, date_join FROM driver WHERE sponsor_id = %s'
+    vals(spon_id, )
+    cursor.execute(sql, vals)
+
+    return cursor.fetchall()
+    
+def view_sponsors():
+    cursor.execute('SELECT title, user, sponsor_id, phone, address, image, date_join FROM sponsor')
+    return cursor.fetchall()
+
+def admin_view_users():
+    users_dict = {}
+    users_dict['admins'] = []
+    users_dict['sponsors'] = []
+    users_dict['drivers'] = []
+    cursor.execute('SELECT first_name, mid_name, last_name, user, admin_id, phone, email, date_join FROM admin')
+    admins = cursor.fetchall()
+    for a in admins:
+        users_dict['admins'].append(a)
+
+    cursor.execute('SELECT title, user, sponsor_id, phone, email, date_join FROM sponsor')
+    sponsors = cursor.fetchall()
+    for s in sponsors:
+        users_dict['sponsors'].append(s)
+
+    cursor.execute('SELECT first_name, mid_name, last_name, user, driver_id, sponsor_id, points, address, phone, email, date_join FROM driver')
+    drivers = cursor.fetchall()
+    for d in drivers:
+        users_dict['drivers'].append(d)
+
+    return users_dict
+
+def get_suspended_users():
+    cursor.execute('SELECT user, date_return FROM suspend')
+    sus = cursor.fetchall()
+    print("---SUSPENDED USERS---")
+    for s in sus:
+        print('Username: {}     Date return: {}'.format(*s))
 
 #main used to test functions
-"""if __name__ == "__main__":
+if __name__ == "__main__":
     add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
     add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
     print(if_username_exist('krod'))
     get_users()
+    print(admin_view_users())
 
     drivers = sponsorless_drivers()
     for row in drivers:
@@ -370,8 +461,15 @@ def get_password(user='NULL'):
     print('krod\'s new password \"kool\": ' + str(pwd_check('krod', 'kool')))
     print("Suspending krod...")
     suspend_driver('krod', 2020, 11, 30)
-    print('Is krod suspended: ' + str(is_driver_suspended('krod')))
-    
-    
+    print('Is krod suspended: ' + str(is_suspended('krod')))
+    print("suspending spon...")
+    suspend_sponsor('spon', 2020, 12, 25)
+    print("Is spon suspended: " + str(is_suspended('spon')))
+    get_suspended_users()
+    print("Removing krod from drivers.....")
+    admin_remove_driver('krod')
+    get_users()
+    get_suspended_users()
+
     cursor.close()
-    database.close()"""
+    database.close()

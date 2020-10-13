@@ -23,4 +23,28 @@
 </form>
 <h3>Change Language</h3>
 <div id="google_translate_element"></div>
+<h3>Change Account Info</h3>
+<form action="{{ url_for('settings') }}" method="POST">
+    <div class="row">
+        <input type="text" placeholder="First Name" id="textbox" class="tftextinput" name="first_name" size="10" maxlength="100">
+        <input type="text" placeholder="Middle Name" id="textbox" class="tftextinput" name="mid_name" size="10" maxlength="100">
+        <input type="text" placeholder="Last Name" id="textbox" class="tftextinput" name="last_name" size="10" maxlength="100">
+    </div>
+
+    <div class="row">
+        <input type="text" placeholder="Address" id="textbox" class="tftextinput" name="address" size="10" maxlength="100">
+        <input type="text" placeholder="Phone Number" id="textbox" 
+               class="tftextinput" name="phone" size="10" maxlength="10" 
+               pattern="[0-9]{10}" >
+        <input type="email" placeholder="E-mail" id="textbox" class="tftextinput" name="email" size="10" maxlength="100">
+    </div>
+
+    <div class="row">
+        <button type="submit" class="tfbutton" name="change-info">Update</button>
+    </div>
+</form>
+<h3>Delete Account</h3>
+<form action="{{ url_for('settings') }}" method="POST">
+    <button type="submit" name="delete-account">Delete Account</button>
+</form>
 {% endblock %}

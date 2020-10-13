@@ -1,4 +1,7 @@
 {% extends "admin/adminBase.html" %}
 {% block adminContent %}
 <h1>Manage Accounts</h1>
+<div class="driver-table">
+    {{ userTable | safe }}
+</div>
 {% endblock %}

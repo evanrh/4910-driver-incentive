@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 from app.database.db_users import *
 from flask.json import JSONEncoder
+from tempfile import TemporaryFile
 
 # Using this to encode our class to store user data
 class CustomJSONEncoder(JSONEncoder):
@@ -35,6 +36,21 @@ def permissionCheck(allowedRole):
 
     if not userInfo.getRole() in allowedRole:
         return False
+
+
+ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg']
+# Check if uploaded file is an acceptable file format
+def allowed_file(filename):
+    return "." in filename and \
+        filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Create temporary file to send to DB driver
+def upload_file(f):
+    """ Expect f to be the file-like from the form input """
+    tempf = TemporaryFile()
+    f.save(tempf)
+    # Send tempf to driver
+    tempf.close()
 
 @app.route('/')
 def home():
@@ -244,7 +260,30 @@ def adminSysSettings():
 def settings():
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
-        userInfo.setSandbox("NULL") 
+        userInfo.setSandbox("NULL")
+
+        if request.method == 'POST':
+            if 'delete-account' in request.form.keys():
+                userInfo.delete()
+                session['logged_in'] = False
+                flash('Account successfully deleted')
+                return redirect(url_for('home'))
+            if 'change-info' in request.form.keys():
+                
+                # Filter out form items that are not filled in
+                data = dict(filter(lambda elem: elem[1] != '', request.form.items()))
+                
+                # Check if no form boxes were filled in
+                if not len(data):
+                    flash("Please fill in at least one box")
+                    return render_template(userInfo.getRole() + "/settings.html")
+                
+                #print(userInfo.username)
+                # Make sure userInfo is populated
+                #userInfo.populate()
+                userInfo.update_info(data)
+                return render_template(userInfo.getRole() + "/settings.html")
+
         if userInfo.getRole() == "driver":
             return render_template('driver/settings.html')
         if userInfo.getRole() == "sponsor":

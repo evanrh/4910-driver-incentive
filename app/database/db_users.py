@@ -72,6 +72,7 @@ class AbsUser(ABC):
     def delete(self):
         """ Deletes the user from the database """
 
+
         
         
 class Admin(AbsUser):
@@ -215,6 +216,152 @@ class Admin(AbsUser):
         self.properties['email'] = data[0][6]
         self.properties['pwd'] = 'NULL'
         self.properties['date_join'] = data[0][7]
+        self.properties['suspension'] = self.is_suspended()
+
+    #this function returns true if a driver is currently suspended
+    def is_suspended(self):
+        
+        sql = 'SELECT user FROM suspend WHERE user = %s'
+        val = (self.properties['user'], )
+
+        
+        #this will remove suspended driver's whos suspensions are over
+        try:
+            self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
+            suspended_user = self.database.query(sql, val)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+        
+        if suspended_user == None:
+            return False
+        else:
+            return True
+
+    #this function adds a driver to a suspension list and their length of suspension
+    def suspend_driver(self, driver_username, year, month, day):
+
+        query  = 'SELECT driver_id FROM driver WHERE user = %s'
+        vals = (driver_username, )
+        try:
+            id = self.database.query(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        if month < 10:
+            month = '0' + str(month)
+        else:
+            month = str(month)
+
+        year = str(year)
+        day = str(day)
+        
+        str_date = year + '-' + month + '-' + day
+
+        query = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
+        vals = (driver_username, id[0][0], 0, str_date)
+        try:
+            self.database.insert(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+    #this function adds a driver to a suspension list and their length of suspension
+    def suspend_sponsor(self, sponsor_username, year, month, day):
+
+        cursor.execute('SELECT sponsor_id FROM sponsor WHERE user = %s', (sponsor_username, ))
+        id = cursor.fetchone()
+
+        if month < 10:
+            month = '0' + str(month)
+        else:
+            month = str(month)
+
+        year = str(year)
+        day = str(day)
+        
+        str_date = year + '-' + month + '-' + day
+
+        query = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
+        val = (sponsor_username, 0, id[0], str_date)
+
+        try:
+            self.database.insert(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+    def edit_suspension(self, username, year, month, day):       
+        if month < 10:
+            month = '0' + str(month)
+        else:
+            month = str(month)
+
+        year = str(year)
+        day = str(day)
+        
+        str_date = year + '-' + month + '-' + day
+        query = 'UPDATE suspend SET date_return = %s WHERE user = %s'
+        vals = (str_date, username)
+        try:
+            self.database.insert(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+    def cancel_suspension(self, username):
+        query = 'DELETE from suspend WHERE user = %s'
+        vals = (username, )
+
+        try:
+            self.database.delete(query, vals)
+        except Exception as e:
+            raise Exception(e)
+        
+
+    def get_suspended_users(self):
+        query = 'SELECT * from suspend'
+        try:
+            users = self.database.query(query)
+        except Exception as e:
+            raise Exception(e)
+        return users
+
+    def remove_user(self, username):
+
+        sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = %s'
+        val = (user, )
+        id = self.database.query(sql, val)
+        if id[0][0] != None:
+            role = 'driver'
+        elif id[0][1] != None:
+            role = 'sponsor'
+
+        self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
+        self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
+        if is_suspended(username):
+            cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
+        self.database.commit()
+
+    def upload_image(self, tempf):
+        with open(tempf, 'rb') as file:
+            image = file.read()
+
+        sql = 'UPDATE driver SET image = %s WHERE user = %s'
+        vals = (image, self.properties['user'])
+
+        try:
+            self.database.insert(query, vals)
+            self.database.commit()
+            self.properties['image'] = image
+        except Exception as e:
+            raise Exception(e)
+
+
+    def download_image(self, tempf):
+        with open(tempf, 'wb') as file:
+            file.write(self.properties['image'])
+
+        return file
 
     def delete(self):
         """ Deletes an admin from the users table and from the admin table """
@@ -357,6 +504,24 @@ class Sponsor(AbsUser):
     def getPoints(self):
         return 999999
 
+    def is_suspended(self):
+        
+        sql = 'SELECT user FROM suspend WHERE user = %s'
+        val = (self.properties['user'], )
+
+        try:
+            #this will remove suspended driver's whos suspensions are over
+            self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
+            suspended_user = self.database.query(sql, val)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+        
+        if suspended_user == None:
+            return False
+        else:
+            return True
+
     def populate(self, username: str):
         query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE user = %s'
         vals = (username, )
@@ -376,6 +541,56 @@ class Sponsor(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['image'] = data[0][6]
         self.properties['date_join'] = data[0][7]
+        self.properties['suspension'] = self.is_suspended()
+    
+    def upload_image(self, tempf):
+        with open(tempf, 'rb') as file:
+            image = file.read()
+
+        sql = 'UPDATE driver SET image = %s WHERE user = %s'
+        vals = (image, self.properties['user'])
+
+        try:
+            self.database.insert(query, vals)
+            self.database.commit()
+            self.properties['image'] = image
+        except Exception as e:
+            raise Exception(e)
+
+    def download_image(self, tempf):
+        with open(tempf, 'wb') as file:
+            file.write(self.properties['image'])
+
+        return file
+        
+    #this function adds a driver to a suspension list and their length of suspension
+    def suspend_driver(driver_username, year, month, day):
+
+        query  = 'SELECT driver_id, sponsor_id FROM driver WHERE user = %s'
+        vals = (driver_username, )
+        try:
+            id = self.database.query(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        if month < 10:
+            month = '0' + str(month)
+        else:
+            month = str(month)
+
+        year = str(year)
+        day = str(day)
+        
+        str_date = year + '-' + month + '-' + day
+
+        query = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
+        vals = (driver_username, id[0][0], id[0][1], str_date)
+        try:
+            self.database.insert(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
 
     def delete(self):
         """ Deletes a sponsor from the users table and from the sponsor table """
@@ -432,7 +647,7 @@ class Driver(AbsUser):
 
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
+        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(END)s, NOW(), %(image)s)'
         self.properties['END'] = 'NULL'
 
         try:
@@ -550,6 +765,25 @@ class Driver(AbsUser):
     def getSandbox(self):
         return self.properties['sandbox']
 
+    def is_suspended(self):
+        
+        sql = 'SELECT user FROM suspend WHERE user = %s'
+        val = (self.properties['user'], )
+
+        try:
+            #this will remove suspended driver's whos suspensions are over
+            self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
+            suspended_user = self.database.query(sql, val)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+        if suspended_user == None:
+            return False
+        else:
+            return True
+
+
     def populate(self, username: str):
         query = 'SELECT first_name, mid_name, last_name, user, driver_id, sponsor_id, points, address, phone, email, image, date_join FROM driver WHERE user = %s'
         vals = (username, )
@@ -573,6 +807,28 @@ class Driver(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['image'] = data[0][10]
         self.properties['date_join'] = data[0][11]
+        self.properties['suspension'] = self.is_suspended()
+
+    
+    def upload_image(self, tempf):
+        with open(tempf, 'rb') as file:
+            image = file.read()
+
+        sql = 'UPDATE driver SET image = %s WHERE user = %s'
+        vals = (image, self.properties['user'])
+
+        try:
+            self.database.insert(query, vals)
+            self.database.commit()
+            self.properties['image'] = image
+        except Exception as e:
+            raise Exception(e)
+
+    def download_image(self, tempf):
+        with open(tempf, 'wb') as file:
+            file.write(self.properties['image'])
+
+        return file
 
     def delete(self):
         """ Deletes a driver from the users table and from the driver table """

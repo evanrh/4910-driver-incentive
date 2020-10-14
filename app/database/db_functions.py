@@ -18,13 +18,15 @@ cursor = database.cursor(buffered=True)
 #First Name, Middle Name, Last Name, Username, Address, Phone number, email, password and image url
 def add_driver(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL', address = 'NULL', 
                 phone = 0, email = 'NULL', pwd = 'NULL', image = 'NULL'):
-
-    sql = "INSERT INTO driver VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
-    driver_id = get_next_driver_id()
-    val = (fname, mname, lname, user, driver_id, 0, 0, address, phone, email, pwd, image, "NULL")
-    cursor.execute(sql, val)
-    add_to_users(user, 'driver', driver_id)
-    #database.commit()
+    try:
+        sql = "INSERT INTO driver VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s)"
+        driver_id = get_next_driver_id()
+        val = (fname, mname, lname, user, driver_id, 0, 0, address, phone, email, pwd, "NULL", image)
+        cursor.execute(sql, val)
+        add_to_users(user, 'driver', driver_id)
+        #database.commit()
+    except Exception as e:
+        raise Exception(e)
 
 #adds a sponsor to the database. Parameters are:
 #Title of Sponsor,  Username, Address, Phone number, email, password and image url
@@ -237,7 +239,10 @@ def suspend_driver(driver_username, year, month, day):
 
     sql = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
     val = (driver_username, id[0][0], id[0][1], str_date)
-    cursor.execute(sql, val)
+    try:
+        cursor.execute(sql, val)
+    except Exception as e:
+        raise Exception(e)
     #database.commit()
 
 #this function adds a driver to a suspension list and their length of suspension
@@ -281,8 +286,18 @@ def is_suspended(user):
 def edit_suspension(user, year, month, day):
 
     #delete the driver from the suspended table and add them back with new dates
-    cursor.execute('DELETE FROM suspend WHERE user = %s', (user, ))
-    suspend_driver(user, year, month, day)
+    cursor.execute('select date_return from suspend where user = %s', (user, ))
+    date = cursor.fetchall()
+    if month < 10:
+        month = '0' + str(month)
+    else:
+        month = str(month)
+
+    year = str(year)
+    day = str(day)
+    
+    str_date = year + '-' + month + '-' + day
+    cursor.execute('UPDATE suspend SET date_return = %s WHERE user = %s', (str_date, user))
 
 #this function cancels a driver's suspension
 def cancel_suspension(user):
@@ -371,12 +386,6 @@ def admin_add_sponsor(title='NULL', username='NULL', temp_password='temp'):
 def admin_add_admin(title='NULL', username='NULL', temp_password='temp'):
     add_admin(first_name, 'NULL', last_name, username, 'NULL', 'NULL', 'NULL', temp_password, 'NULL')
 
-def admin_remove_driver(username='NULL'):
-    cursor.execute('DELETE FROM users WHERE UserName = %s', (username, ))
-    cursor.execute('DELETE FROM driver WHERE user = %s', (username, ))
-    if is_suspended(username):
-        cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
-    #database.commit()
 
 def admin_see_drivers_under_sponsor(spon_username):
     sql = 'SELECT sponsor_id FROM sponsor WHERE user = %s'
@@ -385,7 +394,7 @@ def admin_see_drivers_under_sponsor(spon_username):
     spon_id = cursor.fetchone()
     
     sql = 'SELECT first_name, mid_name, last_name, user, driver_id, image, date_join FROM driver WHERE sponsor_id = %s'
-    vals(spon_id, )
+    vals = (spon_id, )
     cursor.execute(sql, vals)
 
     return cursor.fetchall()
@@ -423,10 +432,30 @@ def get_suspended_users():
     for s in sus:
         print('Username: {}     Date return: {}'.format(*s))
 
+def is_suspended(user):
+        
+        sql = 'SELECT user FROM suspend WHERE user = %s'
+        val = (user, )
+
+        try:
+            #this will remove suspended driver's whos suspensions are over
+            cursor.execute('DELETE from suspend WHERE date_return <= NOW()')
+            cursor.execute(sql, val)
+            suspended_user = cursor.fetchall()
+
+        except Exception as e:
+            raise Exception(e)
+
+        if suspended_user == None:
+            return False
+        else:
+            return True
+
 #main used to test functions
 if __name__ == "__main__":
-    add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
+    add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'NULL')
     add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
+    print(is_suspended('krod'))
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
     print(if_username_exist('krod'))
@@ -466,10 +495,9 @@ if __name__ == "__main__":
     suspend_sponsor('spon', 2020, 12, 25)
     print("Is spon suspended: " + str(is_suspended('spon')))
     get_suspended_users()
-    print("Removing krod from drivers.....")
-    admin_remove_driver('krod')
-    get_users()
+    edit_suspension('krod', 2020, 11, 12)
     get_suspended_users()
+    
 
     cursor.close()
     database.close()

@@ -364,9 +364,9 @@ def getUserTable():
 
     for sponsor in Sponsor().get_users():
         html_str += "<tr>"
-        html_str += "<td>" + sponsor[3] + "</td>"
-        html_str += "<td>" + sponsor[0] + "</td>"
-        html_str += "<td>" + sponsor[2] + "</td>"
+        html_str += "<td>" + str(sponsor[3]) + "</td>"
+        html_str += "<td>" + str(sponsor[0]) + "</td>"
+        html_str += "<td>" + str(sponsor[2]) + "</td>"
         html_str += "<td><button id='suspend'>X</button></td>"
         html_str += "<td><input id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
         html_str += "<td><input id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
@@ -388,9 +388,9 @@ def getUserTable():
 
     for driver in Driver().get_users():
         html_str += "<tr>"
-        html_str += "<td>" + driver[3] + "</td>"
-        html_str += "<td>" + driver[0] + "</td>"
-        html_str += "<td>" + driver[2] + "</td>"
+        html_str += "<td>" + str(driver[3]) + "</td>"
+        html_str += "<td>" + str(driver[0]) + "</td>"
+        html_str += "<td>" + str(driver[2]) + "</td>"
         html_str += "<td><button id='suspend'>X</button></td>"
         html_str += "<td><input id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
         html_str += "<td><input id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"

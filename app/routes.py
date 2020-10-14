@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 from app.database.db_users import *
 from flask.json import JSONEncoder
+from tempfile import TemporaryFile
 
 # Using this to encode our class to store user data
 class CustomJSONEncoder(JSONEncoder):
@@ -35,6 +36,21 @@ def permissionCheck(allowedRole):
 
     if not userInfo.getRole() in allowedRole:
         return False
+
+
+ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg']
+# Check if uploaded file is an acceptable file format
+def allowed_file(filename):
+    return "." in filename and \
+        filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Create temporary file to send to DB driver
+def upload_file(f):
+    """ Expect f to be the file-like from the form input """
+    tempf = TemporaryFile()
+    f.save(tempf)
+    # Send tempf to driver
+    tempf.close()
 
 @app.route('/')
 def home():

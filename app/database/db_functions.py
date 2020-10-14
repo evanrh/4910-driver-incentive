@@ -259,7 +259,7 @@ def suspend_sponsor(sponsor_username, year, month, day):
     sql = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
     val = (sponsor_username, 0, id[0], str_date)
     cursor.execute(sql, val)
-    #database.commit()
+    database.commit()
 
 #this function returns true if a driver is currently suspended
 def is_suspended(user):

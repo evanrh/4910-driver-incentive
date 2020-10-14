@@ -399,3 +399,18 @@ def getUserTable():
     html_str += "</table></form>"
 
     return html_str
+
+
+
+# Settings page
+@app.route("/productsearch", methods=["GET","POST"])
+def productsearch():
+    search = "no input"
+    results = "blah blah blah blah"  
+
+    if request.method == 'POST':
+        form = request.form
+        search = form['search']
+        results = product_search(search)
+
+    return render_template('driver/driverResults.html', results = results, query = search)

@@ -432,6 +432,7 @@ def get_suspended_users():
     for s in sus:
         print('Username: {}     Date return: {}'.format(*s))
 
+<<<<<<< Updated upstream
 def is_suspended(user):
         
         sql = 'SELECT user FROM suspend WHERE user = %s'
@@ -454,6 +455,31 @@ def is_suspended(user):
 #main used to test functions
 if __name__ == "__main__":
     add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'NULL')
+=======
+
+#Clean search and translate into sql search
+def product_search(search):
+    dirty_search = search;
+    numwords = len(dirty_search.split())
+    clean_search = [None] * numwords
+    sql = "SELECT * FROM product WHERE name = '"
+    returninfo = "\n"
+    for i in range(numwords):
+        clean_search = dirty_search.split(' ')[i]
+        clean_search = clean_search.lower();
+        cursor.execute(sql + clean_search + "'")    
+        got = cursor.fetchall()
+        print("---Product Information---")
+        print(got)
+        returninfo = returninfo + "\n" +  str(got)
+    print(returninfo)
+
+
+
+#main used to test functions
+if __name__ == "__main__":
+
+    add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
     add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
     print(is_suspended('krod'))
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
@@ -461,6 +487,11 @@ if __name__ == "__main__":
     print(if_username_exist('krod'))
     get_users()
     print(admin_view_users())
+
+
+    print("David Search\n")
+    search = "Bike sponge"
+    product_search(search) 
 
     drivers = sponsorless_drivers()
     for row in drivers:
@@ -497,7 +528,7 @@ if __name__ == "__main__":
     get_suspended_users()
     edit_suspension('krod', 2020, 11, 12)
     get_suspended_users()
-    
 
     cursor.close()
     database.close()
+    

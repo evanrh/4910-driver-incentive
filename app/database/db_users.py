@@ -152,7 +152,13 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        pass
+        query = "SELECT * FROM admin"
+
+        try:
+            out = self.database.query(query)
+            return out
+        except Exception as e:
+            raise Exception(e)
 
     # returns user data as a 2D array in the following format
     # [0][0] = first name

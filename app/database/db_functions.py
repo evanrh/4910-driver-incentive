@@ -243,7 +243,7 @@ def suspend_driver(driver_username, year, month, day):
         cursor.execute(sql, val)
     except Exception as e:
         raise Exception(e)
-    #database.commit()
+    database.commit()
 
 #this function adds a driver to a suspension list and their length of suspension
 def suspend_sponsor(sponsor_username, year, month, day):
@@ -264,7 +264,7 @@ def suspend_sponsor(sponsor_username, year, month, day):
     sql = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
     val = (sponsor_username, 0, id[0], str_date)
     cursor.execute(sql, val)
-    #database.commit()
+    database.commit()
 
 #this function returns true if a driver is currently suspended
 def is_suspended(user):

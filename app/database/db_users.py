@@ -720,6 +720,7 @@ class Driver(AbsUser):
         query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
         query = query.format("Driver_ID", self.properties['user'], self.properties['id'])
         self.database.insert(query)
+        self.database.commit()
 
 
     def setSandbox(self, sandbox):

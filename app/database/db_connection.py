@@ -8,6 +8,7 @@ class DB_Connection():
                                    database = name,
                                    user = user,
                                    password = pwd)
+            self.conn.autocommit = True
 
         except Error as e:
             raise Error(e)

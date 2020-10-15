@@ -281,6 +281,7 @@ class Admin(AbsUser):
         vals = (str_date, username)
         try:
             self.database.insert(query, vals)
+            self.database.commit()
         except Exception as e:
             raise Exception(e)
 
@@ -289,6 +290,7 @@ class Admin(AbsUser):
         vals = (username, )
         try:
             self.database.delete(query, vals)
+            self.database.commit()
         except Exception as e:
             raise Exception(e)
         
@@ -305,13 +307,14 @@ class Admin(AbsUser):
         else:
             role = 'admin'
 
-        sus_list = get_suspended_users()
-        self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
-        self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
-        if username in sus_list:
-            print("DELETE")
+        try:
+            self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
+            self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
             self.database.delete('DELETE FROM suspend WHERE user = %s', (username, ))
-        self.database.commit()
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+        
 
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:

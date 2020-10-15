@@ -432,6 +432,14 @@ def admin_view_users():
 
     return users_dict
 
+def cancel_suspension(username):
+    query = 'DELETE FROM suspend WHERE user = %s'
+    vals = (username, )
+    try:
+        cursor.execute(query, vals)
+    except Exception as e:
+        raise Exception(e)
+
 def get_suspended_users():
     cursor.execute('SELECT user FROM suspend')
     sus = cursor.fetchall()
@@ -505,7 +513,7 @@ def product_search(search):
     print("Cleaned return----------------") 
     listt = returninfo.splitlines()
 #    print(listt[3])
-    return listt;
+    return listt
 
 def getgenres():
     cursor.execute("SELECT DISTINCT Genre FROM product")
@@ -525,9 +533,10 @@ def getgenres():
 #main used to test functions
 if __name__ == "__main__":
 
+    cancel_suspension('wsherre')
     if username_exist('krod'):
         add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
-    if not username_exist('bean'):
+    if username_exist('bean'):
         add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
     print(is_suspended('krod'))
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
@@ -574,8 +583,8 @@ if __name__ == "__main__":
     print(get_suspended_users())
     edit_suspension('krod', 2020, 11, 12)
     print(get_suspended_users())
-    print(username_exist('remove'))
-    get_suspended_users()
+    cancel_suspension('krod')
+    print(get_suspended_users())
     print(if_username_exist('remove'))
 
     cursor.close()

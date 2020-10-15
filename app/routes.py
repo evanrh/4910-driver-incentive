@@ -11,8 +11,6 @@ class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, AbsUser):
             return obj.__dict__
-        if isinstance(obj, database):
-            return ""
         else:
             return ""
             #JSONEncoder.default(self, obj)
@@ -191,6 +189,12 @@ def driverInbox():
         return redirect(url_for('home'))
     return render_template('driver/driverInbox.html')
 
+@app.route("/driverCart")
+def driverCart():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+    return render_template('driver/driverCart.html')
+
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
 def sponsorNotification():
@@ -257,7 +261,7 @@ def adminManageAcc():
        else:
            newUser = Admin(fname, mname, lname, username, phone, email, pwd_hash, img)
     
-       if newUser.check_username_available():
+       if Admin().check_username_available(username):
            newUser.add_user()
            flash('Account created!')
        else:

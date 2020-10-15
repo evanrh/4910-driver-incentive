@@ -342,6 +342,8 @@ class Admin(AbsUser):
             role = 'driver'
         elif id[0][1] != None:
             role = 'sponsor'
+        else:
+            role = 'admin'
 
         self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
         self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
@@ -654,7 +656,7 @@ class Driver(AbsUser):
 
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(END)s, NOW(), %(image)s)'
+        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s, %(image)s)'
         self.properties['END'] = 'NULL'
 
         try:

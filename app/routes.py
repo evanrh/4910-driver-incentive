@@ -11,6 +11,8 @@ class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, AbsUser):
             return obj.__dict__
+        if isinstance(obj, database):
+            return ""
         else:
             return ""
             #JSONEncoder.default(self, obj)
@@ -56,7 +58,9 @@ def upload_file(f):
 def home():
     # Using the global class to access data
     global userInfo
-
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+            return redirect(url_for('home'))
+            
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
@@ -386,51 +390,49 @@ def getDriverTable():
 # Returns a string full of html code representing
 # a table with all drivers and sponsors to display on webpage
 def getUserTable():
+    adminList = Admin().get_users()
+    sponsorList = Sponsor().get_users()
+    driverList = Driver().get_users()
+
     html_str = ""
 
     html_str += '<form id="view-drivers">'
     html_str += "<table>"
-    html_str += "<h3> Admins </h3>"
     html_str += "<tr>"
-    html_str += "<th>Remove</th>"
+    html_str += "<th class='heading'>Admins</th>"
+    html_str += "<th>Delete</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>First Name</th>"
     html_str += "<th>Last Name</th>"
     html_str += "</tr>"
 
-    for admin in Admin().get_users():
+    for admin in adminList:
         html_str += "<tr>"
+        html_str += "<td></td>"
         html_str += "<td><button name='" + str(admin[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + admin[3] + "</td>"
         html_str += "<td>" + admin[0] + "</td>"
         html_str += "<td>" + admin[2] + "</td>"
         html_str += "</tr>"
-        
-    html_str += "</table></form>"
 
-    html_str += '<form id="view-drivers">'
-    html_str += "<table>"
-    html_str += "<h3> Sponsors </h3>"
     html_str += "<tr>"
-    html_str += "<th>Remove</th>"
+    html_str += "<th class='heading'> Sponsors </th>"
+    html_str += "<th>Delete</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>Title</th>"
     html_str += "</tr>"
 
-    for sponsor in Sponsor().get_users():
+    for sponsor in sponsorList:
         html_str += "<tr>"
+        html_str += "<td></td>"
         html_str += "<td><button name='" + str(sponsor[1]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(sponsor[1]) + "</td>"
         html_str += "<td>" + str(sponsor[0]) + "</td>"
         html_str += "</tr>"
 
-    html_str += "</table></form>"
-
-    html_str += '<form id="view-drivers">'
-    html_str += "<table>"
-    html_str += "<h3> Drivers </h3>"
     html_str += "<tr>"
-    html_str += "<th>Remove</th>"
+    html_str += "<th class='heading'>Drivers</th>"
+    html_str += "<th>Delete</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>First Name</th>"
     html_str += "<th>Last Name</th>"
@@ -440,8 +442,9 @@ def getUserTable():
     html_str += "<th>Send Message</th>"
     html_str += "</tr>"
 
-    for driver in Driver().get_users():
+    for driver in driverList:
         html_str += "<tr>"
+        html_str += "<td></td>"
         html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(driver[3]) + "</td>"
         html_str += "<td>" + str(driver[0]) + "</td>"

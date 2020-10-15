@@ -7,7 +7,25 @@
 	</div>
 	
 	<div class="row">
-		<p> Found Results: {{results}}</p>
-	</div>
-		
+		<p> Found {{numresults}}  Results: </p>
+
+	
+		{% for segment in results%}
+			<p>
+				 {{segment}}
+			</p>
+		{% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+
+
 {% endblock %}

@@ -466,27 +466,66 @@ if __name__ == "__main__":
 
 #Clean search and translate into sql search
 def product_search(search):
+    cursor.execute("SELECT DISTINCT Genre FROM product")
+    returngenre = cursor.fetchall()
+    print(returngenre)
+    strgenre = ' '.join(str(v) for v in returngenre)
+    strgenre = strgenre.replace("[", "")
+    strgenre = strgenre.replace("]", "")
+    strgenre = strgenre.replace("(", "") 
+    strgenre = strgenre.replace(")", "")
+    strgenre = strgenre.replace(",", "")
+    strgenre = strgenre.replace("'", "")
+    print(strgenre)
     dirty_search = search
     numwords = len(dirty_search.split())
     clean_search = [None] * numwords
-    sql = "SELECT * FROM product WHERE name = '"
+    sql = "SELECT name, description FROM product WHERE  available = 1 AND name = '"
+    sqlgenre = "SELECT name, description FROM product WHERE  available = 1 AND Genre = '" 
     returninfo = "\n"
     for i in range(numwords):
         clean_search = dirty_search.split(' ')[i]
         clean_search = clean_search.lower()
-        cursor.execute(sql + clean_search + "'")    
+        if clean_search in strgenre:
+            print("Got a genre")
+            cursor.execute(sqlgenre + clean_search + "'")                
+        else:
+            cursor.execute(sql + clean_search + "'")    
         got = cursor.fetchall()
         print("---Product Information---")
         print(got)
         returninfo = returninfo + "\n" +  str(got)
-    print(returninfo)
+    returninfo = ''.join(str(v) for v in returninfo)
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+#    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print("Cleaned return----------------") 
+    listt = returninfo.splitlines()
+#    print(listt[3])
+    return listt;
+
+def getgenres():
+    cursor.execute("SELECT DISTINCT Genre FROM product")
+    returngenre = cursor.fetchall()
+    print(returngenre)
+    strgenre = ' '.join(str(v) for v in returngenre)
+    strgenre = strgenre.replace("[", "")
+    strgenre = strgenre.replace("]", "")
+    strgenre = strgenre.replace("(", "") 
+    strgenre = strgenre.replace(")", "")
+#    strgenre = strgenre.replace(",", "")
+    strgenre = strgenre.replace("'", "")
+    return strgenre
 
 
 
 #main used to test functions
 if __name__ == "__main__":
 
-    if not username_exist('krod'):
+    if username_exist('krod'):
         add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
     if not username_exist('bean'):
         add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
@@ -497,11 +536,9 @@ if __name__ == "__main__":
     get_users()
     print(admin_view_users())
 
-
     print("David Search\n")
-    search = "Bike sponge"
+    search = "Bike Tool car"
     product_search(search) 
-
     drivers = sponsorless_drivers()
     for row in drivers:
         print(str(row[3]) +' is sponsorless')
@@ -538,6 +575,9 @@ if __name__ == "__main__":
     edit_suspension('krod', 2020, 11, 12)
     print(get_suspended_users())
     print(username_exist('remove'))
+    get_suspended_users()
+    print(if_username_exist('remove'))
+
     cursor.close()
     database.close()
     

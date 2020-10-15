@@ -33,7 +33,11 @@ def permissionCheck(allowedRole):
         else:
             userInfo = Driver()
 
-        userInfo.populate(session['userInfo']['properties']['user'])
+        try:
+            userInfo.populate(session['userInfo']['properties']['user'])
+        except Exception as e:
+            session['logged_in'] = False
+            return redirect(url_for('home'))
 
     if not userInfo.getRole() in allowedRole:
         return False

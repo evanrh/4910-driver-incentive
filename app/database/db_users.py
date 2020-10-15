@@ -285,6 +285,14 @@ class Admin(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    def get_suspended_users(self):
+        sus = self.database.query('SELECT user FROM suspend')
+        sus_list = []
+        
+        for s in sus:
+            sus_list.append(s[0])
+        return sus_list
+
     def cancel_suspension(self, username):
         query = 'DELETE FROM suspend WHERE user = %s'
         vals = (username, )

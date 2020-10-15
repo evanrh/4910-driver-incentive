@@ -409,7 +409,7 @@ def getUserTable():
     adminList = Admin().get_users()
     sponsorList = Sponsor().get_users()
     driverList = Driver().get_users()
-    suspendedUsers = get_suspended_users()
+    suspendedUsers = Admin().get_suspended_users()
     print(suspendedUsers)
     html_str = ""
 

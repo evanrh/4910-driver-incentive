@@ -243,7 +243,7 @@ def suspend_driver(driver_username, year, month, day):
         cursor.execute(sql, val)
     except Exception as e:
         raise Exception(e)
-    database.commit()
+    #database.commit()
 
 #this function adds a driver to a suspension list and their length of suspension
 def suspend_sponsor(sponsor_username, year, month, day):
@@ -264,7 +264,7 @@ def suspend_sponsor(sponsor_username, year, month, day):
     sql = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
     val = (sponsor_username, 0, id[0], str_date)
     cursor.execute(sql, val)
-    database.commit()
+    #database.commit()
 
 #this function returns true if a driver is currently suspended
 #its implemented in the db_users classes this is here only to help with testing.
@@ -279,7 +279,7 @@ def is_suspended(user):
             cursor.execute('DELETE from suspend WHERE date_return <= NOW()')
             cursor.execute(sql, val)
             suspended_user = cursor.fetchall()
-            database.commit()
+            #database.commit()
         except Exception as e:
             raise Exception(e)
         
@@ -325,7 +325,8 @@ def add_points_to_driver(driver_username, sponsor_id, points_to_add):
     cursor.execute(sql, val)
     current_points = cursor.fetchone()
 
-    points_to_add += current_points[0]
+    if current_points != None:
+        points_to_add += current_points[0]
 
     sql = 'UPDATE driver SET points = %s WHERE (user = %s AND sponsor_id = %s)'
     val = (points_to_add, driver_username, sponsor_id)
@@ -432,11 +433,13 @@ def admin_view_users():
     return users_dict
 
 def get_suspended_users():
-    cursor.execute('SELECT user, date_return FROM suspend')
+    cursor.execute('SELECT user FROM suspend')
     sus = cursor.fetchall()
-    print("---SUSPENDED USERS---")
+    sus_list = []
+    
     for s in sus:
-        print('Username: {}     Date return: {}'.format(*s))
+        sus_list.append(s[0])
+    return sus_list
 
 def is_suspended(user):
         
@@ -483,14 +486,14 @@ def product_search(search):
 #main used to test functions
 if __name__ == "__main__":
 
-    if username_exist('krod'):
+    if not username_exist('krod'):
         add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
-    if username_exist('bean'):
+    if not username_exist('bean'):
         add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
     print(is_suspended('krod'))
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
-    print(if_username_exist('krod'))
+    print(username_exist('krod'))
     get_users()
     print(admin_view_users())
 
@@ -531,10 +534,10 @@ if __name__ == "__main__":
     print("suspending spon...")
     suspend_sponsor('spon', 2020, 12, 25)
     print("Is spon suspended: " + str(is_suspended('spon')))
-    get_suspended_users()
+    print(get_suspended_users())
     edit_suspension('krod', 2020, 11, 12)
-    get_suspended_users()
-    print(if_username_exist('remove'))
+    print(get_suspended_users())
+    print(username_exist('remove'))
     cursor.close()
     database.close()
     

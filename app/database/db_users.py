@@ -247,14 +247,7 @@ class Admin(AbsUser):
             return True
 
     #this function adds a driver to a suspension list and their length of suspension
-    def suspend_driver(self, driver_username, year, month, day):
-
-        query  = 'SELECT driver_id FROM driver WHERE user = %s'
-        vals = (driver_username, )
-        try:
-            id = self.database.query(query, vals)
-        except Exception as e:
-            raise Exception(e)
+    def suspend_user(self, username, year, month, day):
 
         if month < 10:
             month = '0' + str(month)
@@ -266,33 +259,8 @@ class Admin(AbsUser):
         
         str_date = year + '-' + month + '-' + day
 
-        query = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
-        vals = (driver_username, id[0][0], 0, str_date)
-        try:
-            self.database.insert(query, vals)
-            self.database.commit()
-        except Exception as e:
-            raise Exception(e)
-
-    #this function adds a driver to a suspension list and their length of suspension
-    def suspend_sponsor(self, sponsor_username, year, month, day):
-
-        cursor.execute('SELECT sponsor_id FROM sponsor WHERE user = %s', (sponsor_username, ))
-        id = cursor.fetchone()
-
-        if month < 10:
-            month = '0' + str(month)
-        else:
-            month = str(month)
-
-        year = str(year)
-        day = str(day)
-        
-        str_date = year + '-' + month + '-' + day
-
-        query = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
-        vals = (sponsor_username, 0, id[0], str_date)
-
+        query = 'INSERT INTO suspend VALUES (%s, %s)'
+        vals = (username, str_date)
         try:
             self.database.insert(query, vals)
             self.database.commit()
@@ -572,14 +540,7 @@ class Sponsor(AbsUser):
         return file
         
     #this function adds a driver to a suspension list and their length of suspension
-    def suspend_driver(self, driver_username, year, month, day):
-
-        query  = 'SELECT driver_id, sponsor_id FROM driver WHERE user = %s'
-        vals = (driver_username, )
-        try:
-            id = self.database.query(query, vals)
-        except Exception as e:
-            raise Exception(e)
+    def suspend_user(self, username, year, month, day):
 
         if month < 10:
             month = '0' + str(month)
@@ -591,8 +552,8 @@ class Sponsor(AbsUser):
         
         str_date = year + '-' + month + '-' + day
 
-        query = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
-        vals = (driver_username, id[0][0], id[0][1], str_date)
+        query = 'INSERT INTO suspend VALUES (%s, %s)'
+        vals = (username, str_date)
         try:
             self.database.insert(query, vals)
             self.database.commit()

@@ -478,7 +478,7 @@ def getUserTable():
 def suspend():
     user = request.get_data().decode("utf-8") 
     print("suspend " + user)
-    Admin().suspend_driver(user, 9999, 12, 30)
+    Admin().suspend_user(user, 9999, 12, 30)
     return ('', 204)
 
 @app.route("/unsuspend", methods=["GET","POST"])

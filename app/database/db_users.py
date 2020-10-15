@@ -113,6 +113,7 @@ class Admin(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         query = 'INSERT INTO admin VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s)'
+        self.properties['END'] = 'NULL'
 
         try:
             self.database.insert(query, params=self.properties)
@@ -128,7 +129,7 @@ class Admin(AbsUser):
 
         return check_password_hash(pwd_hash, db_pwd)
 
-    def check_username_available(self, username):
+    def check_username_available(self):
         query = "SELECT COUNT(*) FROM admin WHERE user=\"{}\"".format(self.properties['user'])
 
         out = self.database.query(query) 
@@ -345,11 +346,14 @@ class Admin(AbsUser):
         else:
             role = 'admin'
 
-        self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
-        self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
-        if is_suspended(username):
-            cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
-        self.database.commit()
+        try:
+            self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
+            self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
+            if is_suspended(username):
+                cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
 
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:

@@ -350,7 +350,7 @@ class Admin(AbsUser):
         vals = (new_pwd, self.properties['user'])
 
         try:
-            self.database.insert(query, vals))
+            self.database.insert(query, vals)
             self.database.commit()
         except Exception as e:
             raise Exception(e)
@@ -581,7 +581,7 @@ class Sponsor(AbsUser):
         vals = (new_pwd, self.properties['user'])
 
         try:
-            self.database.insert(query, vals))
+            self.database.insert(query, vals)
             self.database.commit()
         except Exception as e:
             raise Exception(e)
@@ -831,7 +831,7 @@ class Driver(AbsUser):
         vals = (new_pwd, self.properties['user'])
 
         try:
-            self.database.insert(query, vals))
+            self.database.insert(query, vals)
             self.database.commit()
         except Exception as e:
             raise Exception(e)

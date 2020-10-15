@@ -67,8 +67,10 @@ def home():
         session.pop('_flashes', None)
 
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
-            return render_template('driver/driverHome.html')
-        
+            genres = getgenres()
+            return render_template('driver/driverHome.html', genres = genres)
+
+
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
             return render_template('sponsor/sponsorHome.html')
 
@@ -340,7 +342,8 @@ def sponsorView():
 def driverView():
     if userInfo.getRole() == ("admin" or "sponsor"):
         userInfo.setSandbox("driver")
-    return render_template('driver/driverHome.html')
+    genres = getgenres()
+    return render_template('driver/driverHome.html', genres = genres)
 
 @app.route("/returnView")
 def returnView():
@@ -503,5 +506,6 @@ def productsearch():
         form = request.form
         search = form['search']
         results = product_search(search)
-
-    return render_template('driver/driverResults.html', results = results, query = search)
+    
+    numresults = len(results) -2
+    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = results)

@@ -2,8 +2,16 @@
 {% block driverContent %}
 <h1>Product Catalog</h1>
 
-<form action="/productsearch" method="POST">
 
+<div class="row">
+	<p style="margin:0">Enter your search below.</p>
+	<p style="margin:0">Terms entered together will give results that share those traits. A seach of "Tool sponge", will return products with the name sponge in the tool genre.</p>
+
+</div>
+
+
+<form action="/productsearch" method="POST">
+	<p style="margin:0">The types of genres for search are: {{genres}}   </p>	
 	<input type="text" placeholder="Search for products" name="search" class="tftextinput" required>
 	<button id="signupbutton" type="submit" class="tfbutton">Search</button>
 

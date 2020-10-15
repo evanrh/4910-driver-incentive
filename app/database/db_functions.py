@@ -432,7 +432,6 @@ def get_suspended_users():
     for s in sus:
         print('Username: {}     Date return: {}'.format(*s))
 
-<<<<<<< Updated upstream
 def is_suspended(user):
         
         sql = 'SELECT user FROM suspend WHERE user = %s'
@@ -455,18 +454,17 @@ def is_suspended(user):
 #main used to test functions
 if __name__ == "__main__":
     add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'NULL')
-=======
 
 #Clean search and translate into sql search
 def product_search(search):
-    dirty_search = search;
+    dirty_search = search
     numwords = len(dirty_search.split())
     clean_search = [None] * numwords
     sql = "SELECT * FROM product WHERE name = '"
     returninfo = "\n"
     for i in range(numwords):
         clean_search = dirty_search.split(' ')[i]
-        clean_search = clean_search.lower();
+        clean_search = clean_search.lower()
         cursor.execute(sql + clean_search + "'")    
         got = cursor.fetchall()
         print("---Product Information---")

@@ -2,29 +2,11 @@
 {% block driverContent %}
 <h1>Product Catalog</h1>
 
-<div class="topnav" method="POST">
+<form action="/productsearch" method="POST">
 
-	
+	<input type="text" placeholder="Search for products" name="search" class="tftextinput" required>
+	<button id="signupbutton" type="submit" class="tfbutton">Search</button>
 
-</div>
-
-<form action={{url_for("productsearch")}} method="POST">
-
-
-	<input type="text" placeholder="Search for products", name="search" >
-	<div>
-	<button id="signupbutton" type="submit" class="tfbutton" disabled=true>Search</button>
-	</div>
-	<a href="productsearch">
-		Continue
-	</a>
-   </form>
-
-
-
-
-
-
-
+</form>
 
 {% endblock %}

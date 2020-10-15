@@ -57,12 +57,13 @@ def upload_file(f):
 def home():
     # Using the global class to access data
     global userInfo
-    if permissionCheck(["driver", "sponsor", "admin"]) == False:
-            return redirect(url_for('home'))
             
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
+        if permissionCheck(["driver", "sponsor", "admin"]) == False:
+            return redirect(url_for('home'))
+
         session.pop('_flashes', None)
 
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':

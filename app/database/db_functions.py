@@ -99,9 +99,9 @@ def add_to_users(user = 'NULL', role = 'driver', id = 0):
 
 
 #detirmines if username is in the table
-#returns if username is in user table
+#returns true if username is in user table
 #false if it isn't
-def if_username_exist(user = 'NULL'):
+def username_exist(user = 'NULL'):
     if( user == 'NULL' ):
         return False
 
@@ -267,6 +267,8 @@ def suspend_sponsor(sponsor_username, year, month, day):
     database.commit()
 
 #this function returns true if a driver is currently suspended
+#its implemented in the db_users classes this is here only to help with testing.
+#will be removed in final copy
 def is_suspended(user):
         
         sql = 'SELECT user FROM suspend WHERE user = %s'
@@ -274,8 +276,9 @@ def is_suspended(user):
 
         #this will remove suspended driver's whos suspensions are over
         try:
-            database.delete('DELETE from suspend WHERE date_return <= NOW()')
-            suspended_user = database.query(sql, val)
+            cursor.execute('DELETE from suspend WHERE date_return <= NOW()')
+            cursor.execute(sql, val)
+            suspended_user = cursor.fetchall()
             database.commit()
         except Exception as e:
             raise Exception(e)
@@ -480,8 +483,10 @@ def product_search(search):
 #main used to test functions
 if __name__ == "__main__":
 
-    add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
-    add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
+    if username_exist('krod'):
+        add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
+    if username_exist('bean'):
+        add_driver('Bean', 'NULL', 'Rodgers', 'bean', 'address', 5, 'email', 'cool', 'Null')
     print(is_suspended('krod'))
     add_sponsor('Sponsor', 'spon', 'add', 0, 'email', 'pwd', '')
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
@@ -529,7 +534,7 @@ if __name__ == "__main__":
     get_suspended_users()
     edit_suspension('krod', 2020, 11, 12)
     get_suspended_users()
-
+    print(if_username_exist('remove'))
     cursor.close()
     database.close()
     

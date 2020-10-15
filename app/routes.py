@@ -86,7 +86,7 @@ def do_admin_login():
     pwd = request.form['password']
 
     # Do basic login verification
-    if not if_username_exist(username):
+    if not username_exist(username):
         flash('Incorrect login credentials!')
     else:
         current_hash = get_password(username)

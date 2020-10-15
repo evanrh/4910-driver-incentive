@@ -113,7 +113,6 @@ class Admin(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         query = 'INSERT INTO admin VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s)'
-        self.properties['END'] = 'NULL'
 
         try:
             self.database.insert(query, params=self.properties)
@@ -129,7 +128,7 @@ class Admin(AbsUser):
 
         return check_password_hash(pwd_hash, db_pwd)
 
-    def check_username_available(self):
+    def check_username_available(self, username):
         query = "SELECT COUNT(*) FROM admin WHERE user=\"{}\"".format(self.properties['user'])
 
         out = self.database.query(query) 
@@ -229,18 +228,19 @@ class Admin(AbsUser):
     #this function returns true if a driver is currently suspended
     def is_suspended(self):
         
-        sql = 'SELECT COUNT(*) FROM suspend WHERE user = %s'
+        sql = 'SELECT user FROM suspend WHERE user = %s'
         val = (self.properties['user'], )
 
+        
+        #this will remove suspended driver's whos suspensions are over
         try:
-            #this will remove suspended driver's whos suspensions are over
             self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
             suspended_user = self.database.query(sql, val)
             self.database.commit()
         except Exception as e:
             raise Exception(e)
-
-        if suspended_user[0][0] == 0:
+        
+        if suspended_user == None:
             return False
         else:
             return True
@@ -290,7 +290,7 @@ class Admin(AbsUser):
         str_date = year + '-' + month + '-' + day
 
         query = 'INSERT INTO suspend VALUES (%s, %s, %s, %s)'
-        val = (sponsor_username, 0, id[0], str_date)
+        vals = (sponsor_username, 0, id[0], str_date)
 
         try:
             self.database.insert(query, vals)
@@ -342,17 +342,12 @@ class Admin(AbsUser):
             role = 'driver'
         elif id[0][1] != None:
             role = 'sponsor'
-        else:
-            role = 'admin'
 
-        try:
-            self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
-            self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
-            if is_suspended(username):
-                cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
-            self.database.commit()
-        except Exception as e:
-            raise Exception(e)
+        self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
+        self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
+        if is_suspended(username):
+            cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
+        self.database.commit()
 
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:
@@ -362,7 +357,7 @@ class Admin(AbsUser):
         vals = (image, self.properties['user'])
 
         try:
-            self.database.insert(query, vals)
+            self.database.insert(sql, vals)
             self.database.commit()
             self.properties['image'] = image
         except Exception as e:
@@ -518,7 +513,7 @@ class Sponsor(AbsUser):
 
     def is_suspended(self):
         
-        sql = 'SELECT COUNT(*) FROM suspend WHERE user = %s'
+        sql = 'SELECT user FROM suspend WHERE user = %s'
         val = (self.properties['user'], )
 
         try:
@@ -528,8 +523,8 @@ class Sponsor(AbsUser):
             self.database.commit()
         except Exception as e:
             raise Exception(e)
-
-        if suspended_user[0][0] == 0:
+        
+        if suspended_user == None:
             return False
         else:
             return True
@@ -563,7 +558,7 @@ class Sponsor(AbsUser):
         vals = (image, self.properties['user'])
 
         try:
-            self.database.insert(query, vals)
+            self.database.insert(sql, vals)
             self.database.commit()
             self.properties['image'] = image
         except Exception as e:
@@ -576,7 +571,7 @@ class Sponsor(AbsUser):
         return file
         
     #this function adds a driver to a suspension list and their length of suspension
-    def suspend_driver(driver_username, year, month, day):
+    def suspend_driver(self, driver_username, year, month, day):
 
         query  = 'SELECT driver_id, sponsor_id FROM driver WHERE user = %s'
         vals = (driver_username, )
@@ -659,7 +654,7 @@ class Driver(AbsUser):
 
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s, %(image)s)'
+        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(END)s, NOW(), %(image)s)'
         self.properties['END'] = 'NULL'
 
         try:
@@ -779,7 +774,7 @@ class Driver(AbsUser):
 
     def is_suspended(self):
         
-        sql = 'SELECT COUNT(*) FROM suspend WHERE user = %s'
+        sql = 'SELECT user FROM suspend WHERE user = %s'
         val = (self.properties['user'], )
 
         try:
@@ -790,7 +785,7 @@ class Driver(AbsUser):
         except Exception as e:
             raise Exception(e)
 
-        if suspended_user[0][0] == 0:
+        if suspended_user == None:
             return False
         else:
             return True
@@ -830,7 +825,7 @@ class Driver(AbsUser):
         vals = (image, self.properties['user'])
 
         try:
-            self.database.insert(query, vals)
+            self.database.insert(sql, vals)
             self.database.commit()
             self.properties['image'] = image
         except Exception as e:

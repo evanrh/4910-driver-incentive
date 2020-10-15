@@ -270,8 +270,8 @@ def suspend_sponsor(sponsor_username, year, month, day):
 #its implemented in the db_users classes this is here only to help with testing.
 #will be removed in final copy
 def is_suspended(user):
-        
-        sql = 'SELECT user FROM suspend WHERE user = %s'
+
+        sql = 'SELECT COUNT(*) FROM suspend WHERE user = %s'
         val = (user, )
 
         #this will remove suspended driver's whos suspensions are over
@@ -283,7 +283,7 @@ def is_suspended(user):
         except Exception as e:
             raise Exception(e)
         
-        if suspended_user == None:
+        if suspended_user[0][0] == 0:
             return False
         else:
             return True

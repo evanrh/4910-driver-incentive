@@ -5,6 +5,7 @@ from app.database.db_functions import *
 from app.database.db_users import *
 from flask.json import JSONEncoder
 from tempfile import TemporaryFile
+import time
 
 # Using this to encode our class to store user data
 class CustomJSONEncoder(JSONEncoder):
@@ -261,7 +262,7 @@ def adminManageAcc():
        else:
            newUser = Admin(fname, mname, lname, username, phone, email, pwd_hash, img)
     
-       if Admin().check_username_available(username):
+       if newUser.check_username_available():
            newUser.add_user()
            flash('Account created!')
        else:
@@ -372,13 +373,14 @@ def getDriverTable():
     html_str += "</tr>"
 
     for driver in Driver().get_users():
+        newDriver = Driver(driver)
         html_str += "<tr>"
         html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(driver[3]) + "</td>"
         html_str += "<td>" + str(driver[0]) + "</td>"
         html_str += "<td>" + str(driver[2]) + "</td>"
 
-        if is_suspended(driver[3]):
+        if newDriver.is_suspended():
             html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
             html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
@@ -447,6 +449,7 @@ def getUserTable():
     html_str += "</tr>"
 
     for driver in driverList:
+        newDriver = Driver(driver)
         html_str += "<tr>"
         html_str += "<td></td>"
         html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
@@ -454,7 +457,7 @@ def getUserTable():
         html_str += "<td>" + str(driver[0]) + "</td>"
         html_str += "<td>" + str(driver[2]) + "</td>"
 
-        if is_suspended(driver[3]):
+        if newDriver.is_suspended():
             html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
             html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"

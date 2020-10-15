@@ -229,19 +229,18 @@ class Admin(AbsUser):
     #this function returns true if a driver is currently suspended
     def is_suspended(self):
         
-        sql = 'SELECT user FROM suspend WHERE user = %s'
+        sql = 'SELECT COUNT(*) FROM suspend WHERE user = %s'
         val = (self.properties['user'], )
 
-        
-        #this will remove suspended driver's whos suspensions are over
         try:
+            #this will remove suspended driver's whos suspensions are over
             self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
             suspended_user = self.database.query(sql, val)
             self.database.commit()
         except Exception as e:
             raise Exception(e)
-        
-        if suspended_user == None:
+
+        if suspended_user[0][0] == 0:
             return False
         else:
             return True
@@ -519,7 +518,7 @@ class Sponsor(AbsUser):
 
     def is_suspended(self):
         
-        sql = 'SELECT user FROM suspend WHERE user = %s'
+        sql = 'SELECT COUNT(*) FROM suspend WHERE user = %s'
         val = (self.properties['user'], )
 
         try:
@@ -529,8 +528,8 @@ class Sponsor(AbsUser):
             self.database.commit()
         except Exception as e:
             raise Exception(e)
-        
-        if suspended_user == None:
+
+        if suspended_user[0][0] == 0:
             return False
         else:
             return True
@@ -780,7 +779,7 @@ class Driver(AbsUser):
 
     def is_suspended(self):
         
-        sql = 'SELECT user FROM suspend WHERE user = %s'
+        sql = 'SELECT COUNT(*) FROM suspend WHERE user = %s'
         val = (self.properties['user'], )
 
         try:
@@ -791,7 +790,7 @@ class Driver(AbsUser):
         except Exception as e:
             raise Exception(e)
 
-        if suspended_user == None:
+        if suspended_user[0][0] == 0:
             return False
         else:
             return True

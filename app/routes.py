@@ -365,17 +365,19 @@ def getDriverTable():
 
     for driver in Driver().get_users():
         html_str += "<tr>"
-        html_str += "<td><button id='remove' style='color:red;'>X</button></td>"
+        html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(driver[3]) + "</td>"
         html_str += "<td>" + str(driver[0]) + "</td>"
         html_str += "<td>" + str(driver[2]) + "</td>"
-        if (is_suspended(str(driver[3]))):
-            html_str += "<td><button id='unsuspend' style='color:red;'>X</button></td>"
+
+        if is_suspended(driver[3]):
+            html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
-            html_str += "<td><button id='suspend'>X</button></td>"
-        html_str += "<td>" + str(driver.getPoints()) + "</td>"
-        html_str += "<td><input id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
-        html_str += "<td><input id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
+            html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
+
+        html_str += "<td>" + str(driver[6]) + "</td>"
+        html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
+        html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
         html_str += "</tr>"
     
     html_str += "</table></form>"
@@ -390,6 +392,7 @@ def getUserTable():
     html_str += "<table>"
     html_str += "<h3> Admins </h3>"
     html_str += "<tr>"
+    html_str += "<th>Remove</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>First Name</th>"
     html_str += "<th>Last Name</th>"
@@ -397,6 +400,7 @@ def getUserTable():
 
     for admin in Admin().get_users():
         html_str += "<tr>"
+        html_str += "<td><button name='" + str(admin[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + admin[3] + "</td>"
         html_str += "<td>" + admin[0] + "</td>"
         html_str += "<td>" + admin[2] + "</td>"
@@ -408,12 +412,14 @@ def getUserTable():
     html_str += "<table>"
     html_str += "<h3> Sponsors </h3>"
     html_str += "<tr>"
+    html_str += "<th>Remove</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>Title</th>"
     html_str += "</tr>"
 
     for sponsor in Sponsor().get_users():
         html_str += "<tr>"
+        html_str += "<td><button name='" + str(sponsor[1]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(sponsor[1]) + "</td>"
         html_str += "<td>" + str(sponsor[0]) + "</td>"
         html_str += "</tr>"
@@ -436,18 +442,19 @@ def getUserTable():
 
     for driver in Driver().get_users():
         html_str += "<tr>"
-        html_str += "<td><button id='remove' style='color:red;'>X</button></td>"
+        html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(driver[3]) + "</td>"
         html_str += "<td>" + str(driver[0]) + "</td>"
         html_str += "<td>" + str(driver[2]) + "</td>"
-        if (is_suspended(str(driver[3]))):
-            html_str += "<td><button id='unsuspend' style='color:red;'>X</button></td>"
+
+        if is_suspended(driver[3]):
+            html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
-            html_str += "<td><button id='suspend'>X</button></td>"
-        print(driver)
+            html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
+
         html_str += "<td>" + str(driver[6]) + "</td>"
-        html_str += "<td><input id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
-        html_str += "<td><input id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
+        html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
+        html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
         html_str += "</tr>"
         
     html_str += "</table></form>"
@@ -456,11 +463,22 @@ def getUserTable():
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():
-    user = request.json['data']
-    suspend_driver(user, 9999, 12, 30)
+    user = request.get_data()
+    Admin().suspend_driver(user, 9999, 12, 30)
     return ('', 204)
 
-# Settings page
+@app.route("/unsuspend", methods=["GET","POST"])
+def unsuspend():
+    user = request.get_data()
+    Admin().cancel_suspension(user)
+    return ('', 204)
+
+@app.route("/remove", methods=["GET","POST"])
+def remove():
+    user = request.get_data()
+    Admin().remove_user(user)
+    return ('', 204)
+
 @app.route("/productsearch", methods=["GET","POST"])
 def productsearch():
     search = "no input"

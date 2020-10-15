@@ -268,19 +268,22 @@ def suspend_sponsor(sponsor_username, year, month, day):
 
 #this function returns true if a driver is currently suspended
 def is_suspended(user):
-    
-    #this will remove suspended driver's whos suspensions are over
-    cursor.execute('DELETE from suspend WHERE date_return <= NOW()')
-    #database.commit()
+        
+        sql = 'SELECT user FROM suspend WHERE user = %s'
+        val = (user, )
 
-    sql = 'SELECT user FROM suspend WHERE user = %s'
-    val = (user, )
-    cursor.execute(sql, val)
-    suspended_user = cursor.fetchone()
-    if suspended_user == None:
-        return False
-    else:
-        return True
+        #this will remove suspended driver's whos suspensions are over
+        try:
+            database.delete('DELETE from suspend WHERE date_return <= NOW()')
+            suspended_user = database.query(sql, val)
+            database.commit()
+        except Exception as e:
+            raise Exception(e)
+        
+        if suspended_user == None:
+            return False
+        else:
+            return True
            
 #this function edits the suspension date of the driver
 def edit_suspension(user, year, month, day):

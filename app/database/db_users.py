@@ -7,6 +7,7 @@ import os
 from abc import ABC
 from abc import abstractmethod
 from werkzeug.security import check_password_hash
+from app.database.db_functions import *
 
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
@@ -315,7 +316,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def cancel_suspension(self, username):
-        query = 'DELETE from suspend WHERE user = %s'
+        query = 'DELETE FROM suspend WHERE user = %s'
         vals = (username, )
 
         try:
@@ -325,7 +326,7 @@ class Admin(AbsUser):
         
 
     def get_suspended_users(self):
-        query = 'SELECT * from suspend'
+        query = 'SELECT * FROM suspend'
         try:
             users = self.database.query(query)
         except Exception as e:
@@ -335,7 +336,7 @@ class Admin(AbsUser):
     def remove_user(self, username):
 
         sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = %s'
-        val = (user, )
+        val = (username, )
         id = self.database.query(sql, val)
         if id[0][0] != None:
             role = 'driver'

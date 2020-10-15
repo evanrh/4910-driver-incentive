@@ -20,18 +20,46 @@ $("#roleSelect").change(function() {
   }
 });
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-
-// function to suspend user
 $(function() {
-var user;
-$('suspend').click(function() {
-    user = $(this).attr("name")
-    $.ajax({
-        url: '/suspend',
-        data: {'data': user},
-        type: 'POST',
-    });
-});
+  $(document).on('click', '#suspend', function(e) {
+    var user =  $(this).attr("name")
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/suspend', 
+      type: 'POST', 
+      data: user
+    })
+  });
 });
 
+$(function() {
+  $(document).on('click', '#unsuspend', function(e) {
+    var user =  $(this).attr("name")
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/unsuspend', 
+      type: 'POST', 
+      data: user
+    })
+  });
+});
+
+$(function() {
+  $(document).on('click', '#remove', function(e) {
+    var user =  $(this).attr("name")
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/remove', 
+      type: 'POST', 
+      data: user
+    })
+  });
+});
+
+$(document).ready(function(){
+	var uri = window.location.toString();
+	if (uri.indexOf("?") > 0) {
+	    var clean_uri = uri.substring(0, uri.indexOf("?"));
+	    window.history.replaceState({}, document.title, clean_uri);
+	}
+});

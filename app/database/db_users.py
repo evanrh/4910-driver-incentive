@@ -304,12 +304,13 @@ class Admin(AbsUser):
             role = 'sponsor'
         else:
             role = 'admin'
-            
+
         sus_list = get_suspended_users()
         self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
         self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
         if username in sus_list:
-            cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
+            print("DELETE")
+            self.database.delete('DELETE FROM suspend WHERE user = %s', (username, ))
         self.database.commit()
 
     def upload_image(self, tempf):

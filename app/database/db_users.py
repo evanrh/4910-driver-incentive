@@ -287,20 +287,11 @@ class Admin(AbsUser):
     def cancel_suspension(self, username):
         query = 'DELETE FROM suspend WHERE user = %s'
         vals = (username, )
-
         try:
             self.database.delete(query, vals)
         except Exception as e:
             raise Exception(e)
         
-
-    def get_suspended_users(self):
-        query = 'SELECT * FROM suspend'
-        try:
-            users = self.database.query(query)
-        except Exception as e:
-            raise Exception(e)
-        return users
 
     def remove_user(self, username):
 
@@ -311,10 +302,13 @@ class Admin(AbsUser):
             role = 'driver'
         elif id[0][1] != None:
             role = 'sponsor'
-
+        else:
+            role = 'admin'
+            
+        sus_list = get_suspended_users()
         self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
         self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
-        if is_suspended(username):
+        if username in sus_list:
             cursor.execute('DELETE FROM suspend WHERE user = %s', (username, ))
         self.database.commit()
 

@@ -345,6 +345,16 @@ class Admin(AbsUser):
 
         return file
 
+    def change_password(self, new_pwd):
+        query = 'UPDATE admin SET pwd = %s WHERE user = %s'
+        vals = (new_pwd, self.properties['user'])
+
+        try:
+            self.database.insert(query, vals))
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
     def delete(self):
         """ Deletes an admin from the users table and from the admin table """
         user_query = "DELETE FROM users WHERE Admin_ID=%s"
@@ -562,6 +572,16 @@ class Sponsor(AbsUser):
         vals = (username, str_date)
         try:
             self.database.insert(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+    def change_password(self, new_pwd):
+        query = 'UPDATE sponsor SET pwd = %s WHERE user = %s'
+        vals = (new_pwd, self.properties['user'])
+
+        try:
+            self.database.insert(query, vals))
             self.database.commit()
         except Exception as e:
             raise Exception(e)
@@ -805,6 +825,16 @@ class Driver(AbsUser):
             file.write(self.properties['image'])
 
         return file
+
+    def change_password(self, new_pwd):
+        query = 'UPDATE driver SET pwd = %s WHERE user = %s'
+        vals = (new_pwd, self.properties['user'])
+
+        try:
+            self.database.insert(query, vals))
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
 
     def delete(self):
         """ Deletes a driver from the users table and from the driver table """

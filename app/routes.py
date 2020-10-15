@@ -357,6 +357,8 @@ def server_error(e):
 # Returns a string full of html code representing
 # a table with all drivers to display on webpage
 def getDriverTable():
+    suspendedUsers = get_suspended_users()
+    driverList = Driver().get_users()
     html_str = ""
     html_str = ""
     html_str += '<form id="view-drivers">'
@@ -372,15 +374,15 @@ def getDriverTable():
     html_str += "<th>Send Message</th>"
     html_str += "</tr>"
 
-    for driver in Driver().get_users():
-        newDriver = Driver(driver)
+    for driver in driverList:
         html_str += "<tr>"
+        html_str += "<td></td>"
         html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(driver[3]) + "</td>"
         html_str += "<td>" + str(driver[0]) + "</td>"
         html_str += "<td>" + str(driver[2]) + "</td>"
 
-        if newDriver.is_suspended():
+        if str(driver[3]) in suspendedUsers:
             html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
             html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
@@ -399,7 +401,8 @@ def getUserTable():
     adminList = Admin().get_users()
     sponsorList = Sponsor().get_users()
     driverList = Driver().get_users()
-
+    suspendedUsers = get_suspended_users()
+    print(suspendedUsers)
     html_str = ""
 
     html_str += '<form id="view-drivers">'
@@ -449,7 +452,6 @@ def getUserTable():
     html_str += "</tr>"
 
     for driver in driverList:
-        newDriver = Driver(driver)
         html_str += "<tr>"
         html_str += "<td></td>"
         html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
@@ -457,7 +459,7 @@ def getUserTable():
         html_str += "<td>" + str(driver[0]) + "</td>"
         html_str += "<td>" + str(driver[2]) + "</td>"
 
-        if newDriver.is_suspended():
+        if str(driver[3]) in suspendedUsers:
             html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
             html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
@@ -473,19 +475,21 @@ def getUserTable():
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():
-    user = request.get_data()
+    user = request.get_data().decode("utf-8") 
+    print("suspend " + user)
     Admin().suspend_driver(user, 9999, 12, 30)
     return ('', 204)
 
 @app.route("/unsuspend", methods=["GET","POST"])
 def unsuspend():
-    user = request.get_data()
+    user = request.get_data().decode("utf-8") 
+    print("unsuspend " + user)
     Admin().cancel_suspension(user)
     return ('', 204)
 
 @app.route("/remove", methods=["GET","POST"])
 def remove():
-    user = request.get_data()
+    user = request.get_data().decode("utf-8") 
     Admin().remove_user(user)
     return ('', 204)
 

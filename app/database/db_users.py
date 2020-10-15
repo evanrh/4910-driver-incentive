@@ -113,7 +113,8 @@ class Admin(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         query = 'INSERT INTO admin VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s)'
-
+        self.properties['END'] = 'NULL'
+        
         try:
             self.database.insert(query, params=self.properties)
             self.add_to_users()
@@ -128,7 +129,7 @@ class Admin(AbsUser):
 
         return check_password_hash(pwd_hash, db_pwd)
 
-    def check_username_available(self, username):
+    def check_username_available(self):
         query = "SELECT COUNT(*) FROM admin WHERE user=\"{}\"".format(self.properties['user'])
 
         out = self.database.query(query) 

@@ -331,7 +331,7 @@ def add_points_to_driver(driver_username, sponsor_id, points_to_add):
     sql = 'UPDATE driver SET points = %s WHERE (user = %s AND sponsor_id = %s)'
     val = (points_to_add, driver_username, sponsor_id)
     cursor.execute(sql, val)
-    #database.commit()
+    database.commit()
 
 def sponsorless_drivers():
     

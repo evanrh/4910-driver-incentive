@@ -179,7 +179,10 @@ def about():
 def driverPointsLeader():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('driver/driverPointsLeader.html')
+    
+    drivers = view_point_leaders(0)
+
+    return render_template('driver/driverPointsLeader.html', drivers=drivers)
 
 @app.route("/driverNotification")
 def driverNotification():
@@ -222,7 +225,10 @@ def sponsorNotification():
 def sponsorPointsLeader():
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('sponsor/sponsorPointsLeader.html')
+
+    drivers = view_point_leaders(0)
+
+    return render_template('sponsor/sponsorPointsLeader.html', drivers=drivers)
 
 @app.route("/sponsorProfile")
 def sponsorProfile():
@@ -296,7 +302,10 @@ def adminNotifications():
 def adminPointsLeader():
     if permissionCheck(["admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('admin/adminPointsLeader.html')
+
+    drivers = view_point_leaders(0)
+
+    return render_template('admin/adminPointsLeader.html', drivers=drivers)
 
 @app.route("/adminReports")
 def adminReports():
@@ -417,6 +426,7 @@ def getDriverTable():
 # Returns a string full of html code representing
 # a table with all drivers and sponsors to display on webpage
 def getUserTable():
+    start_time = time.time()
     adminList = Admin().get_users()
     sponsorList = Sponsor().get_users()
     driverList = Driver().get_users()
@@ -448,6 +458,7 @@ def getUserTable():
     html_str += "<th>User Name</th>"
     html_str += "<th>Title</th>"
     html_str += "<th>Suspend</th>"
+    html_str += "<th>Date Joined</th>"
     html_str += "</tr>"
 
     for sponsor in sponsorList:
@@ -460,6 +471,7 @@ def getUserTable():
             html_str += "<td><button name='" + str(sponsor[1]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
             html_str += "<td><button name='" + str(sponsor[1]) + "' id='suspend'>X</button></td>"
+        html_str += "<td>" + str(sponsor[7]) + "</td>"
         html_str += "</tr>"
 
     html_str += "<tr>"
@@ -495,7 +507,8 @@ def getUserTable():
         html_str += "</tr>"
         
     html_str += "</table></form>"
-
+    print("--- %s seconds ---" % (time.time() - start_time))
+    
     return html_str
 
 @app.route("/suspend", methods=["GET","POST"])
@@ -521,7 +534,7 @@ def addpts():
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     points = data[1].split("=")
-    add_points_to_driver(user[1], 0, points[1])
+    add_points_to_driver(user[1], 0, int(points[1]))
     return ('', 204)
 
 @app.route("/productsearch", methods=["GET","POST"])

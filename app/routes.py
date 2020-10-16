@@ -24,6 +24,7 @@ userInfo = Driver()
 
 def permissionCheck(allowedRole):
     global userInfo
+    suspendedUsers = Admin().get_suspended_users()
 
     if userInfo.getUsername() == 'NULL':
         if session['userInfo']['properties']['role'] == "admin": 
@@ -33,11 +34,15 @@ def permissionCheck(allowedRole):
         else:
             userInfo = Driver()
 
-        try:
-            userInfo.populate(session['userInfo']['properties']['user'])
-        except Exception as e:
-            session['logged_in'] = False
-            return redirect(url_for('home'))
+    try:
+        userInfo.populate(session['userInfo']['properties']['user'])
+    except Exception as e:
+        session['logged_in'] = False
+        return redirect(url_for('home'))
+
+    if userInfo.getUsername() in suspendedUsers:
+        session['logged_in'] = False
+        return redirect(url_for('home'))
 
     if not userInfo.getRole() in allowedRole:
         return False
@@ -88,6 +93,7 @@ def home():
 def do_admin_login():
     # Using the global class to access data
     global userInfo
+    suspendedUsers = Admin().get_suspended_users()
 
     # Get user input from web page
     username = request.form['username']
@@ -96,6 +102,8 @@ def do_admin_login():
     # Do basic login verification
     if not username_exist(username):
         flash('Incorrect login credentials!')
+    elif username in suspendedUsers:
+        flash('Your account is currently suspended! Please contact us if you think this is a mistake.')
     else:
         current_hash = get_password(username)
         if check_password_hash(current_hash, pwd):
@@ -372,6 +380,7 @@ def getDriverTable():
     html_str += '<form id="view-drivers">'
     html_str += "<table>"
     html_str += "<tr>"
+    html_str += "<th class='heading'>Drivers</th>"
     html_str += "<th>Remove</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>First Name</th>"
@@ -380,9 +389,10 @@ def getDriverTable():
     html_str += "<th>Points</th>"
     html_str += "<th>Add Points</th>"
     html_str += "<th>Send Message</th>"
+    html_str += "<th>Date Joined</th>"
     html_str += "</tr>"
 
-    for driver in driverList:
+    for driver in driverList:  
         html_str += "<tr>"
         html_str += "<td></td>"
         html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
@@ -398,6 +408,7 @@ def getDriverTable():
         html_str += "<td>" + str(driver[6]) + "</td>"
         html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
         html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
+        html_str += "<td>" + str(driver[12]) +"</td>"
         html_str += "</tr>"
     
     html_str += "</table></form>"
@@ -410,7 +421,6 @@ def getUserTable():
     sponsorList = Sponsor().get_users()
     driverList = Driver().get_users()
     suspendedUsers = Admin().get_suspended_users()
-    print(suspendedUsers)
     html_str = ""
 
     html_str += '<form id="view-drivers">'
@@ -437,6 +447,7 @@ def getUserTable():
     html_str += "<th>Delete</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>Title</th>"
+    html_str += "<th>Suspend</th>"
     html_str += "</tr>"
 
     for sponsor in sponsorList:
@@ -445,6 +456,10 @@ def getUserTable():
         html_str += "<td><button name='" + str(sponsor[1]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(sponsor[1]) + "</td>"
         html_str += "<td>" + str(sponsor[0]) + "</td>"
+        if str(sponsor[1]) in suspendedUsers:
+            html_str += "<td><button name='" + str(sponsor[1]) + "' id='unsuspend' style='color:red;'>X</button></td>"
+        else:
+            html_str += "<td><button name='" + str(sponsor[1]) + "' id='suspend'>X</button></td>"
         html_str += "</tr>"
 
     html_str += "<tr>"
@@ -457,6 +472,7 @@ def getUserTable():
     html_str += "<th>Points</th>"
     html_str += "<th>Add Points</th>"
     html_str += "<th>Send Message</th>"
+    html_str += "<th>Date Joined</th>"
     html_str += "</tr>"
 
     for driver in driverList:
@@ -473,8 +489,9 @@ def getUserTable():
             html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
 
         html_str += "<td>" + str(driver[6]) + "</td>"
-        html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
-        html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
+        html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints"+ str(driver[3]) +"' placeholder='Add Pts'><button name='" + str(driver[3]) + "' id='addpoints'>+</button></td>"
+        html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage"+ str(driver[3]) +"' placeholder='Message'><button name='" + str(driver[3]) + "' id='sendmessage'>Send</button></td>"
+        html_str += "<td>" + str(driver[12]) +"</td>"
         html_str += "</tr>"
         
     html_str += "</table></form>"
@@ -484,14 +501,12 @@ def getUserTable():
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():
     user = request.get_data().decode("utf-8") 
-    print("suspend " + user)
     Admin().suspend_user(user, 9999, 12, 30)
     return ('', 204)
 
 @app.route("/unsuspend", methods=["GET","POST"])
 def unsuspend():
     user = request.get_data().decode("utf-8") 
-    print("unsuspend " + user)
     Admin().cancel_suspension(user)
     return ('', 204)
 
@@ -499,6 +514,14 @@ def unsuspend():
 def remove():
     user = request.get_data().decode("utf-8") 
     Admin().remove_user(user)
+    return ('', 204)
+
+@app.route("/addpts", methods=["GET","POST"])
+def addpts():
+    data = request.get_data().decode("utf-8").split("&")
+    user = data[0].split("=")
+    points = data[1].split("=")
+    add_points_to_driver(user[1], 0, points[1])
     return ('', 204)
 
 @app.route("/productsearch", methods=["GET","POST"])

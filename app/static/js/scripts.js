@@ -20,6 +20,7 @@ $("#roleSelect").change(function() {
   }
 });
 
+// Suspend User
 $(function() {
   $(document).on('click', '#suspend', function(e) {
     var user =  $(this).attr("name")
@@ -32,6 +33,7 @@ $(function() {
   });
 });
 
+// Unsuspend User
 $(function() {
   $(document).on('click', '#unsuspend', function(e) {
     var user =  $(this).attr("name")
@@ -44,6 +46,7 @@ $(function() {
   });
 });
 
+// Remove user
 $(function() {
   $(document).on('click', '#remove', function(e) {
     var user =  $(this).attr("name")
@@ -56,6 +59,21 @@ $(function() {
   });
 });
 
+// Add points
+$(function() {
+  $(document).on('click', '#addpoints', function(e) {
+    var user =  $(this).attr("name")
+    var points = document.getElementById("addpoints" + user).value;
+    $.ajax({ 
+      contentType: "application/x-www-form-urlencoded",
+      url: '/addpts', 
+      type: 'POST', 
+      data:{'user': user, 'points': points}
+    })
+  });
+});
+
+// Fix URL
 $(document).ready(function(){
 	var uri = window.location.toString();
 	if (uri.indexOf("?") > 0) {

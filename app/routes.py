@@ -373,7 +373,7 @@ def server_error(e):
 # Returns a string full of html code representing
 # a table with all drivers to display on webpage
 def getDriverTable():
-    suspendedUsers = get_suspended_users()
+    suspendedUsers = Admin().get_suspended_users()
     driverList = Driver().get_users()
     html_str = ""
     html_str = ""

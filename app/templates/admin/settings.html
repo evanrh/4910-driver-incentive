@@ -48,6 +48,13 @@
     <button type="submit" name="delete-account">Delete Account</button>
 </form>
 
+<h3>Change Theme</h3>
+<label for="themeColor">Select Theme Color</label>
+        <select name="themeSelect" id = "themeSelect">
+            <option value = "main">Main Theme</option>
+            <option value = "dark">Dark Theme</option>
+        </select>
+
 <h3>Change Language</h3>
 <div id="google_translate_element"></div>
 <script type="text/javascript">
@@ -55,4 +62,6 @@
         new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL}, 'google_translate_element');
     }
 </script>
+
+<br><br>
 {% endblock %}

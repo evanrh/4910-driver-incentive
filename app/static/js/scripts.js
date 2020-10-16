@@ -8,6 +8,52 @@ function updateNav() {
   }
 }
 
+$("#themeSelect").change(function() {
+  if ($(this).val() == "dark") {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme1');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme4');
+    document.documentElement.style.setProperty('--main-theme1', color1);
+    document.documentElement.style.setProperty('--main-theme2', color2);
+    document.documentElement.style.setProperty('--main-theme3', color3);
+    document.documentElement.style.setProperty('--main-theme4', color4);
+    document.cookie = 'theme=dark'
+  } else {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme4');
+    document.documentElement.style.setProperty('--main-theme1', color1);
+    document.documentElement.style.setProperty('--main-theme2', color2);
+    document.documentElement.style.setProperty('--main-theme3', color3);
+    document.documentElement.style.setProperty('--main-theme4', color4);
+    document.cookie = 'theme=light'
+  }
+});
+
+function setThemeFromCookie() {
+  if (document.cookie.match(/theme=dark/i) != null) {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme1');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme4');
+    document.documentElement.style.setProperty('--main-theme1', color1);
+    document.documentElement.style.setProperty('--main-theme2', color2);
+    document.documentElement.style.setProperty('--main-theme3', color3);
+    document.documentElement.style.setProperty('--main-theme4', color4);
+  } else {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme4');
+    document.documentElement.style.setProperty('--main-theme1', color1);
+    document.documentElement.style.setProperty('--main-theme2', color2);
+    document.documentElement.style.setProperty('--main-theme3', color3);
+    document.documentElement.style.setProperty('--main-theme4', color4);
+  }
+}
+
 $("#roleSelect").change(function() {
   if ($(this).val() == "sponsor") {
     $('#title').show();
@@ -79,5 +125,6 @@ $(document).ready(function(){
 	if (uri.indexOf("?") > 0) {
 	    var clean_uri = uri.substring(0, uri.indexOf("?"));
 	    window.history.replaceState({}, document.title, clean_uri);
-	}
+  }
+  setThemeFromCookie()
 });

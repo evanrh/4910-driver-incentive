@@ -217,7 +217,7 @@ class Admin(AbsUser):
 
         self.properties['fname'] = data[0][0]
         self.properties['mname'] = data[0][1]
-        self.properties['lname'] = data[0][1]
+        self.properties['lname'] = data[0][2]
         self.properties['user'] = data[0][3]
         self.properties['id'] = data[0][4]
         self.properties['phone'] = data[0][5]

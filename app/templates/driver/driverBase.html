@@ -28,10 +28,16 @@
                 <a style="padding-left:0;">
                     <span>Points: {{ session['userInfo']['properties']['points'] }}</span>
                 </a>
-
-                <a href="/driverProfile">
-                    <img src="{{url_for('static', filename='img/userpic.png')}}" class="pfp">
-                </a>
+                
+                {% if session['userInfo']['properties']['image'] %}
+                    <a href="/driverProfile">
+                        <img src="{{url_for('static', filename='img/userpic.png')}}" class="pfp">
+                    </a>
+                {% else %}
+                    <a href="/driverProfile">
+                        <img src="{{url_for('static', filename='img/userpic.png')}}" class="pfp">
+                    </a>
+                {% endif %}
 
                 <a style="padding-left:0;">
                     <span>{{ session['userInfo']['properties']['user'].capitalize() }}</span>

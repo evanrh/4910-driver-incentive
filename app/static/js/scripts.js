@@ -73,6 +73,10 @@ $("#roleSelect").change(function() {
     $('#title').show();
     $('#title').attr('required', '');
     $('#title').attr('data-error', 'This field is required.');
+  }else if ($(this).val() == "driver") {
+    $('#sponsorid').show();
+    $('#sponsorid').attr('required', '');
+    $('#sponsorid').attr('data-error', 'This field is required.');
   } else {
     $('#title').hide();
     $('#title').removeAttr('required');

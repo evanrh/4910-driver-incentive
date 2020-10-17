@@ -381,56 +381,10 @@ def get_password(user='NULL'):
 
     return current_password[0]
 
-#generic class for functionality. will get expanded when added to the admin user's class
-def admin_add_driver(first_name='NULL', last_name='NULL', username='NULL', temp_password='temp'):
-    add_driver(first_name, 'NULL', last_name, username, 'NULL', 'NULL', 'NULL', temp_password, 'NULL')
-
-#generic class for functionality. will get expanded when added to the admin user's class
-def admin_add_sponsor(title='NULL', username='NULL', temp_password='temp'):
-    add_sponsor(title, username,'NULL', 'NULL', 'NULL', temp_password, 'NULL')
-
-#generic class for functionality. will get expanded when added to the admin user's class
-def admin_add_admin(title='NULL', username='NULL', temp_password='temp'):
-    add_admin(first_name, 'NULL', last_name, username, 'NULL', 'NULL', 'NULL', temp_password, 'NULL')
 
 
-def admin_see_drivers_under_sponsor(spon_username):
-    sql = 'SELECT sponsor_id FROM sponsor WHERE user = %s'
-    vals(spon_username, )
-    cursor.execute(sql, vals)
-    spon_id = cursor.fetchone()
     
-    sql = 'SELECT first_name, mid_name, last_name, user, driver_id, image, date_join FROM driver WHERE sponsor_id = %s'
-    vals = (spon_id, )
-    cursor.execute(sql, vals)
 
-    return cursor.fetchall()
-    
-def view_sponsors():
-    cursor.execute('SELECT title, user, sponsor_id, phone, address, image, date_join FROM sponsor')
-    return cursor.fetchall()
-
-def admin_view_users():
-    users_dict = {}
-    users_dict['admins'] = []
-    users_dict['sponsors'] = []
-    users_dict['drivers'] = []
-    cursor.execute('SELECT first_name, mid_name, last_name, user, admin_id, phone, email, date_join FROM admin')
-    admins = cursor.fetchall()
-    for a in admins:
-        users_dict['admins'].append(a)
-
-    cursor.execute('SELECT title, user, sponsor_id, phone, email, date_join FROM sponsor')
-    sponsors = cursor.fetchall()
-    for s in sponsors:
-        users_dict['sponsors'].append(s)
-
-    cursor.execute('SELECT first_name, mid_name, last_name, user, driver_id, sponsor_id, points, address, phone, email, date_join FROM driver')
-    drivers = cursor.fetchall()
-    for d in drivers:
-        users_dict['drivers'].append(d)
-
-    return users_dict
 
 def cancel_suspension(username):
     query = 'DELETE FROM suspend WHERE user = %s'
@@ -467,10 +421,6 @@ def is_suspended(user):
             return False
         else:
             return True
-
-#main used to test functions
-if __name__ == "__main__":
-    add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'NULL')
 
 #Clean search and translate into sql search
 def product_search(search):

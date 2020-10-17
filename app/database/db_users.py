@@ -320,6 +320,9 @@ class Admin(AbsUser):
             self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
             self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
             self.database.delete('DELETE FROM suspend WHERE user = %s', (username, ))
+            if role == 'driver':
+                self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id[0[0]], ))
+                self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id[0[0]], ))
             self.database.commit()
         except Exception as e:
             raise Exception(e)
@@ -497,6 +500,27 @@ class Sponsor(AbsUser):
     def getPoints(self):
         return 999999
 
+    def populate(self, username: str):
+        query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE user = %s'
+        vals = (username, )
+
+        try:
+            data = self.database.query(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+        self.properties['title'] = data[0][0]
+        self.properties['user'] = data[0][1]
+        self.properties['id'] = data[0][2]
+        self.properties['address'] = data[0][3]
+        self.properties['phone'] = data[0][4]
+        self.properties['email'] = data[0][5]
+        self.properties['pwd'] = 'NULL'
+        self.properties['image'] = data[0][6]
+        self.properties['date_join'] = data[0][7]
+        self.properties['suspension'] = self.is_suspended()
+
     def is_suspended(self):
         
         sql = 'SELECT user FROM suspend WHERE user = %s'
@@ -515,26 +539,136 @@ class Sponsor(AbsUser):
         else:
             return True
 
-    def populate(self, username: str):
-        query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE user = %s'
-        vals = (username, )
+    def edit_suspension(self, username, year, month, day):       
+        if month < 10:
+            month = '0' + str(month)
+        else:
+            month = str(month)
 
+        year = str(year)
+        day = str(day)
+        
+        str_date = year + '-' + month + '-' + day
+        query = 'UPDATE suspend SET date_return = %s WHERE user = %s'
+        vals = (str_date, username)
         try:
-            data = self.database.query(query, vals)
-
+            self.database.insert(query, vals)
+            self.database.commit()
         except Exception as e:
             raise Exception(e)
 
-        self.properties['title'] = data[0][0]
-        self.properties['user'] = data[0][1]
-        self.properties['id'] = data[0][2]
-        self.properties['address'] = data[0][3]
-        self.properties['phone'] = data[0][4]
-        self.properties['email'] = data[0][5]
-        self.properties['pwd'] = 'NULL'
-        self.properties['image'] = data[0][6]
-        self.properties['date_join'] = data[0][7]
-        self.properties['suspension'] = self.is_suspended()
+    def get_suspended_users(self):
+        sus = self.database.query('SELECT user FROM suspend')
+        sus_list = []
+        
+        for s in sus:
+            sus_list.append(s[0])
+        return sus_list
+
+    def cancel_suspension(self, username):
+        query = 'DELETE FROM suspend WHERE user = %s'
+        vals = (username, )
+        try:
+            self.database.delete(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+    def view_applications(self):
+        query = 'SELECT driver.user FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1'
+        vals = (self.properties['id'])
+
+        try: 
+            apps = self.database.query(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        return apps
+
+
+    def view_drivers(self):
+        query = 'SELECT driver.user, driver_bridge.points FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
+        vals = (self.properties['id'])
+
+        try: 
+            drivers = self.database.query(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        return drivers
+
+
+    def accept_application(self, driver_id):
+        query = 'UPDATE driver_bridge SET apply = 0 WHERE driver_id = %s AND sponsor_id = %s'
+        vals = (driver_id, self.properties['id'])
+
+        try: 
+            self.database.insert(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+    
+    def decline_application(self, driver_id):
+        query = 'DELETE FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s'
+        vals = (driver_id, self.properties['id'])
+
+        try: 
+            self.database.delete(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+    def add_points(self, driver_id, add_points):
+
+        data = self.database.query('SELECT points FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s AND apply = 0', (driver_id, self.properties['id']))
+        current_points = data[0][0]
+
+        current_points += add_points
+
+        query = 'UPDATE driver_bridge SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
+        vals = (current_points, driver_id, self.properties['id'])
+        try: 
+            self.database.insert(query, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+        data = self.database.query('SELECT points FROM points_leaderboard WHERE driver_id = %s AND sponsor_id = %s', (driver_id, self.properties['id']))
+        current_points = data[0][0]
+
+        current_points += add_points
+        
+        leader = 'UPDATE points_leaderboard SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
+        try: 
+            self.database.insert(leader, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+    def view_leaderboard(self):
+        query = 'SELECT driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s ORDER BY points_leaderboard.points DESC'
+        val = (self.properties['id'])
+
+        try: 
+            leaders = self.database.query(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        return leaders
+
+
+    def remove_driver(self, driver_id):
+        query = 'DELETE FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s'
+        remove_leader = 'DELETE FROM points_leaderboard WHERE driver_id = %s and sponsor_id = %s'
+        vals = (driver_id, self.properties['id'])
+
+        try: 
+            self.database.delete(query, vals)
+            self.database.delete(remove_leader, vals)
+            self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
     
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:
@@ -614,8 +748,7 @@ class Driver(AbsUser):
         self.properties['lname'] = lname
         self.properties['user'] = user
         self.properties['id'] = 0
-        self.properties['sponsor_id'] = 0
-        self.properties['points'] = 0
+        self.properties['sponsors'] = {}
         self.properties['address'] = address
         self.properties['phone'] = phone
         self.properties['email'] = email
@@ -643,7 +776,7 @@ class Driver(AbsUser):
 
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(sponsor_id)s, %(points)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(END)s, NOW(), %(image)s)'
+        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(END)s, NOW(), %(image)s)'
         self.properties['END'] = 'NULL'
 
         try:
@@ -782,7 +915,7 @@ class Driver(AbsUser):
 
 
     def populate(self, username: str):
-        query = 'SELECT first_name, mid_name, last_name, user, driver_id, sponsor_id, points, address, phone, email, image, date_join FROM driver WHERE user = %s'
+        query = 'SELECT first_name, mid_name, last_name, user, driver_id, address, phone, email, image, date_join FROM driver WHERE user = %s'
         vals = (username, )
 
         try:
@@ -796,8 +929,6 @@ class Driver(AbsUser):
         self.properties['lname'] = data[0][2]
         self.properties['user'] = data[0][3]
         self.properties['id'] = data[0][4]
-        self.properties['sponsor_id'] = data[0][5]
-        self.properties['points'] = data[0][6]
         self.properties['address'] = data[0][7]
         self.properties['phone'] = data[0][8]
         self.properties['email'] = data[0][9]
@@ -805,6 +936,28 @@ class Driver(AbsUser):
         self.properties['image'] = data[0][10]
         self.properties['date_join'] = data[0][11]
         self.properties['suspension'] = self.is_suspended()
+
+        query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
+        vals = (self.properties['user'])
+
+        try:
+            data = self.database.query(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        if data:
+            for d in data:
+                sponsor_id = '{}'.format(d[0])
+                self.properties['sponsors'][sponsor_id] = d[1] 
+
+    def apply_to_sponsor(self, sponsor_id):
+        query = 'INSERT INTO driver_bridge VALUES (%s, %s, %s, %s)'
+        vals = (self.properties['id'], sponsor_id, 0, 1)
+
+        try:
+            self.database.insert(query, vals)
+        except Exception as e:
+            raise Exception(e)
 
     
     def upload_image(self, tempf):

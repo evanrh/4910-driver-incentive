@@ -189,6 +189,7 @@ class Admin(AbsUser):
         query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
         query = query.format('Admin_ID', self.properties['user'], self.properties['id'])
         self.database.insert(query)
+        self.database.commit()
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
@@ -479,7 +480,7 @@ class Sponsor(AbsUser):
         query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
         query = query.format('Sponsor_ID', self.properties['user'], self.properties['id'])
         self.database.insert(query)
-
+        self.database.commit()
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox

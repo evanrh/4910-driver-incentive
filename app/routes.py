@@ -427,10 +427,12 @@ def getDriverTable():
 # a table with all drivers and sponsors to display on webpage
 def getUserTable():
     start_time = time.time()
-    adminList = Admin().get_users()
+    admin = Admin()
+    suspendedUsers = admin.get_suspended_users()
+    adminList = admin.get_users()
+    
     sponsorList = Sponsor().get_users()
     driverList = Driver().get_users()
-    suspendedUsers = Admin().get_suspended_users()
     html_str = ""
 
     html_str += '<form id="view-drivers">'
@@ -457,6 +459,7 @@ def getUserTable():
     html_str += "<th>Delete</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>Title</th>"
+    html_str += "<th>Sponsor ID</th>"
     html_str += "<th>Suspend</th>"
     html_str += "<th>Date Joined</th>"
     html_str += "</tr>"
@@ -467,6 +470,7 @@ def getUserTable():
         html_str += "<td><button name='" + str(sponsor[1]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(sponsor[1]) + "</td>"
         html_str += "<td>" + str(sponsor[0]) + "</td>"
+        html_str += "<td>" + str(sponsor[2]) + "</td>"
         if str(sponsor[1]) in suspendedUsers:
             html_str += "<td><button name='" + str(sponsor[1]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:

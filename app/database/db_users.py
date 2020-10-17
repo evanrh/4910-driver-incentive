@@ -576,7 +576,7 @@ class Sponsor(AbsUser):
 
     def view_applications(self):
         query = 'SELECT driver.user driver.driver_id FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1'
-        vals = (self.properties['id'])
+        vals = (self.properties['id'], )
 
         try: 
             apps = self.database.query(query, vals)
@@ -588,7 +588,7 @@ class Sponsor(AbsUser):
 
     def view_drivers(self):
         query = 'SELECT driver.user, driver.driver_id, driver_bridge.points FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
-        vals = (self.properties['id'])
+        vals = (self.properties['id'], )
 
         try: 
             drivers = self.database.query(query, vals)
@@ -647,7 +647,7 @@ class Sponsor(AbsUser):
 
     def view_leaderboard(self):
         query = 'SELECT driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s ORDER BY points_leaderboard.points DESC'
-        val = (self.properties['id'])
+        val = (self.properties['id'], )
 
         try: 
             leaders = self.database.query(query, vals)

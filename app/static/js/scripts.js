@@ -14,22 +14,30 @@ $("#themeSelect").change(function() {
     var color2 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme2');
     var color3 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme3');
     var color4 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme4');
-    document.documentElement.style.setProperty('--main-theme1', color1);
-    document.documentElement.style.setProperty('--main-theme2', color2);
-    document.documentElement.style.setProperty('--main-theme3', color3);
-    document.documentElement.style.setProperty('--main-theme4', color4);
     document.cookie = 'theme=dark'
+  } else if ($(this).val() == "red") {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme1');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme4');
+    document.cookie = 'theme=red'
+  } else if ($(this).val() == "clemson") {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme1');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme4');
+    document.cookie = 'theme=clemson'
   } else {
     var color1 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme');
     var color2 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme2');
     var color3 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme3');
     var color4 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme4');
-    document.documentElement.style.setProperty('--main-theme1', color1);
-    document.documentElement.style.setProperty('--main-theme2', color2);
-    document.documentElement.style.setProperty('--main-theme3', color3);
-    document.documentElement.style.setProperty('--main-theme4', color4);
     document.cookie = 'theme=light'
   }
+  document.documentElement.style.setProperty('--main-theme1', color1);
+  document.documentElement.style.setProperty('--main-theme2', color2);
+  document.documentElement.style.setProperty('--main-theme3', color3);
+  document.documentElement.style.setProperty('--main-theme4', color4);
 });
 
 function setThemeFromCookie() {
@@ -38,20 +46,26 @@ function setThemeFromCookie() {
     var color2 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme2');
     var color3 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme3');
     var color4 = getComputedStyle(document.documentElement).getPropertyValue('--dark-theme4');
-    document.documentElement.style.setProperty('--main-theme1', color1);
-    document.documentElement.style.setProperty('--main-theme2', color2);
-    document.documentElement.style.setProperty('--main-theme3', color3);
-    document.documentElement.style.setProperty('--main-theme4', color4);
+  } else if (document.cookie.match(/theme=red/i) != null) {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme1');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--red-theme4');
+  } else if (document.cookie.match(/theme=clemson/i) != null) {
+    var color1 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme1');
+    var color2 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme2');
+    var color3 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme3');
+    var color4 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme4');
   } else {
     var color1 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme');
     var color2 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme2');
     var color3 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme3');
     var color4 = getComputedStyle(document.documentElement).getPropertyValue('--blue-theme4');
-    document.documentElement.style.setProperty('--main-theme1', color1);
-    document.documentElement.style.setProperty('--main-theme2', color2);
-    document.documentElement.style.setProperty('--main-theme3', color3);
-    document.documentElement.style.setProperty('--main-theme4', color4);
   }
+  document.documentElement.style.setProperty('--main-theme1', color1);
+  document.documentElement.style.setProperty('--main-theme2', color2);
+  document.documentElement.style.setProperty('--main-theme3', color3);
+  document.documentElement.style.setProperty('--main-theme4', color4);
 }
 
 $("#roleSelect").change(function() {
@@ -59,6 +73,10 @@ $("#roleSelect").change(function() {
     $('#title').show();
     $('#title').attr('required', '');
     $('#title').attr('data-error', 'This field is required.');
+  }else if ($(this).val() == "driver") {
+    $('#sponsorid').show();
+    $('#sponsorid').attr('required', '');
+    $('#sponsorid').attr('data-error', 'This field is required.');
   } else {
     $('#title').hide();
     $('#title').removeAttr('required');

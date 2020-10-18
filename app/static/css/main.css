@@ -5,10 +5,18 @@
 	--blue-theme: #0076a3;
 	--blue-theme2: #00B8CC;
 	--blue-theme3:  #027986;
-	--blue-theme4: white;
+    --blue-theme4: white;
+    --red-theme1: #85000f;
+    --red-theme2: #ba0015;
+    --red-theme3: #822e37;
+    --red-theme4: white;
+    --clemson-theme1: #522D80;
+    --clemson-theme2: #F56600;
+    --clemson-theme3: #522D80;
+    --clemson-theme4: white;
 	--dark-theme1: #5e5e5e;
-	--dark-theme2: #000000;
-	--dark-theme3: #525252;
+	--dark-theme2: #2e2e2e;
+	--dark-theme3: #383838;
 	--dark-theme4: white;
 	--main-theme1: var(--blue-theme);
 	--main-theme2: var(--blue-theme2);
@@ -161,7 +169,7 @@ header p{
 }
   
 /* Change color of dropdown links on hover */
-.dropdown-content a:hover {background-color: var(--main-theme4);}
+.dropdown-content a:hover {background-color: var(--main-theme3);}
   
 /* Show the dropdown menu on hover */
 .dropdown:hover .dropdown-content {display: block;}
@@ -194,7 +202,7 @@ header p{
 	cursor: pointer;
 	text-align: center;
 	text-decoration: none;
-	color: var(--main-theme1);
+	color: var(--main-theme3);
 	border: solid 1px var(--main-theme1); 
 	border-top-right-radius: 5px 5px;
 	border-bottom-right-radius: 5px 5px;
@@ -307,7 +315,7 @@ footer {
 
 h1 {
 	text-align: left;
-	color:var(--main-theme2);
+	color:var(--main-theme3);
 	font-family: 'Roboto', sans-serif;
 	font-weight: 1200; 
 	text-transform: uppercase; 
@@ -315,7 +323,7 @@ h1 {
 }
 
 h2 {
-	color: var(--main-theme2);
+	color: var(--main-theme3);
 	font-family: 'Roboto', sans-serif;
 	font-weight: 900; 
 	text-transform: uppercase;
@@ -335,7 +343,7 @@ footer h2 {
 }
 
 h3 {
-	color: var(--main-theme1);
+	color: var(--main-theme3);
 	font-family: 'Roboto', sans-serif; 
 	text-transform: uppercase;
 	font-weight: 600;
@@ -419,7 +427,7 @@ img  {
 }
 
 #view-drivers th:not(:first-child){
-	color:var(--main-theme1);
+	color:var(--main-theme3);
 	font-size: 18px;
 	padding-top: 10px;
 }
@@ -498,7 +506,7 @@ img  {
     }
 
     .side-navbar.responsive {
-        background-color:var(--main-theme2);
+        background-color:var(--main-theme3);
         height: 250px;
         padding: 0 10px 0 10px;
         width: 100%;

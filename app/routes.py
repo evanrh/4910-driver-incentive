@@ -267,7 +267,8 @@ def adminManageAcc():
        pwd = form['pass']
        role = form['roleSelect']
        title = form['title']
-
+       sponsorid = form['sponsorid']
+       
        fname = 'NULL'
        mname = 'NULL'
        lname = 'NULL'
@@ -428,10 +429,11 @@ def getDriverTable():
 # a table with all drivers and sponsors to display on webpage
 def getUserTable():
     start_time = time.time()
-    adminList = Admin().get_users()
+    admin = Admin()
+    suspendedUsers = admin.get_suspended_users()
+    adminList = admin.get_users()
     sponsorList = Sponsor().get_users()
-    driverList = Driver().get_users()
-    suspendedUsers = Admin().get_suspended_users()
+
     html_str = ""
 
     html_str += '<form id="view-drivers">'
@@ -458,6 +460,7 @@ def getUserTable():
     html_str += "<th>Delete</th>"
     html_str += "<th>User Name</th>"
     html_str += "<th>Title</th>"
+    html_str += "<th>Sponsor ID</th>"
     html_str += "<th>Suspend</th>"
     html_str += "<th>Date Joined</th>"
     html_str += "</tr>"
@@ -468,6 +471,7 @@ def getUserTable():
         html_str += "<td><button name='" + str(sponsor[1]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(sponsor[1]) + "</td>"
         html_str += "<td>" + str(sponsor[0]) + "</td>"
+        html_str += "<td>" + str(sponsor[2]) + "</td>"
         if str(sponsor[1]) in suspendedUsers:
             html_str += "<td><button name='" + str(sponsor[1]) + "' id='unsuspend' style='color:red;'>X</button></td>"
         else:
@@ -475,37 +479,43 @@ def getUserTable():
         html_str += "<td>" + str(sponsor[7]) + "</td>"
         html_str += "</tr>"
 
-    html_str += "<tr>"
-    html_str += "<th class='heading'>Drivers</th>"
-    html_str += "<th>Delete</th>"
-    html_str += "<th>User Name</th>"
-    html_str += "<th>First Name</th>"
-    html_str += "<th>Last Name</th>"
-    html_str += "<th>Suspend</th>"
-    html_str += "<th>Points</th>"
-    html_str += "<th>Add Points</th>"
-    html_str += "<th>Send Message</th>"
-    html_str += "<th>Date Joined</th>"
-    html_str += "</tr>"
-
-    for driver in driverList:
+        html_str += '<form id="view-drivers"><table>'
         html_str += "<tr>"
-        html_str += "<td></td>"
-        html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
-        html_str += "<td>" + str(driver[3]) + "</td>"
-        html_str += "<td>" + str(driver[0]) + "</td>"
-        html_str += "<td>" + str(driver[2]) + "</td>"
-
-        if str(driver[3]) in suspendedUsers:
-            html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
-        else:
-            html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
-
-        html_str += "<td>" + str(driver[6]) + "</td>"
-        html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints"+ str(driver[3]) +"' placeholder='Add Pts'><button name='" + str(driver[3]) + "' id='addpoints'>+</button></td>"
-        html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage"+ str(driver[3]) +"' placeholder='Message'><button name='" + str(driver[3]) + "' id='sendmessage'>Send</button></td>"
-        html_str += "<td>" + str(driver[12]) +"</td>"
+        html_str += "<th class='heading'>Drivers</th>"
+        html_str += "<th>Delete</th>"
+        html_str += "<th>User Name</th>"
+        html_str += "<th>First Name</th>"
+        html_str += "<th>Last Name</th>"
+        html_str += "<th>Suspend</th>"
+        html_str += "<th>Points</th>"
+        html_str += "<th>Add Points</th>"
+        html_str += "<th>Send Message</th>"
+        html_str += "<th>Date Joined</th>"
         html_str += "</tr>"
+
+        currSponsor = Sponsor()
+        currSponsor.populate(str(sponsor[1]))
+        for driver in currSponsor.view_drivers():
+            print(driver)
+            html_str += "<tr>"
+            html_str += "<td></td>"
+            html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
+            html_str += "<td>" + str(driver[3]) + "</td>"
+            html_str += "<td>" + str(driver[0]) + "</td>"
+            html_str += "<td>" + str(driver[2]) + "</td>"
+
+            if str(driver[3]) in suspendedUsers:
+                html_str += "<td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
+            else:
+                html_str += "<td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
+
+            html_str += "<td>" + str(driver[6]) + "</td>"
+            html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints"+ str(driver[3]) +"' placeholder='Add Pts'><button name='" + str(driver[3]) + "' id='addpoints'>+</button></td>"
+            html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage"+ str(driver[3]) +"' placeholder='Message'><button name='" + str(driver[3]) + "' id='sendmessage'>Send</button></td>"
+            html_str += "<td>" + str(driver[12]) +"</td>"
+            html_str += "</tr>"
+        
+        html_str += '</table></form>'
         
     html_str += "</table></form>"
     print("--- %s seconds ---" % (time.time() - start_time))

@@ -650,7 +650,7 @@ class Sponsor(AbsUser):
         val = (self.properties['id'], )
 
         try: 
-            leaders = self.database.query(query, vals)
+            leaders = self.database.query(query, val)
         except Exception as e:
             raise Exception(e)
 

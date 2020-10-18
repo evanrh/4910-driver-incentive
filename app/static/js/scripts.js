@@ -141,7 +141,7 @@ $(function() {
       contentType: "application/x-www-form-urlencoded",
       url: '/addpts', 
       type: 'POST', 
-      data:{'user': user, 'points': points}
+      data:{'user': user, 'points': points, 'sponsor': sponsor}
     })
   });
 });

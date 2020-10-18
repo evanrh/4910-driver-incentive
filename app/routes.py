@@ -3,6 +3,7 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 from app.database.db_users import *
+from app.database.db_connection import DB_Connection
 from flask.json import JSONEncoder
 from tempfile import TemporaryFile
 import json
@@ -21,19 +22,22 @@ class CustomJSONEncoder(JSONEncoder):
 app.json_encoder = CustomJSONEncoder
 
 # Chooses a class to use for User
-userInfo = Driver()
+userInfo = Driver(database)
+database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
 
 def permissionCheck(allowedRole):
     global userInfo
-    suspendedUsers = Admin().get_suspended_users()
+    global database
+
+    suspendedUsers = Admin(database).get_suspended_users()
 
     if userInfo.getUsername() == 'NULL':
         if session['userInfo']['properties']['role'] == "admin": 
-            userInfo = Admin()
+            userInfo = Admin(database)
         elif session['userInfo']['properties']['role'] == "sponsor":
-            userInfo = Sponsor()
+            userInfo = Sponsor(database)
         else:
-            userInfo = Driver()
+            userInfo = Driver(database)
 
     try:
         userInfo.populate(session['userInfo']['properties']['user'])
@@ -67,7 +71,8 @@ def upload_file(f):
 def home():
     # Using the global class to access data
     global userInfo
-            
+    global database
+
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
@@ -94,7 +99,8 @@ def home():
 def do_admin_login():
     # Using the global class to access data
     global userInfo
-    suspendedUsers = Admin().get_suspended_users()
+    global database
+    suspendedUsers = Admin(database).get_suspended_users()
 
     # Get user input from web page
     username = request.form['username']
@@ -113,11 +119,11 @@ def do_admin_login():
             # Sets the class based on which user role
             id, role = get_table_id(username)
             if role == "admin": 
-                userInfo = Admin()
+                userInfo = Admin(database)
             elif role == "sponsor":
-                userInfo = Sponsor()
+                userInfo = Sponsor(database)
             else:
-                userInfo = Driver()
+                userInfo = Driver(database)
             # Populate our class with data
             userInfo.populate(username)
 
@@ -139,6 +145,7 @@ def logout():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    global database
 
     if request.method == "POST":
        form = request.form
@@ -159,7 +166,7 @@ def signup():
        pwd_hash = generate_password_hash(pwd, method='sha256')
        img = 'NULL'
 
-       newDriver = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
+       newDriver = Driver(database, fname, mname, lname, username, address, phone, email, pwd_hash, img)
 
        if newDriver.check_username_available():
            newDriver.add_user()
@@ -222,10 +229,11 @@ def sponsorNotification():
 
 @app.route("/sponsorPointsLeader")
 def sponsorPointsLeader():
+    global database
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
-    currSponsor = Sponsor()
+    currSponsor = Sponsor(database)
     currSponsor.populate(userInfo.getUsername())
     drivers = currSponsor.view_leaderboard()
 
@@ -246,10 +254,11 @@ def sponsorSystemSettings():
 
 @app.route("/sponsorViewDriver")
 def sponsorViewDriver():
+    global database
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    suspendedUsers = Admin().get_suspended_users()
-    return render_template('sponsor/sponsorViewDriver.html', drivers=Driver().get_users(), suspendedUsers=suspendedUsers)
+    suspendedUsers = Admin(database).get_suspended_users()
+    return render_template('sponsor/sponsorViewDriver.html', drivers=Driver(database).get_users(), suspendedUsers=suspendedUsers)
 
 # Admin Page Routes
 @app.route("/adminInbox")
@@ -260,6 +269,8 @@ def adminInbox():
 
 @app.route("/adminManageAcc", methods=["GET", "POST"])
 def adminManageAcc():
+    global database
+
     if permissionCheck(["admin"]) == False:
         return redirect(url_for('home'))
 
@@ -281,11 +292,11 @@ def adminManageAcc():
        img = 'NULL'
 
        if role == "driver":
-           newUser = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
+           newUser = Driver(database, fname, mname, lname, username, address, phone, email, pwd_hash, img)
        elif role == "sponsor":
-           newUser = Sponsor(title, username, address, phone, email, pwd_hash, img)
+           newUser = Sponsor(database, title, username, address, phone, email, pwd_hash, img)
        else:
-           newUser = Admin(fname, mname, lname, username, phone, email, pwd_hash, img)
+           newUser = Admin(database, fname, mname, lname, username, phone, email, pwd_hash, img)
     
        if newUser.check_username_available():
            newUser.add_user()
@@ -293,13 +304,13 @@ def adminManageAcc():
        else:
            flash('Username taken!')
     
-    admin = Admin()
+    admin = Admin(database)
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
-    sponsorList = Sponsor().get_users()
+    sponsorList = Sponsor(database).get_users()
 
     def getDriverList(sponsorName):
-        currSponsor = Sponsor()
+        currSponsor = Sponsor(database)
         currSponsor.populate(sponsorName)
         return currSponsor.view_drivers()
     
@@ -313,12 +324,13 @@ def adminNotifications():
 
 @app.route("/adminPointsLeader")
 def adminPointsLeader():
+    global database
     if permissionCheck(["admin"]) == False:
         return redirect(url_for('home'))
         
     drivers = []
-    currSponsor = Sponsor()
-    for sponsor in Sponsor().get_users():
+    currSponsor = Sponsor(database)
+    for sponsor in Sponsor(database).get_users():
         currSponsor.populate(sponsor[1])
         drivers.append(currSponsor.view_leaderboard())
 
@@ -398,34 +410,38 @@ def server_error(e):
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():
+    global database
     user = request.get_data().decode("utf-8") 
-    Admin().suspend_user(user, 9999, 12, 30)
+    Admin(database).suspend_user(user, 9999, 12, 30)
     return ('', 204)
 
 @app.route("/unsuspend", methods=["GET","POST"])
 def unsuspend():
+    global database
     user = request.get_data().decode("utf-8") 
-    Admin().cancel_suspension(user)
+    Admin(database).cancel_suspension(user)
     return ('', 204)
 
 @app.route("/remove", methods=["GET","POST"])
 def remove():
+    global database
     user = request.get_data().decode("utf-8") 
-    Admin().remove_user(user)
+    Admin(database).remove_user(user)
     return ('', 204)
 
 @app.route("/addpts", methods=["GET","POST"])
 def addpts():
+    global database
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     points = data[1].split("=")
     sponsor = data[2].split("=")
 
-    driver = Driver()
+    driver = Driver(database)
     driver.populate(user)
     driver_id = driver.get_user_data()[0][4]
 
-    sponsor = Sponsor()
+    sponsor = Sponsor(database)
     sponsor.populate(sponsor)
     sponsor.add_points(driver_id, int(points[1]))
     return ('', 204)
@@ -445,17 +461,18 @@ def productsearch():
 
 @app.route("/updateDriver/<username>", methods=["GET","POST"])
 def updateDriver(username):
+    global database
     """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
         Provides an endpoint for AJAX calls as well. Expects a JSON object with keys corresponding to driver
         attributes in database"""
-    dl = Driver().get_users()
+    dl = Driver(database).get_users()
     driver = list(filter(lambda d: d[3] == username, dl))[0]
     if request.method == 'POST':
         data = request.json
         if 'addPoints' in data.keys():
             add_points_to_driver(username, 0, data['addPoints'])
             return json.dumps({'status': 'OK', 'ptsAdded': data['addPoints']})
-        driverObj = Driver()
+        driverObj = Driver(database)
         driverObj.populate(username)
 
         # Data should be formatted in the way update_info expects

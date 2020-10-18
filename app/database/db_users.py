@@ -77,7 +77,7 @@ class AbsUser(ABC):
         
         
 class Admin(AbsUser):
-    def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
+    def __init__(self, database_conn, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  phone='NULL', email='NULL', pwd='NULL', image='NULL'):
         self.properties = {}
         self.properties['fname'] = fname
@@ -95,8 +95,7 @@ class Admin(AbsUser):
         self.properties['sandbox'] = 'NULL'
         self.properties['points'] = 99999999
 
-        self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
-                                      self.DB_USER, self.DB_PASS)
+        self.database = database_conn
 
     def setLogIn(self, loggedIn):
         self.loggedIn = loggedIn
@@ -116,7 +115,7 @@ class Admin(AbsUser):
         self.properties['END'] = 'NULL'
         
         try:
-            self.database.insert(query, params=self.properties)
+            self.database.insert(query, tuple(params=self.properties))
             self.add_to_users()
             self.database.commit()
 
@@ -130,11 +129,11 @@ class Admin(AbsUser):
         return check_password_hash(pwd_hash, db_pwd)
 
     def check_username_available(self):
-        query = "SELECT COUNT(*) FROM admin WHERE user=\"{}\"".format(self.properties['user'])
+        query = "SELECT COUNT(*) FROM users WHERE UserName=\"{}\"".format(self.properties['user'])
 
         out = self.database.query(query) 
         print(out)
-        return out[0][0] == 0
+        return out[0][0] == 0 or out == None
 
     def update_info(self, data: dict):
         
@@ -225,7 +224,6 @@ class Admin(AbsUser):
         self.properties['email'] = data[0][6]
         self.properties['pwd'] = 'NULL'
         self.properties['date_join'] = data[0][7]
-        self.properties['suspension'] = self.is_suspended()
 
     #this function returns true if a driver is currently suspended
     def is_suspended(self):
@@ -323,6 +321,9 @@ class Admin(AbsUser):
             if role == 'driver':
                 self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id[0[0]], ))
                 self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id[0[0]], ))
+            if role == 'sponsor':
+                self.database.delete('DELETE FROM driver_bridge WHERE sponsor_id = %s', (id[0[1]], ))
+                self.database.delete('DELETE FROM points_leaderboard WHERE sponsor_id = %s', (id[0[1]], ))
             self.database.commit()
         except Exception as e:
             raise Exception(e)
@@ -374,7 +375,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
 class Sponsor(AbsUser):
-    def __init__(self, title='NULL', user='NULL', address='NULL', phone='NULL', 
+    def __init__(self, database_conn, title='NULL', user='NULL', address='NULL', phone='NULL', 
                     email='NULL', pwd='NULL', image='NULL'):
         self.properties = {}
         self.properties['title'] = title
@@ -390,8 +391,7 @@ class Sponsor(AbsUser):
         self.properties['role'] = 'sponsor'
         self.properties['sandbox'] = 'NULL'
         self.properties['points'] = 99999999
-        self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
-                                      self.DB_USER, self.DB_PASS)
+        self.database = database_conn
 
     def setLogIn(self, loggedIn):
         self.loggedIn = loggedIn
@@ -426,11 +426,11 @@ class Sponsor(AbsUser):
 
 
     def check_username_available(self):
-        query = "SELECT COUNT(*) FROM sponsor WHERE user=\"{}\"".format(self.properties['user'])
+        query = "SELECT COUNT(*) FROM users WHERE UserName=\"{}\"".format(self.properties['user'])
 
         out = self.database.query(query) 
         print(out)
-        return out[0][0] == 0
+        return out[0][0] == 0 or out == None
 
     def update_info(self, data: dict):
         
@@ -519,7 +519,6 @@ class Sponsor(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['image'] = data[0][6]
         self.properties['date_join'] = data[0][7]
-        self.properties['suspension'] = self.is_suspended()
 
     def is_suspended(self):
         
@@ -739,7 +738,7 @@ class Sponsor(AbsUser):
 
 
 class Driver(AbsUser):
-    def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
+    def __init__(self, database_conn, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  address='NULL', phone='NULL', email='NULL', pwd='NULL', image='NULL'):
         # Dictionary to keep track of driver data
         self.properties = {}
@@ -759,8 +758,7 @@ class Driver(AbsUser):
         self.properties['role'] = 'driver'
         self.properties['sandbox'] = 'NULL'
 
-        self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
-                                      self.DB_USER, self.DB_PASS)
+        self.database = database_conn
 
     def setLogIn(self, loggedIn):
         self.loggedIn = loggedIn
@@ -776,11 +774,12 @@ class Driver(AbsUser):
 
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO driver VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(END)s, NOW(), %(image)s)'
         self.properties['END'] = 'NULL'
+        query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\')'.format(**self.properties)
+        print(query)
 
         try:
-            self.database.insert(query, params=self.properties)
+            self.database.insert(query)
             self.add_to_users()
             self.database.commit()
 
@@ -794,11 +793,11 @@ class Driver(AbsUser):
         return check_password_hash(pwd_hash, db_pwd)
 
     def check_username_available(self):
-        query = "SELECT COUNT(*) FROM driver WHERE user=\"{}\"".format(self.properties['user'])
+        query = "SELECT COUNT(*) FROM users WHERE UserName=\"{}\"".format(self.properties['user'])
 
         out = self.database.query(query) 
         print(out)
-        return out[0][0] == 0
+        return out[0][0] == 0 or out == None
 
     def get_current_id(self):
         query = "SELECT driver_id FROM driver WHERE email=\"{}\" AND user=\"{}\""
@@ -935,7 +934,6 @@ class Driver(AbsUser):
         self.properties['pwd'] = 'NULL'
         self.properties['image'] = data[0][8]
         self.properties['date_join'] = data[0][9]
-        self.properties['suspension'] = self.is_suspended()
 
         query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
         vals = (self.properties['id'], )

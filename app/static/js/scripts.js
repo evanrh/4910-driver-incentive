@@ -70,14 +70,23 @@ function setThemeFromCookie() {
 
 $("#roleSelect").change(function() {
   if ($(this).val() == "sponsor") {
+    $('#sponsorid').hide();
+    $('#sponsorid').removeAttr('required');
+    $('#sponsorid').removeAttr('data-error');
     $('#title').show();
     $('#title').attr('required', '');
     $('#title').attr('data-error', 'This field is required.');
   }else if ($(this).val() == "driver") {
+    $('#title').hide();
+    $('#title').removeAttr('required');
+    $('#title').removeAttr('data-error');
     $('#sponsorid').show();
     $('#sponsorid').attr('required', '');
     $('#sponsorid').attr('data-error', 'This field is required.');
   } else {
+    $('#sponsorid').hide();
+    $('#sponsorid').removeAttr('required');
+    $('#sponsorid').removeAttr('data-error');
     $('#title').hide();
     $('#title').removeAttr('required');
     $('#title').removeAttr('data-error');

@@ -432,6 +432,22 @@ img  {
 	padding-top: 10px;
 }
 
+#view-drivers .driverRow:first-child {
+	color:var(--main-theme3);
+	font-size: 24px;
+    padding-top: 10px;
+}
+
+#view-drivers .driverRow {
+	color:var(--main-theme3);
+	font-size: 18px;
+    padding-top: 10px;
+    display: table-cell;
+    vertical-align: inherit;
+    font-weight: bold;
+    text-align: -internal-center;
+}
+
 #view-drivers td{
 	text-align: center;
 }

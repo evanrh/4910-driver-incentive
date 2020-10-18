@@ -18,14 +18,15 @@
 <form action="{{ url_for('adminManageAcc') }}" method="POST">
     <label for="roleSelect">Select User Role</label>
         <select name="roleSelect" id = "roleSelect">
+            <option hidden disabled selected value> Select </option>
             <option value = "driver">Driver</option>
             <option value = "sponsor">Sponsor</option>
             <option value = "admin">Admin</option>
         </select>
         <input type="text" placeholder="Username" id="textbox" class="tftextinput" name="user" size="10" maxlength="100" required>
         <input type="password" placeholder="Password" id="password" class="tftextinput" name="pass" size="10" maxlength="20" required>
-        <input id="title" placeholder="Title" id="title" class="tftextinput" name="title" size="10" maxlength="20" hidden>
-        <input id="title" placeholder="SponsorID" id="sponsorid" class="tftextinput" name="sponsorid" size="10" maxlength="20" hidden>
+        <input placeholder="Title" id="title" class="tftextinput" name="title" size="10" maxlength="20" hidden>
+        <input placeholder="SponsorID" id="sponsorid" class="tftextinput" name="sponsorid" size="10" maxlength="20" hidden>
     <div class="row">
         <button type="submit" class="tfbutton" style="width: 200px;" name="create-acc">Create Account</button>
     </div>
@@ -34,7 +35,105 @@
 <h2> View all users </h2>
 
 <div class="driver-table">
+    <form id="view-drivers">
+        <table>
+            <tr>
+                <th class='heading'>Admins</th>
+                <th>Delete</th>
+                <th>User Name</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+            </tr>
 
-    {{ userTable | safe }}
+            {% for admin in adminList %}
+            <tr>
+                <td></td>
+                <td><button name=" {{ admin[3] }} " id='remove' style='color:red;'>X</button></td>
+                <td> {{ admin[3] }} </td>
+                <td> {{ admin[0] }} </td>
+                <td> {{ admin[2] }} </td>
+            </tr>
+            {% endfor %}
+
+            {% for sponsor in sponsorList %}
+            <tr>
+                <th class='heading'> Sponsor </th>
+                <th>Delete</th>
+                <th>User Name</th>
+                <th>Title</th>
+                <th>Sponsor ID</th>
+                <th>Suspend</th>
+                <th>Date Joined</th>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td><button name=" {{ sponsor[1] }} " id='remove' style='color:red;'>X</button></td>
+                <td> {{ sponsor[1] }} </td>
+                <td> {{ sponsor[0] }} </td>
+                <td> {{ sponsor[2] }} </td>
+                {% if sponsor[1] in suspendedUsers %}
+                <td><button name=" {{ sponsor[1] }} " id='unsuspend' style='color:red;'>X</button></td>
+                {% else %}
+                <td><button name=" {{ sponsor[1] }} " id='suspend'>X</button></td>
+                {% endif %}
+                <td> {{ sponsor[7] }} </td>
+            </tr>
+
+            <tr>
+                <td class='driverRow'>Drivers</td>
+                <td class='driverRow'>Delete</td>
+                <td class='driverRow'>User Name</td>
+                <td class='driverRow'>First Name</td>
+                <td class='driverRow'>Last Name</td>
+                <td class='driverRow'>Suspend</td>
+                <td class='driverRow'>Points</td>
+                <td class='driverRow'>Add Points</td>
+                <td class='driverRow'>Send Message</td>
+                <td class='driverRow'>Date Joined</td>
+            </tr>
+
+            {% for driver in getDriverList(sponsor[1]) %}
+            <tr>
+                <td><button name="{{ driver[3] }}" id='edit'><a href="{{ url_for('updateDriver', username=driver[3]) }}">Edit</a></button></td>
+                <td><button name=" {{ driver[3] }} " id='remove' style='color:red;'>X</button></td>
+                <td> {{ driver[3] }} </td>
+                <td> {{ driver[0] }} </td>
+                <td> {{ driver[2] }} </td>
+                {% if driver[3] in suspendedUsers %}
+                <td><button name="{{ driver[3] }}" id='unsuspend' style='color:red;'>X</button></td>
+                {% else %}
+                <td><button name="{{ driver[3] }}" id='suspend'>X</button></td>
+                {% endif %}
+                <td> {{ driver[6] }} </td>
+                <td><input name="{{ driver[3] }}" id='addpoints{{ driver[3] }}' placeholder='Add Pts'><button name='{{ driver[3] }}' id='addpoints'>+</button></td>
+                <td><input name="{{ driver[3] }}" id='sendmessage{{ driver[3] }}' placeholder='Message'><button name='{{ driver[3] }}' id='sendmessage'>Send</button></td>
+                <td> {{ driver[9] }} </td>
+            </tr>
+            {% endfor %}
+
+            <!-- Needs to be reworked
+            for driver in sponsorless_drivers():
+                    <tr>"
+                    <td></td>"
+                    <td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
+                    <td>" + str(driver[3]) + "</td>"
+                    <td>" + str(driver[0]) + "</td>"
+                    <td>" + str(driver[2]) + "</td>"
+
+                    if str(driver[3]) in suspendedUsers:
+                        <td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
+                    else:
+                        <td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
+
+                    <td>" + str(driver[6]) + "</td>"
+                    <td><input name='" + str(driver[3]) + "' id='addpoints"+ str(driver[3]) +"' placeholder='Add Pts'><button name='" + str(driver[3]) + "' id='addpoints'>+</button></td>"
+                    <td><input name='" + str(driver[3]) + "' id='sendmessage"+ str(driver[3]) +"' placeholder='Message'><button name='" + str(driver[3]) + "' id='sendmessage'>Send</button></td>"
+                    <td>" + str(driver[12]) +"</td>"
+                    </tr>"
+            -->
+        {% endfor %}
+    </table>
+</form>
 </div>
 {% endblock %}

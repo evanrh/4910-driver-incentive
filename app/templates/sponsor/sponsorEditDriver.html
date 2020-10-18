@@ -31,6 +31,12 @@
         <p>Phone: <input type="phone" id="phone" value="{{ driver[6] }}"></p>
         <button class="tfbutton" id="update-phone">Update</button>
     </div>
+    <hr>
+    <div class="row">
+        <p>Points: <input type="text" id="points" readonly value="{{ driver[5] }}">
+        <input type="text" id="addPoints"><button id="ptsButton">+</button>
+        </p>
+    </div>
 </div>
 {% endblock %}
 
@@ -107,5 +113,22 @@
             })
         });
     });
+    // Add points to user
+    $(function() {
+        $(document).on('click', '#ptsButton', function(e) {
+            var driver = document.getElementById("username").innerText;
+            var pts = document.getElementById("addPoints").value;
+            var arr = {'addPoints': pts};
+            $.ajax({
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                url: '/updateDriver/' + driver,
+                type: 'POST',
+                data: JSON.stringify(arr),
+                success: finished
+            })
+        });
+    });
+
 </script>
 {% endblock %}

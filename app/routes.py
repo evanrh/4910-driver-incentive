@@ -570,9 +570,12 @@ def updateDriver(username):
     dl = Driver().get_users()
     driver = list(filter(lambda d: d[3] == username, dl))[0]
     if request.method == 'POST':
+        data = request.json
+        if 'addPoints' in data.keys():
+            add_points_to_driver(username, 0, data['addPoints'])
+            return json.dumps({'status': 'OK', 'ptsAdded': data['addPoints']})
         driverObj = Driver()
         driverObj.populate(username)
-        data = request.json
 
         # Data should be formatted in the way update_info expects
         driverObj.update_info(data)

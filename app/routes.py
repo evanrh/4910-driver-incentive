@@ -5,6 +5,7 @@ from app.database.db_functions import *
 from app.database.db_users import *
 from flask.json import JSONEncoder
 from tempfile import TemporaryFile
+import json
 import time
 
 # Using this to encode our class to store user data
@@ -417,7 +418,7 @@ def getDriverTable():
         html_str += "<td>" + str(driver[6]) + "</td>"
         html_str += "<td><input name='" + str(driver[3]) + "' id='addpoints' placeholder='Add Pts'><button id='addpoints'>+</button></td>"
         html_str += "<td><input name='" + str(driver[3]) + "' id='sendmessage' placeholder='Message'><button id='sendmessage'>Send</button></td>"
-        html_str += "<td>" + str(driver[12]) +"</td>"
+        #html_str += "<td>" + str(driver[12]) +"</td>"
         html_str += "</tr>"
     
     html_str += "</table></form>"
@@ -549,3 +550,13 @@ def productsearch():
     
     numresults = len(results) -2
     return render_template('driver/driverResults.html', numresults = numresults, query = search, results = results)
+
+@app.route("/updateDriver/<username>", methods=["GET","POST"])
+def updateDriver(username):
+    dl = Driver().get_users()
+    driver = list(filter(lambda d: d[3] == username, dl))[0]
+    if request.method == 'POST':
+        data = request.json
+        return json.dumps({'status': 'OK', 'user': username})
+
+    return render_template("sponsor/sponsorEditDriver.html", driver=driver)

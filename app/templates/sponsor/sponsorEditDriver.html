@@ -1,0 +1,39 @@
+{% extends "sponsor/sponsorBase.html" %}
+{% block sponsorContent %}
+<h1>Edit Driver</h1>
+<div class="driver-table">
+    <div class="row">
+        <p>Username: <span id="username">{{ driver[3] }}</span></p>
+    </div>
+    <hr>
+    <div class="row">
+        <p>E-mail:</p>
+        <input type="email" class="tfinput" id="email" value="{{ driver[7] }}">
+        <button class="tfbutton" id="update-email">Update</button>
+    </div>
+    <hr>
+    <p>First Name:</p>
+    <p>Middle Name:</p>
+    <p>Last Name:</p>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript">
+    // Update user email
+    $(function() {
+        $(document).on('click', '#update-email', function(e) {
+            var driver = document.getElementById("username").innerText;
+            var email = document.getElementById("email").value;
+            $.ajax({
+                url: '/updateDriver/' + driver,
+                type: 'POST',
+                data: {'email': email},
+                success: function(response) {
+                    console.log(response);
+                }
+            })
+        });
+    });
+</script>
+{% endblock %}

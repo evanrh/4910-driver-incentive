@@ -7,31 +7,103 @@
     </div>
     <hr>
     <div class="row">
-        <p>E-mail:</p>
-        <input type="email" class="tfinput" id="email" value="{{ driver[7] }}">
+        <p>E-mail: <input type="email" id="email" value="{{ driver[7] }}"></p>
         <button class="tfbutton" id="update-email">Update</button>
     </div>
     <hr>
-    <p>First Name:</p>
-    <p>Middle Name:</p>
-    <p>Last Name:</p>
+    <div class="row">
+        <div class="left">
+            <p>First Name: <input type="text" id="first_name" value="{{ driver[0] }}"></p>
+            <p>Middle Name: <input type="text" id="mid_name" value="{{ driver[1] }}"></p>
+            <p>Last Name: <input type="text" id="last_name" value="{{ driver[2] }}"></p>
+        </div>
+        <div class="right">
+            <button class="tfbutton" id="update-names">Update</button>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <p>Address: <input type="text" id="address" value="{{ driver[5] }}"></p>
+        <button class="tfbutton" id="update-address">Update</button>
+    </div>
+    <hr>
+    <div class="row">
+        <p>Phone: <input type="phone" id="phone" value="{{ driver[6] }}"></p>
+        <button class="tfbutton" id="update-phone">Update</button>
+    </div>
 </div>
 {% endblock %}
 
 {% block footer %}
 <script type="text/javascript">
     // Update user email
+    var finished = function(response) {
+        console.log(response);
+        window.location.reload();
+    };
     $(function() {
         $(document).on('click', '#update-email', function(e) {
             var driver = document.getElementById("username").innerText;
             var email = document.getElementById("email").value;
+            var arr = {'email': email};
             $.ajax({
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
                 url: '/updateDriver/' + driver,
                 type: 'POST',
-                data: {'email': email},
-                success: function(response) {
-                    console.log(response);
-                }
+                data: JSON.stringify(arr),
+                success: finished
+            })
+        });
+    });
+    // Update user names
+    $(function() {
+        $(document).on('click', '#update-names', function(e) {
+            var driver = document.getElementById("username").innerText;
+            var first_name = document.getElementById("first_name").value;
+            var mid_name = document.getElementById("mid_name").value;
+            var last_name = document.getElementById("last_name").value;
+            var arr = {'first_name': first_name, 'mid_name': mid_name,
+                       'last_name': last_name};
+            $.ajax({
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                url: '/updateDriver/' + driver,
+                type: 'POST',
+                data: JSON.stringify(arr),
+                success: finished
+            })
+        });
+    });
+    // Update address
+    $(function() {
+        $(document).on('click', '#update-address', function(e) {
+            var driver = document.getElementById("username").innerText;
+            var address = document.getElementById("address").value;
+            var arr = {'address': address};
+            $.ajax({
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                url: '/updateDriver/' + driver,
+                type: 'POST',
+                data: JSON.stringify(arr),
+                success: finished
+            })
+        });
+    });
+    // Update phone number
+    $(function() {
+        $(document).on('click', '#update-phone', function(e) {
+            var driver = document.getElementById("username").innerText;
+            var phone = document.getElementById("phone").value;
+            var arr = {'phone': phone};
+            $.ajax({
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                url: '/updateDriver/' + driver,
+                type: 'POST',
+                data: JSON.stringify(arr),
+                success: finished
             })
         });
     });

@@ -247,7 +247,8 @@ def sponsorSystemSettings():
 def sponsorViewDriver():
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('sponsor/sponsorViewDriver.html', driverTable=getDriverTable())
+    suspendedUsers = Admin().get_suspended_users()
+    return render_template('sponsor/sponsorViewDriver.html', drivers=Driver().get_users(), suspendedUsers=suspendedUsers)
 
 # Admin Page Routes
 @app.route("/adminInbox")
@@ -405,7 +406,7 @@ def getDriverTable():
 
     for driver in driverList:  
         html_str += "<tr>"
-        html_str += "<td></td>"
+        html_str += "<td><button name='" + str(driver[3]) + "' id='edit'><a href='/updateDriver/" + str(driver[3]) + "'>Edit</a></button></td>"
         html_str += "<td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
         html_str += "<td>" + str(driver[3]) + "</td>"
         html_str += "<td>" + str(driver[0]) + "</td>"
@@ -563,10 +564,19 @@ def productsearch():
 
 @app.route("/updateDriver/<username>", methods=["GET","POST"])
 def updateDriver(username):
+    """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
+        Provides an endpoint for AJAX calls as well. Expects a JSON object with keys corresponding to driver
+        attributes in database"""
     dl = Driver().get_users()
     driver = list(filter(lambda d: d[3] == username, dl))[0]
     if request.method == 'POST':
+        driverObj = Driver()
+        driverObj.populate(username)
         data = request.json
+
+        # Data should be formatted in the way update_info expects
+        driverObj.update_info(data)
+        flash("Information updated!")
         return json.dumps({'status': 'OK', 'user': username})
 
     return render_template("sponsor/sponsorEditDriver.html", driver=driver)

@@ -929,16 +929,16 @@ class Driver(AbsUser):
         self.properties['lname'] = data[0][2]
         self.properties['user'] = data[0][3]
         self.properties['id'] = data[0][4]
-        self.properties['address'] = data[0][7]
-        self.properties['phone'] = data[0][8]
-        self.properties['email'] = data[0][9]
+        self.properties['address'] = data[0][5]
+        self.properties['phone'] = data[0][6]
+        self.properties['email'] = data[0][7]
         self.properties['pwd'] = 'NULL'
-        self.properties['image'] = data[0][10]
-        self.properties['date_join'] = data[0][11]
+        self.properties['image'] = data[0][8]
+        self.properties['date_join'] = data[0][9]
         self.properties['suspension'] = self.is_suspended()
 
         query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
-        vals = (self.properties['user'])
+        vals = (self.properties['id'], )
 
         try:
             data = self.database.query(query, vals)

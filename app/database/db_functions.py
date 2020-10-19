@@ -306,19 +306,20 @@ def getgenres():
     cursor.execute("SELECT DISTINCT Genre FROM product")
     returngenre = cursor.fetchall()
     print(returngenre)
-    strgenre = ' '.join(str(v) for v in returngenre)
-    strgenre = strgenre.replace("[", "")
-    strgenre = strgenre.replace("]", "")
-    strgenre = strgenre.replace("(", "") 
-    strgenre = strgenre.replace(")", "")
-#    strgenre = strgenre.replace(",", "")
-    strgenre = strgenre.replace("'", "")
-    return strgenre
+    # Return a list of all genres
+    return list(map(lambda x: x[0], returngenre))
 
 def recommend(userna):
     cursor.execute("SELECT driver_id FROM driver WHERE user='"+userna+"'")
     ID = cursor.fetchall()
     print(ID)
+
+def get_products_by_name(search):
+    query = "SELECT name FROM product WHERE name REGEXP(%s)"
+    cursor.execute(query, (search, ))
+    matches = list(map(lambda x: x[0], cursor.fetchall()))
+    print(matches)
+    return matches
 
 #main used to test functions
 if __name__ == "__main__":

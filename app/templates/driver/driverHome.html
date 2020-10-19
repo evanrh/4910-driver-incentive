@@ -19,7 +19,7 @@
 
 
 
-	<input type="text" placeholder="Search for products" name="search" class="tftextinput" required>
+	<input type="text" placeholder="Search for products" id="search" name="search" class="tftextinput" required>
 	<button id="signupbutton" type="submit" class="tfbutton">Search</button>
 
 	<p style="margin:0">I'll recommend you stuff here</p>
@@ -30,6 +30,26 @@
 
 
 
-
-
+{% endblock %}
+{% block footer %}
+    <script type="text/javascript">
+        $(function () {
+            $(document).on('keyup', '#search', function(e) {
+                var search = document.getElementById('search').value;
+                if (search.length == 0)
+                    return;
+                $.ajax({
+                    contentType: "application/json; charset=utf-8",
+                    dataType: 'json',
+                    url: '/productAJAX',
+                    type: 'POST',
+                    data: JSON.stringify({'search': search}),
+                    success: function(args) {
+                        $('#search').autocomplete({
+                            source: args
+                        })}
+                    })
+                });
+            });
+    </script>
 {% endblock %}

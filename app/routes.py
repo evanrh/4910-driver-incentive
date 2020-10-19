@@ -462,12 +462,19 @@ def productsearch():
     numresults = len(results) 
     return render_template('driver/driverResults.html', numresults = numresults, query = search, results = results)
 
+@app.route("/productAJAX", methods=["POST"])
+def productAJAX():
+    global database
+    data = request.json
+    search = data['search']
+    return json.dumps(get_products_by_name(search))
+
 @app.route("/updateDriver/<username>", methods=["GET","POST"])
 def updateDriver(username):
-    global database
     """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
         Provides an endpoint for AJAX calls as well. Expects a JSON object with keys corresponding to driver
         attributes in database"""
+    global database
     dl = Driver().get_users()
     driver = list(filter(lambda d: d[3] == username, dl))[0]
     if request.method == 'POST':

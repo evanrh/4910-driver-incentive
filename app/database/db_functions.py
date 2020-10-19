@@ -1,5 +1,6 @@
 import mysql.connector
 import datetime
+from .db_users import getConnection
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -99,34 +100,7 @@ def add_to_users(user = 'NULL', role = 'driver', id = 0):
     cursor.execute(query)
 
 
-#detirmines if username is in the table
-#returns true if username is in user table
-#false if it isn't
-def username_exist(user = 'NULL'):
-    if( user == 'NULL' ):
-        return False
 
-    sql = "SELECT * FROM users WHERE UserName = %s"
-    val = (user, )
-    cursor.execute(sql, val)
-    row = cursor.fetchone()
-    if( row == None or row[0] == None ):
-        return False
-    else:
-        return True
-
-#returns id and table that the user is in
-def get_table_id(user):
-    sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
-    val = (user, )
-    cursor.execute(sql, val)
-    id = cursor.fetchone()
-    if id[0] != None:
-        return id[0], 'driver'
-    elif id[1] != None:
-        return id[1], 'sponsor'
-    else:
-        return id[2], 'admin'
 
 
 #checks to see if the password entered by the user matches password with that username
@@ -377,14 +351,38 @@ def get_password(user='NULL'):
     
     sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
     val = (user, )
-    cursor.execute(sql, val)
-    current_password = cursor.fetchone()
+    current_password = getConnection().query(sql, val)
 
-    return current_password[0]
-
+    return current_password[0][0]
 
 
-    
+
+#detirmines if username is in the table
+#returns true if username is in user table
+#false if it isn't
+def username_exist(user = 'NULL'):
+    if( user == 'NULL' ):
+        return False
+
+    sql = "SELECT * FROM users WHERE UserName = %s"
+    val = (user, )
+    row = getConnection().query(sql, val)
+    if( row == None or row[0] == None ):
+        return False
+    else:
+        return True
+
+    #returns id and table that the user is in
+def get_table_id(user):
+    sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
+    val = (user, )
+    id = getConnection().query(sql, val)
+    if id[0][0] != None:
+        return id[0][0], 'driver'
+    elif id[0][1] != None:
+        return id[0][1], 'sponsor'
+    else:
+        return id[0][2], 'admin'
 
 
 def cancel_suspension(username):

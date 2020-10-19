@@ -868,13 +868,33 @@ class Driver(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT * FROM driver"
-
+        main_query = "SELECT first_name, mid_name, last_name, user, date_join, driver_id FROM driver"
         try:
-            out = self.database.query(query)
-            return out
+            out = self.database.query(main_query)
         except Exception as e:
             raise Exception(e)
+
+        final_list = []
+
+        for driver in out:
+            sponsors = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s and apply = 0'
+            val = (driver[5], )
+            try:
+                sponsor = self.database.query(sponsors, val)
+            except Exception as e:
+                raise Exception(e)
+            
+            sponsor_dict = {}
+            for s in sponsor:
+                sponsor_id = '{}'.format(s[0])
+                sponsor_dict[sponsor_id] = s[1]
+
+            driver = list(driver)
+            driver[5] = sponsor_dict
+            final_list.append(driver)
+
+        
+        return final_list
     
     # returns user data as a 2D array in the following formart
     # [0][0] = first name

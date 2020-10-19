@@ -98,7 +98,6 @@ def home():
 def do_admin_login():
     # Using the global class to access data
     global userInfo
-    global database
     suspendedUsers = Admin().get_suspended_users()
 
     # Get user input from web page

@@ -200,12 +200,9 @@ def username_exist(user = 'NULL'):
     sql = "SELECT * FROM users WHERE UserName = %s"
     val = (user, )
     row = getConnection().query(sql, val)
-    if( row == None or row[0] == None ):
-        return False
-    else:
-        return True
+    return row
 
-    #returns id and table that the user is in
+#returns id and table that the user is in
 def get_table_id(user):
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
     val = (user, )

@@ -651,6 +651,7 @@ class Sponsor(AbsUser):
         current_points = data[0][0]
 
         current_points += add_points
+        vals = (current_points, driver_id, self.properties['id'])
         
         leader = 'UPDATE points_leaderboard SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
         try: 

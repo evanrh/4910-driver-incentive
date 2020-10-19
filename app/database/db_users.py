@@ -115,7 +115,7 @@ class Admin(AbsUser):
         self.properties['END'] = 'NULL'
         
         try:
-            self.database.insert(query, tuple(params=self.properties))
+            self.database.insert(query, self.properties)
             self.add_to_users()
             self.database.commit()
 
@@ -304,9 +304,10 @@ class Admin(AbsUser):
 
     def remove_user(self, username):
 
-        sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = %s'
-        val = (username, )
-        id = self.database.query(sql, val)
+        username = str(username).strip()
+        sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = \'{}\''.format(username)
+        print(sql)
+        id = self.database.query(sql)
         if id[0][0] != None:
             role = 'driver'
         elif id[0][1] != None:
@@ -314,17 +315,31 @@ class Admin(AbsUser):
         else:
             role = 'admin'
 
+
         try:
-            self.database.delete('DELETE FROM users WHERE UserName = %s', (username, ))
-            self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
             self.database.delete('DELETE FROM suspend WHERE user = %s', (username, ))
+            self.database.delete('DELETE FROM users WHERE UserName = \'{}\''.format(username))
+            self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
             if role == 'driver':
                 self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id[0[0]], ))
                 self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id[0[0]], ))
             if role == 'sponsor':
-                self.database.delete('DELETE FROM driver_bridge WHERE sponsor_id = %s', (id[0[1]], ))
-                self.database.delete('DELETE FROM points_leaderboard WHERE sponsor_id = %s', (id[0[1]], ))
+                id = id[0][1]
+                self.database.delete('DELETE FROM driver_bridge WHERE sponsor_id = {}'.format(id))
+                self.database.delete('DELETE FROM points_leaderboard WHERE sponsor_id = {}'.format(id))
             self.database.commit()
+        except Exception as e:
+            raise Exception(e)
+
+
+    def add_to_sponsor(self, driver_id, sponsor_id):
+        bridge_query = 'INSERT INTO driver_bridge VALUES (%s, %s, 0, 0)'
+        points_query = 'INSERT INTO points_leaderboard VALUES (%s, %s, 0)'
+        vals = (driver_id, sponsor_id)
+    
+        try:
+            self.database.insert(bridge_query, vals)
+            self.database.insert(points_query, vals)
         except Exception as e:
             raise Exception(e)
         
@@ -886,10 +901,10 @@ class Driver(AbsUser):
         return self.properties['role']
 
     def getPoints(self):
-        return self.properties['points']
+        return 0
     
-    def getSponsor(self):
-        return self.properties['sponsor_id']
+    def getID(self):
+        return self.properties['id']
 
     def getSandbox(self):
         return self.properties['sandbox']

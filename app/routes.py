@@ -280,7 +280,7 @@ def adminManageAcc():
        pwd = form['pass']
        role = form['roleSelect']
        title = form['title']
-       sponsorid = form['sponsorid']
+       sponsorid = form['sponsorid'] or 'Null'
 
        fname = 'NULL'
        mname = 'NULL'
@@ -300,6 +300,8 @@ def adminManageAcc():
     
        if newUser.check_username_available():
            newUser.add_user()
+           if sponsorid != 'Null':
+               Admin(database).add_to_sponsor(newUser.getID(), sponsorid)
            flash('Account created!')
        else:
            flash('Username taken!')
@@ -410,24 +412,28 @@ def server_error(e):
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():
-    global database
+    database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
+    user = user.strip()
     Admin(database).suspend_user(user, 9999, 12, 30)
     return ('', 204)
 
 @app.route("/unsuspend", methods=["GET","POST"])
 def unsuspend():
-    global database
+    database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
+    user = user.strip()
     Admin(database).cancel_suspension(user)
     return ('', 204)
 
 @app.route("/remove", methods=["GET","POST"])
 def remove():
-    global database
+    database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
+    user = user.strip()
     Admin(database).remove_user(user)
     return ('', 204)
+
 
 @app.route("/addpts", methods=["GET","POST"])
 def addpts():

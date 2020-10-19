@@ -1,4 +1,6 @@
 import mysql.connector
+#from db_connection import *
+#from db_users import *
 import datetime
 #establish connection
 database = mysql.connector.connect(
@@ -11,7 +13,8 @@ database = mysql.connector.connect(
 #cursor for the database
 cursor = database.cursor(buffered=True)
 
-#having database.commit() commented still allows you to see what it would be like if you 
+#having database.commit() commented still allows you to see what 
+# it would be like if you 
 #modified the database however without commiting you will not change anything in the database
 
 #adds a driver to the database. Parameters are:
@@ -493,50 +496,18 @@ if __name__ == "__main__":
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
     print(username_exist('krod'))
     get_users()
-    print(admin_view_users())
 
     print("David Search\n")
     search = "Bike Tool car"
     product_search(search) 
-    drivers = sponsorless_drivers()
-    for row in drivers:
-        print(str(row[3]) +' is sponsorless')
-    assign_driver_to_sponsor('krod', 1)
-    assign_driver_to_sponsor('bean', 1)
     
-    add_points_to_driver('krod', 1, 50)
-    add_points_to_driver('bean', 1, 100)
-    drivers = view_point_leaders(1)
-    print(str(drivers[0][3]) + ': ' + str(drivers[0][5]))
-    print(str(drivers[1][3]) + ': ' + str(drivers[1][5]))
+    data = DB_Connection('cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com','website','admin','cpsc4910')
+    h = Admin(data).get_suspended_users()
+    admin = Admin(data)
+    admin.remove_user(' wsherre ')
 
-    print("Add 200 to bean for being in top place, 100 to krod for second")
-
-    add_points_for_leading_drivers(1, 200, 100, 50)
-    drivers = view_point_leaders(1)
-    print(str(drivers[0][3]) + ': ' + str(drivers[0][5]))
-    print(str(drivers[1][3]) + ': ' + str(drivers[1][5]))
-    
-
-    print('krod\'s password \"cool\": ' + str(pwd_check('krod', 'cool')))
-    print('spon\'s password \"password\": ' + str(pwd_check('spon', 'password')))
-    print('admin\'s password \"pwd\": ' + str(pwd_check('admin', 'pwd')))
-
-    change_password('krod', 'kool')
-    print('krod\'s new password \"kool\": ' + str(pwd_check('krod', 'kool')))
-    print("Suspending krod...")
-    #suspend_driver('krod', 2020, 11, 30)
-    print('Is krod suspended: ' + str(is_suspended('krod')))
-    print("suspending spon...")
-    #suspend_sponsor('spon', 2020, 12, 25)
-    print("Is spon suspended: " + str(is_suspended('spon')))
-    print(get_suspended_users())
-    edit_suspension('krod', 2020, 11, 12)
-    print(get_suspended_users())
-    cancel_suspension('krod')
-    print(get_suspended_users())
-    print(if_username_exist('remove'))
 
     cursor.close()
     database.close()
     
+

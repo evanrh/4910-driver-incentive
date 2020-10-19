@@ -228,14 +228,17 @@ def cancel_suspension(username):
 
 #Clean search and translate into sql search
 def product_search(search):
+    print(search)
     cursor.execute("SELECT DISTINCT Genre FROM product")
     returngenre = cursor.fetchall()
     print(returngenre)
     strgenre = ' '.join(str(v) for v in returngenre)
+    print("strgenre--------------")
+    print(strgenre)
     strgenre = strgenre.replace("[", "")
     strgenre = strgenre.replace("]", "")
     strgenre = strgenre.replace("(", "") 
-    strgenre = strgenre.replace(")", "")
+    strgenre = strgenre.replace(")", ":")
     strgenre = strgenre.replace(",", "")
     strgenre = strgenre.replace("'", "")
     print(strgenre)
@@ -243,30 +246,63 @@ def product_search(search):
     numwords = len(dirty_search.split())
     clean_search = [None] * numwords
     sql = "SELECT name, description FROM product WHERE  available = 1 AND name = '"
-    sqlgenre = "SELECT name, description FROM product WHERE  available = 1 AND Genre = '" 
+    #This searches by multiple genres
+    multigenrelong = "SELECT name,price,rating, description FROM product WHERE available = 1 AND ("
+    multiOR = " OR "
+    multigenre = "Genre ="
+    #This seraches by multiple genres and Orders by price or rating
     returninfo = "\n"
+    searchup = "priceup: ratingup:"
+    searchdown = "pricedown: ratingdown:"
+    one = 0
+    priceup = 0
+    pricedown = 0
+    ratingup = 0
+    ratingdown = 0
     for i in range(numwords):
         clean_search = dirty_search.split(' ')[i]
         clean_search = clean_search.lower()
         if clean_search in strgenre:
             print("Got a genre")
-            cursor.execute(sqlgenre + clean_search + "'")                
-        else:
-            cursor.execute(sql + clean_search + "'")    
-        got = cursor.fetchall()
-        print("---Product Information---")
-        print(got)
-        returninfo = returninfo + "\n" +  str(got)
-    returninfo = ''.join(str(v) for v in returninfo)
+            if one == 1:
+                multigenrelong = multigenrelong + multiOR
+            multigenrelong = multigenrelong + multigenre + "'"+clean_search +"'"+ " "
+            one = 1
+
+        elif clean_search in "priceup":
+            priceup = 1
+        elif clean_search in "ratingup":
+            ratingup = 1
+        elif clean_search in "pricedown":
+            pricedown = 1
+        elif clean_search in "ratingdown":
+            ratingdown = 1
+
+    multigenrelong = multigenrelong.replace(":","")
+    multigenrelong = multigenrelong + ")"
+    if priceup == 1:
+        multigenrelong = multigenrelong + " ORDER BY price DESC"
+    elif pricedown == 1:
+        multigenrelong = multigenrelong + " ORDER BY price ASC"
+    elif ratingup == 1:
+        multigenrelong = multigenrelong + " ORDER BY rating DESC"
+    elif ratingdown == 1:
+        multigenrelong = multigenrelong + " ORDER BY rating ASC"    
+    print(multigenrelong)
+    cursor.execute(multigenrelong) 
+    got = cursor.fetchall()
+    print(got)
+    returninfo = '\n'.join(str(v) for v in got)
+#    print(returninfo)
     returninfo = returninfo.replace("[", "")
     returninfo = returninfo.replace("]", "")
     returninfo = returninfo.replace("(", "") 
     returninfo = returninfo.replace(")", "")
 #    returninfo = returninfo.replace(",", "")
     returninfo = returninfo.replace("'", "")
-    print("Cleaned return----------------") 
+    print(returninfo)
     listt = returninfo.splitlines()
-#    print(listt[3])
+#    print(listt[1])
     return listt
 
 def getgenres():
@@ -282,11 +318,13 @@ def getgenres():
     strgenre = strgenre.replace("'", "")
     return strgenre
 
-
+def recommend(userna):
+    cursor.execute("SELECT driver_id FROM driver WHERE user='"+userna+"'")
+    ID = cursor.fetchall()
+    print(ID)
 
 #main used to test functions
 if __name__ == "__main__":
-
     cancel_suspension('wsherre')
     if username_exist('krod'):
         add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
@@ -298,11 +336,51 @@ if __name__ == "__main__":
     print(username_exist('krod'))
     get_users()
 
+    print(admin_view_users())
+    print("David recoo\n")
+    recommend("cgaber")
     print("David Search\n")
-    search = "Bike Tool car"
+    search = "Bike Tool: car: Luxury: sponge priceup"
     product_search(search) 
+   
+    drivers = sponsorless_drivers()
+    for row in drivers:
+        print(str(row[3]) +' is sponsorless')
+    assign_driver_to_sponsor('krod', 1)
+    assign_driver_to_sponsor('bean', 1)
+    
+    add_points_to_driver('krod', 1, 50)
+    add_points_to_driver('bean', 1, 100)
+    drivers = view_point_leaders(1)
+    print(str(drivers[0][3]) + ': ' + str(drivers[0][5]))
+    print(str(drivers[1][3]) + ': ' + str(drivers[1][5]))
+
+    print("Add 200 to bean for being in top place, 100 to krod for second")
+
+    add_points_for_leading_drivers(1, 200, 100, 50)
+    drivers = view_point_leaders(1)
+    print(str(drivers[0][3]) + ': ' + str(drivers[0][5]))
+    print(str(drivers[1][3]) + ': ' + str(drivers[1][5]))
     
 
+    print('krod\'s password \"cool\": ' + str(pwd_check('krod', 'cool')))
+    print('spon\'s password \"password\": ' + str(pwd_check('spon', 'password')))
+    print('admin\'s password \"pwd\": ' + str(pwd_check('admin', 'pwd')))
+
+    change_password('krod', 'kool')
+    print('krod\'s new password \"kool\": ' + str(pwd_check('krod', 'kool')))
+    print("Suspending krod...")
+    #suspend_driver('krod', 2020, 11, 30)
+    print('Is krod suspended: ' + str(is_suspended('krod')))
+    print("suspending spon...")
+    #suspend_sponsor('spon', 2020, 12, 25)
+    print("Is spon suspended: " + str(is_suspended('spon')))
+    print(get_suspended_users())
+    edit_suspension('krod', 2020, 11, 12)
+    print(get_suspended_users())
+    cancel_suspension('krod')
+    print(get_suspended_users())
+    print(if_username_exist('remove'))
 
     cursor.close()
     database.close()

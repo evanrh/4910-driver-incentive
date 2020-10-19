@@ -82,6 +82,8 @@ def home():
 
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
             genres = getgenres()
+            userna = session['userInfo']['properties']['user']
+            
             return render_template('driver/driverHome.html', genres = genres)
 
 
@@ -394,6 +396,7 @@ def driverView():
     if userInfo.getRole() == ("admin" or "sponsor"):
         userInfo.setSandbox("driver")
     genres = getgenres()
+    
     return render_template('driver/driverHome.html', genres = genres)
 
 @app.route("/returnView")
@@ -456,8 +459,7 @@ def productsearch():
         form = request.form
         search = form['search']
         results = product_search(search)
-    
-    numresults = len(results) -2
+    numresults = len(results) 
     return render_template('driver/driverResults.html', numresults = numresults, query = search, results = results)
 
 @app.route("/updateDriver/<username>", methods=["GET","POST"])

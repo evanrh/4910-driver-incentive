@@ -5,16 +5,31 @@
 
 <div class="row">
 	<p style="margin:0">Enter your search below.</p>
-	<p style="margin:0">Terms entered together will give results that share those traits. A seach of "Tool sponge", will return products with the name sponge in the tool genre.</p>
-
+	<p style="margin:0">To search by genre, write Genre:search. An example would be "Tool:Sponge"   </p>
+	<p style="margin:0"> To search by Price or Rating, writing PriceUp: or PriceDown:, RatingUp: or RatingDown: for desc and asdencing respectively</p>
 </div>
 
 
 <form action="/productsearch" method="POST">
 	<p style="margin:0">The types of genres for search are: {{genres}}   </p>	
+	<select name="SearchBox" id="productsearch">
+		<option hidden disabled selected value> Select </option>
+		<option value ="">
+		
+
+
+
 	<input type="text" placeholder="Search for products" name="search" class="tftextinput" required>
 	<button id="signupbutton" type="submit" class="tfbutton">Search</button>
 
+	<p style="margin:0">I'll recommend you stuff here</p>
+
 </form>
+
+
+
+
+
+
 
 {% endblock %}

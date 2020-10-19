@@ -137,6 +137,7 @@ $(function() {
   $(document).on('click', '#addpoints', function(e) {
     var user =  $(this).attr("name")
     var points = document.getElementById("addpoints" + user).value;
+    var sponsor = $(this).attr('class');
     $.ajax({ 
       contentType: "application/x-www-form-urlencoded",
       url: '/addpts', 

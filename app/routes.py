@@ -258,7 +258,17 @@ def sponsorViewDriver():
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
     suspendedUsers = Admin().get_suspended_users()
-    return render_template('sponsor/sponsorViewDriver.html', drivers=Driver().get_users(), suspendedUsers=suspendedUsers)
+
+    if userInfo.getRole() == 'admin' or userInfo.getSandbox() == 'sponsor':
+        currSponsor = Sponsor()
+        sponsor = currSponsor.get_users()[0][1]
+        currSponsor.populate(sponsor)
+        drivers = currSponsor.view_drivers()
+    else:
+        sponsor = userInfo.getUsername()
+        drivers = userInfo.view_drivers()
+
+    return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, suspendedUsers=suspendedUsers, sponsor=sponsor)
 
 # Admin Page Routes
 @app.route("/adminInbox")
@@ -439,15 +449,16 @@ def addpts():
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     points = data[1].split("=")
-    sponsor = data[2].split("=")
+    sponsorname = data[2].split("=")
 
     driver = Driver()
-    driver.populate(user)
-    driver_id = driver.get_user_data()[0][4]
- 
+    driver.populate(user[1])
+    driver_id = driver.getID()
+
     sponsor = Sponsor()
-    sponsor.populate(sponsor)
+    sponsor.populate(sponsorname[1])
     sponsor.add_points(driver_id, int(points[1]))
+
     return ('', 204)
 
 @app.route("/productsearch", methods=["GET","POST"])

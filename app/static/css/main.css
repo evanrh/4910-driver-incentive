@@ -17,7 +17,11 @@
 	--dark-theme1: #5e5e5e;
 	--dark-theme2: #2e2e2e;
 	--dark-theme3: #383838;
-	--dark-theme4: white;
+    --dark-theme4: white;
+    --seizure-theme1: #FFFF00;
+	--seizure-theme2: #FF69B4;
+	--seizure-theme3: #FFFF00;
+	--seizure-theme4: white;
 	--main-theme1: var(--blue-theme);
 	--main-theme2: var(--blue-theme2);
 	--main-theme3: var(--blue-theme3);

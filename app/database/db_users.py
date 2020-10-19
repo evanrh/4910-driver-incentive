@@ -17,6 +17,9 @@ def getConnection():
         connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     return connection
 
+def getNewConnection():
+    return DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
+
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
     DB_NAME = os.getenv('DB_NAME')
@@ -222,15 +225,16 @@ class Admin(AbsUser):
         except Exception as e:
             raise Exception(e)
 
-        self.properties['fname'] = data[0][0]
-        self.properties['mname'] = data[0][1]
-        self.properties['lname'] = data[0][2]
-        self.properties['user'] = data[0][3]
-        self.properties['id'] = data[0][4]
-        self.properties['phone'] = data[0][5]
-        self.properties['email'] = data[0][6]
-        self.properties['pwd'] = 'NULL'
-        self.properties['date_join'] = data[0][7]
+        if data:
+            self.properties['fname'] = data[0][0]
+            self.properties['mname'] = data[0][1]
+            self.properties['lname'] = data[0][2]
+            self.properties['user'] = data[0][3]
+            self.properties['id'] = data[0][4]
+            self.properties['phone'] = data[0][5]
+            self.properties['email'] = data[0][6]
+            self.properties['pwd'] = 'NULL'
+            self.properties['date_join'] = data[0][7]
 
     #this function returns true if a driver is currently suspended
     def is_suspended(self):
@@ -255,6 +259,7 @@ class Admin(AbsUser):
     #this function adds a driver to a suspension list and their length of suspension
     def suspend_user(self, username, year, month, day):
 
+        self.database = getNewConnection()
         if month < 10:
             month = '0' + str(month)
         else:
@@ -300,6 +305,8 @@ class Admin(AbsUser):
         return sus_list
 
     def cancel_suspension(self, username):
+
+        self.database = getNewConnection()
         query = 'DELETE FROM suspend WHERE user = %s'
         vals = (username, )
         try:
@@ -311,6 +318,7 @@ class Admin(AbsUser):
 
     def remove_user(self, username):
 
+        self.database = getNewConnection()
         username = str(username).strip()
         sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = \'{}\''.format(username)
         print(sql)
@@ -328,8 +336,9 @@ class Admin(AbsUser):
             self.database.delete('DELETE FROM users WHERE UserName = \'{}\''.format(username))
             self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
             if role == 'driver':
-                self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id[0[0]], ))
-                self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id[0[0]], ))
+                id = id[0][0]
+                self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id, ))
+                self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id, ))
             if role == 'sponsor':
                 id = id[0][1]
                 self.database.delete('DELETE FROM driver_bridge WHERE sponsor_id = {}'.format(id))
@@ -540,15 +549,17 @@ class Sponsor(AbsUser):
         except Exception as e:
             raise Exception(e)
 
-        self.properties['title'] = data[0][0]
-        self.properties['user'] = data[0][1]
-        self.properties['id'] = data[0][2]
-        self.properties['address'] = data[0][3]
-        self.properties['phone'] = data[0][4]
-        self.properties['email'] = data[0][5]
-        self.properties['pwd'] = 'NULL'
-        self.properties['image'] = data[0][6]
-        self.properties['date_join'] = data[0][7]
+
+        if data:
+            self.properties['title'] = data[0][0]
+            self.properties['user'] = data[0][1]
+            self.properties['id'] = data[0][2]
+            self.properties['address'] = data[0][3]
+            self.properties['phone'] = data[0][4]
+            self.properties['email'] = data[0][5]
+            self.properties['pwd'] = 'NULL'
+            self.properties['image'] = data[0][6]
+            self.properties['date_join'] = data[0][7]
 
     def is_suspended(self):
         
@@ -974,27 +985,27 @@ class Driver(AbsUser):
         except Exception as e:
             raise Exception(e)
 
-        self.properties['fname'] = data[0][0]
-        self.properties['mname'] = data[0][1]
-        self.properties['lname'] = data[0][2]
-        self.properties['user'] = data[0][3]
-        self.properties['id'] = data[0][4]
-        self.properties['address'] = data[0][5]
-        self.properties['phone'] = data[0][6]
-        self.properties['email'] = data[0][7]
-        self.properties['pwd'] = 'NULL'
-        self.properties['image'] = data[0][8]
-        self.properties['date_join'] = data[0][9]
-
-        query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
-        vals = (self.properties['id'], )
-
-        try:
-            data = self.database.query(query, vals)
-        except Exception as e:
-            raise Exception(e)
-
         if data:
+            self.properties['fname'] = data[0][0]
+            self.properties['mname'] = data[0][1]
+            self.properties['lname'] = data[0][2]
+            self.properties['user'] = data[0][3]
+            self.properties['id'] = data[0][4]
+            self.properties['address'] = data[0][5]
+            self.properties['phone'] = data[0][6]
+            self.properties['email'] = data[0][7]
+            self.properties['pwd'] = 'NULL'
+            self.properties['image'] = data[0][8]
+            self.properties['date_join'] = data[0][9]
+
+            query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
+            vals = (self.properties['id'], )
+
+            try:
+                data = self.database.query(query, vals)
+            except Exception as e:
+                raise Exception(e)
+
             for d in data:
                 sponsor_id = '{}'.format(d[0])
                 self.properties['sponsors'][sponsor_id] = d[1] 

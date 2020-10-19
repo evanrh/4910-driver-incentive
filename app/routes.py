@@ -411,7 +411,6 @@ def server_error(e):
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():
-    database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
     user = user.strip()
     Admin().suspend_user(user, 9999, 12, 30)
@@ -419,7 +418,6 @@ def suspend():
 
 @app.route("/unsuspend", methods=["GET","POST"])
 def unsuspend():
-    database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
     user = user.strip()
     Admin().cancel_suspension(user)
@@ -427,7 +425,6 @@ def unsuspend():
 
 @app.route("/remove", methods=["GET","POST"])
 def remove():
-    database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
     user = user.strip()
     Admin().remove_user(user)
@@ -436,7 +433,6 @@ def remove():
 
 @app.route("/addpts", methods=["GET","POST"])
 def addpts():
-    global database
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     points = data[1].split("=")
@@ -445,7 +441,7 @@ def addpts():
     driver = Driver()
     driver.populate(user)
     driver_id = driver.get_user_data()[0][4]
-
+ 
     sponsor = Sponsor()
     sponsor.populate(sponsor)
     sponsor.add_points(driver_id, int(points[1]))

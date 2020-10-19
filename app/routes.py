@@ -23,7 +23,6 @@ app.json_encoder = CustomJSONEncoder
 
 # Chooses a class to use for User
 userInfo = Driver()
-database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
 
 def permissionCheck(allowedRole):
     global userInfo

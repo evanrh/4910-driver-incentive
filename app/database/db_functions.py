@@ -178,7 +178,17 @@ def get_users():
 
 
            
+def get_password(user='NULL'):
+    if( user == 'NULL'):
+        return ''
 
+    id, table = get_table_id(user)
+    
+    sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
+    val = (user, )
+    current_password = getConnection().query(sql, val)
+
+    return current_password[0][0]
 
 #detirmines if username is in the table
 #returns true if username is in user table

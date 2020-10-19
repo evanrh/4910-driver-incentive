@@ -616,7 +616,7 @@ class Sponsor(AbsUser):
 
 
     def view_drivers(self):
-        query = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver_bridge.points FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
+        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, driver_bridge.points, driver.date_join FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
         vals = (self.properties['id'], )
 
         try: 

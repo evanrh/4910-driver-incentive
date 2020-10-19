@@ -9,6 +9,14 @@ from abc import abstractmethod
 from werkzeug.security import check_password_hash
 from app.database.db_functions import *
 
+connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
+
+def getConnection():
+    global connection
+    if not connection:
+        connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
+    return connection
+
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
     DB_NAME = os.getenv('DB_NAME')
@@ -16,8 +24,7 @@ class AbsUser(ABC):
     DB_PASS = os.getenv('DB_PASS')
 
     def __init__(self):
-        self.database = DB_Connection(self.DB_HOST, self.DB_NAME, 
-                                      self.DB_USER, self.DB_PASS)
+        self.database = getConnection()
 
     @abstractmethod
     def add_user(self) -> None:
@@ -77,7 +84,7 @@ class AbsUser(ABC):
         
         
 class Admin(AbsUser):
-    def __init__(self, database_conn, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
+    def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  phone='NULL', email='NULL', pwd='NULL', image='NULL'):
         self.properties = {}
         self.properties['fname'] = fname
@@ -95,7 +102,7 @@ class Admin(AbsUser):
         self.properties['sandbox'] = 'NULL'
         self.properties['points'] = 99999999
 
-        self.database = database_conn
+        self.database = getConnection()
 
     def setLogIn(self, loggedIn):
         self.loggedIn = loggedIn
@@ -398,7 +405,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
 class Sponsor(AbsUser):
-    def __init__(self, database_conn, title='NULL', user='NULL', address='NULL', phone='NULL', 
+    def __init__(self, title='NULL', user='NULL', address='NULL', phone='NULL', 
                     email='NULL', pwd='NULL', image='NULL'):
         self.properties = {}
         self.properties['title'] = title
@@ -414,7 +421,7 @@ class Sponsor(AbsUser):
         self.properties['role'] = 'sponsor'
         self.properties['sandbox'] = 'NULL'
         self.properties['points'] = 99999999
-        self.database = database_conn
+        self.database = getConnection()
 
     def setLogIn(self, loggedIn):
         self.loggedIn = loggedIn
@@ -762,7 +769,7 @@ class Sponsor(AbsUser):
 
 
 class Driver(AbsUser):
-    def __init__(self, database_conn, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
+    def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  address='NULL', phone='NULL', email='NULL', pwd='NULL', image='NULL'):
         # Dictionary to keep track of driver data
         self.properties = {}
@@ -782,7 +789,7 @@ class Driver(AbsUser):
         self.properties['role'] = 'driver'
         self.properties['sandbox'] = 'NULL'
 
-        self.database = database_conn
+        self.database = getConnection()
 
     def setLogIn(self, loggedIn):
         self.loggedIn = loggedIn

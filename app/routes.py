@@ -22,22 +22,22 @@ class CustomJSONEncoder(JSONEncoder):
 app.json_encoder = CustomJSONEncoder
 
 # Chooses a class to use for User
-userInfo = Driver(database)
+userInfo = Driver()
 database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
 
 def permissionCheck(allowedRole):
     global userInfo
     global database
 
-    suspendedUsers = Admin(database).get_suspended_users()
+    suspendedUsers = Admin().get_suspended_users()
 
     if userInfo.getUsername() == 'NULL':
         if session['userInfo']['properties']['role'] == "admin": 
-            userInfo = Admin(database)
+            userInfo = Admin()
         elif session['userInfo']['properties']['role'] == "sponsor":
-            userInfo = Sponsor(database)
+            userInfo = Sponsor()
         else:
-            userInfo = Driver(database)
+            userInfo = Driver()
 
     try:
         userInfo.populate(session['userInfo']['properties']['user'])
@@ -100,7 +100,7 @@ def do_admin_login():
     # Using the global class to access data
     global userInfo
     global database
-    suspendedUsers = Admin(database).get_suspended_users()
+    suspendedUsers = Admin().get_suspended_users()
 
     # Get user input from web page
     username = request.form['username']
@@ -119,11 +119,11 @@ def do_admin_login():
             # Sets the class based on which user role
             id, role = get_table_id(username)
             if role == "admin": 
-                userInfo = Admin(database)
+                userInfo = Admin()
             elif role == "sponsor":
-                userInfo = Sponsor(database)
+                userInfo = Sponsor()
             else:
-                userInfo = Driver(database)
+                userInfo = Driver()
             # Populate our class with data
             userInfo.populate(username)
 
@@ -166,7 +166,7 @@ def signup():
        pwd_hash = generate_password_hash(pwd, method='sha256')
        img = 'NULL'
 
-       newDriver = Driver(database, fname, mname, lname, username, address, phone, email, pwd_hash, img)
+       newDriver = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
 
        if newDriver.check_username_available():
            newDriver.add_user()
@@ -233,7 +233,7 @@ def sponsorPointsLeader():
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
-    currSponsor = Sponsor(database)
+    currSponsor = Sponsor()
     currSponsor.populate(userInfo.getUsername())
     drivers = currSponsor.view_leaderboard()
 
@@ -257,8 +257,8 @@ def sponsorViewDriver():
     global database
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    suspendedUsers = Admin(database).get_suspended_users()
-    return render_template('sponsor/sponsorViewDriver.html', drivers=Driver(database).get_users(), suspendedUsers=suspendedUsers)
+    suspendedUsers = Admin().get_suspended_users()
+    return render_template('sponsor/sponsorViewDriver.html', drivers=Driver().get_users(), suspendedUsers=suspendedUsers)
 
 # Admin Page Routes
 @app.route("/adminInbox")
@@ -292,31 +292,32 @@ def adminManageAcc():
        img = 'NULL'
 
        if role == "driver":
-           newUser = Driver(database, fname, mname, lname, username, address, phone, email, pwd_hash, img)
+           newUser = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
        elif role == "sponsor":
-           newUser = Sponsor(database, title, username, address, phone, email, pwd_hash, img)
+           newUser = Sponsor(title, username, address, phone, email, pwd_hash, img)
        else:
-           newUser = Admin(database, fname, mname, lname, username, phone, email, pwd_hash, img)
+           newUser = Admin(fname, mname, lname, username, phone, email, pwd_hash, img)
     
        if newUser.check_username_available():
            newUser.add_user()
            if sponsorid != 'Null':
-               Admin(database).add_to_sponsor(newUser.getID(), sponsorid)
+               Admin().add_to_sponsor(newUser.getID(), sponsorid)
            flash('Account created!')
        else:
            flash('Username taken!')
     
-    admin = Admin(database)
+    admin = Admin()
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
-    sponsorList = Sponsor(database).get_users()
+    sponsorList = Sponsor().get_users()
+    sponsorlessDrivers = Admin().get_sponsorless_drivers()
 
     def getDriverList(sponsorName):
-        currSponsor = Sponsor(database)
+        currSponsor = Sponsor()
         currSponsor.populate(sponsorName)
         return currSponsor.view_drivers()
     
-    return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, suspendedUsers = suspendedUsers, getDriverList = getDriverList)
+    return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, suspendedUsers = suspendedUsers, getDriverList = getDriverList, sponsorlessDrivers = sponsorlessDrivers)
 
 @app.route("/adminNotifications")
 def adminNotifications():
@@ -331,8 +332,8 @@ def adminPointsLeader():
         return redirect(url_for('home'))
         
     drivers = []
-    currSponsor = Sponsor(database)
-    for sponsor in Sponsor(database).get_users():
+    currSponsor = Sponsor()
+    for sponsor in Sponsor().get_users():
         currSponsor.populate(sponsor[1])
         drivers.append(currSponsor.view_leaderboard())
 
@@ -415,7 +416,7 @@ def suspend():
     database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
     user = user.strip()
-    Admin(database).suspend_user(user, 9999, 12, 30)
+    Admin().suspend_user(user, 9999, 12, 30)
     return ('', 204)
 
 @app.route("/unsuspend", methods=["GET","POST"])
@@ -423,7 +424,7 @@ def unsuspend():
     database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
     user = user.strip()
-    Admin(database).cancel_suspension(user)
+    Admin().cancel_suspension(user)
     return ('', 204)
 
 @app.route("/remove", methods=["GET","POST"])
@@ -431,7 +432,7 @@ def remove():
     database = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     user = request.get_data().decode("utf-8") 
     user = user.strip()
-    Admin(database).remove_user(user)
+    Admin().remove_user(user)
     return ('', 204)
 
 
@@ -443,11 +444,11 @@ def addpts():
     points = data[1].split("=")
     sponsor = data[2].split("=")
 
-    driver = Driver(database)
+    driver = Driver()
     driver.populate(user)
     driver_id = driver.get_user_data()[0][4]
 
-    sponsor = Sponsor(database)
+    sponsor = Sponsor()
     sponsor.populate(sponsor)
     sponsor.add_points(driver_id, int(points[1]))
     return ('', 204)
@@ -471,14 +472,14 @@ def updateDriver(username):
     """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
         Provides an endpoint for AJAX calls as well. Expects a JSON object with keys corresponding to driver
         attributes in database"""
-    dl = Driver(database).get_users()
+    dl = Driver().get_users()
     driver = list(filter(lambda d: d[3] == username, dl))[0]
     if request.method == 'POST':
         data = request.json
         if 'addPoints' in data.keys():
             add_points_to_driver(username, 0, data['addPoints'])
             return json.dumps({'status': 'OK', 'ptsAdded': data['addPoints']})
-        driverObj = Driver(database)
+        driverObj = Driver()
         driverObj.populate(username)
 
         # Data should be formatted in the way update_info expects

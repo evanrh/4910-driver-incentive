@@ -17,7 +17,7 @@
 
 <form action="{{ url_for('adminManageAcc') }}" method="POST">
     <label for="roleSelect">Select User Role</label>
-        <select name="roleSelect" id = "roleSelect">
+        <select name="roleSelect" id = "roleSelect" required>
             <option hidden disabled selected value> Select </option>
             <option value = "driver">Driver</option>
             <option value = "sponsor">Sponsor</option>
@@ -112,26 +112,39 @@
             </tr>
             {% endfor %}
 
-            <!-- Needs to be reworked
-            for driver in sponsorless_drivers():
-                    <tr>"
-                    <td></td>"
-                    <td><button name='" + str(driver[3]) + "' id='remove' style='color:red;'>X</button></td>"
-                    <td>" + str(driver[3]) + "</td>"
-                    <td>" + str(driver[0]) + "</td>"
-                    <td>" + str(driver[2]) + "</td>"
+            
+            <tr>
+                <td class='driverRow'>Sponsorless Drivers</td>
+                <td class='driverRow'>Delete</td>
+                <td class='driverRow'>User Name</td>
+                <td class='driverRow'>First Name</td>
+                <td class='driverRow'>Last Name</td>
+                <td class='driverRow'>Suspend</td>
+                <td class='driverRow'>Points</td>
+                <td class='driverRow'>Add Points</td>
+                <td class='driverRow'>Send Message</td>
+                <td class='driverRow'>Date Joined</td>
+            </tr>
 
-                    if str(driver[3]) in suspendedUsers:
-                        <td><button name='" + str(driver[3]) + "' id='unsuspend' style='color:red;'>X</button></td>"
-                    else:
-                        <td><button name='" + str(driver[3]) + "' id='suspend'>X</button></td>"
-
-                    <td>" + str(driver[6]) + "</td>"
-                    <td><input name='" + str(driver[3]) + "' id='addpoints"+ str(driver[3]) +"' placeholder='Add Pts'><button name='" + str(driver[3]) + "' id='addpoints'>+</button></td>"
-                    <td><input name='" + str(driver[3]) + "' id='sendmessage"+ str(driver[3]) +"' placeholder='Message'><button name='" + str(driver[3]) + "' id='sendmessage'>Send</button></td>"
-                    <td>" + str(driver[12]) +"</td>"
-                    </tr>"
-            -->
+            {% for driver in sponsorlessDrivers %}
+            <tr>
+                {{ driver }}
+                <td><button name="{{ driver[3] }}" id='edit'><a href="{{ url_for('updateDriver', username=driver[3]) }}">Edit</a></button></td>
+                <td><button name=" {{ driver[3] }} " id='remove' style='color:red;'>X</button></td>
+                <td> {{ driver[3] }} </td>
+                <td> {{ driver[0] }} </td>
+                <td> {{ driver[2] }} </td>
+                {% if driver[3] in suspendedUsers %}
+                <td><button name="{{ driver[3] }}" id='unsuspend' style='color:red;'>X</button></td>
+                {% else %}
+                <td><button name="{{ driver[3] }}" id='suspend'>X</button></td>
+                {% endif %}
+                <td> {{ driver[6] }} </td>
+                <td><input name="{{ driver[3] }}" id='addpoints{{ driver[3] }}' placeholder='Add Pts'><button name='{{ driver[3] }}' id='addpoints'>+</button></td>
+                <td><input name="{{ driver[3] }}" id='sendmessage{{ driver[3] }}' placeholder='Message'><button name='{{ driver[3] }}' id='sendmessage'>Send</button></td>
+                <td> {{ driver[9] }} </td>
+            </tr>
+            {% endfor %}
         {% endfor %}
     </table>
 </form>

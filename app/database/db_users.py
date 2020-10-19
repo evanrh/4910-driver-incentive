@@ -342,7 +342,15 @@ class Admin(AbsUser):
             self.database.insert(points_query, vals)
         except Exception as e:
             raise Exception(e)
+
+    def get_sponsorless_drivers(self):
+        sql = 'select driver.user, driver.first_name, driver.last_name, driver.driver_id from driver where driver.driver_id not in (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id)'
         
+        try:
+            data = self.database.query(sql)
+        except Exception as e:
+            raise Exception(e)
+        return data
 
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:
@@ -589,7 +597,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def view_applications(self):
-        query = 'SELECT driver.user driver.driver_id FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1'
+        query = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1'
         vals = (self.properties['id'], )
 
         try: 
@@ -601,7 +609,7 @@ class Sponsor(AbsUser):
 
 
     def view_drivers(self):
-        query = 'SELECT driver.user, driver.driver_id, driver_bridge.points FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
+        query = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver_bridge.points FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
         vals = (self.properties['id'], )
 
         try: 

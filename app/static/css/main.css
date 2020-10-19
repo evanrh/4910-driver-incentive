@@ -40,6 +40,11 @@ header {
 	background-color:var(--main-theme2);
 }
 
+a {
+    color: var(--main-theme3);
+    text-decoration: none;
+}
+
 header p{
 	color: var(--main-theme4);;
 }
@@ -279,6 +284,11 @@ header p{
 	box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
 }
 
+#edit {
+    color: red;
+    text-decoration: none;
+}
+
 .tocart {
 	display:block; 
     width:50%; 
@@ -433,7 +443,8 @@ img  {
 }
 
 #view-drivers .driverRow:first-child {
-	color:var(--main-theme3);
+    padding-left: 30px;
+	color:var(--main-theme2);
 	font-size: 24px;
     padding-top: 10px;
 }

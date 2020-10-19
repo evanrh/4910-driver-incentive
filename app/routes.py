@@ -329,13 +329,13 @@ def adminPointsLeader():
     if permissionCheck(["admin"]) == False:
         return redirect(url_for('home'))
         
-    drivers = []
+    sponsors = []
     currSponsor = Sponsor()
     for sponsor in Sponsor().get_users():
         currSponsor.populate(sponsor[1])
-        drivers.append(currSponsor.view_leaderboard())
+        sponsors.append(currSponsor.view_leaderboard())
 
-    return render_template('admin/adminPointsLeader.html', drivers=drivers)
+    return render_template('admin/adminPointsLeader.html', sponsors=sponsors)
 
 @app.route("/adminReports")
 def adminReports():

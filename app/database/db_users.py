@@ -351,7 +351,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_sponsorless_drivers(self):
-        sql = 'select driver.user, driver.first_name, driver.last_name, driver.driver_id from driver where driver.driver_id not in (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id)'
+        sql = 'select driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join from driver where driver.driver_id not in (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id)'
         
         try:
             data = self.database.query(sql)
@@ -676,7 +676,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def view_leaderboard(self):
-        query = 'SELECT driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s ORDER BY points_leaderboard.points DESC'
+        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s ORDER BY points_leaderboard.points DESC'
         val = (self.properties['id'], )
 
         try: 

@@ -11,27 +11,28 @@
                 <th>First Name</th>
                 <th>Last Name</th>
                 <th>Suspend</th>
-                <th>Points</th>
-                <th>Add Points</th>
-                <th>Send Message</th>
                 <th>Date Joined</th>
+                <th>Send Message</th>
             </tr>
+
             {% for driver in drivers %}
+                {% set user = driver[0] %}
+                {% set first = driver[1] %}
+                {% set last = driver[2] %}
+                {% set datejoined = driver[4] %}
                 <tr>
-                    <td><button name="{{ driver[3] }}" id='edit'><a href="{{ url_for('updateDriver', username=driver[3]) }}">Edit</a></button></td>
-                    <td><button name=" {{ driver[3] }} " id='remove' style='color:red;'>X</button></td>
-                    <td> {{ driver[3] }} </td>
-                    <td> {{ driver[0] }} </td>
-                    <td> {{ driver[2] }} </td>
-                    {% if driver[3] in suspendedUsers %}
-                    <td><button name="{{ driver[3] }}" id='unsuspend' style='color:red;'>X</button></td>
+                    <td><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
+                    <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
+                    <td> {{ user }} </td>
+                    <td> {{ first  }} </td>
+                    <td> {{ last }} </td>
+                    {% if user in suspendedUsers %}
+                    <td><button name="{{ user }}" id='unsuspend' style='color:red;'>X</button></td>
                     {% else %}
-                    <td><button name="{{ driver[3] }}" id='suspend'>X</button></td>
+                    <td><button name="{{ user }}" id='suspend'>X</button></td>
                     {% endif %}
-                    <td> {{ driver[6] }} </td>
-                    <td><input name="{{ driver[3] }}" id='addpoints{{ driver[3] }}' placeholder='Add Pts'><button name='{{ driver[3] }}' id='addpoints'>+</button></td>
-                    <td><input name="{{ driver[3] }}" id='sendmessage{{ driver[3] }}' placeholder='Message'><button name='{{ driver[3] }}' id='sendmessage'>Send</button></td>
-                    <td> {{ driver[9] }} </td>
+                    <td> {{ datejoined }} </td>
+                    <td><input name="{{ user }}" id='sendmessage{{ user }}' placeholder='Message'><button name='{{ user }}' id='sendmessage'>Send</button></td>
                 </tr>
             {% endfor %}
         </table>

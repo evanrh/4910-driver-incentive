@@ -1,6 +1,4 @@
 import mysql.connector
-#from db_connection import *
-#from db_users import *
 import datetime
 #establish connection
 database = mysql.connector.connect(
@@ -501,10 +499,6 @@ if __name__ == "__main__":
     search = "Bike Tool car"
     product_search(search) 
     
-    data = DB_Connection('cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com','website','admin','cpsc4910')
-    h = Admin(data).get_suspended_users()
-    admin = Admin(data)
-    admin.remove_user(' wsherre ')
 
 
     cursor.close()

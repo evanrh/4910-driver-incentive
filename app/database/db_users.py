@@ -297,6 +297,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_suspended_users(self):
+        self.database = getNewConnection()
         sus = self.database.query('SELECT user FROM suspend')
         sus_list = []
         
@@ -598,6 +599,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_suspended_users(self):
+        self.database = getNewConnection()
         sus = self.database.query('SELECT user FROM suspend')
         sus_list = []
         
@@ -659,6 +661,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def add_points(self, driver_id, add_points):
+        self.database = getNewConnection()
 
         data = self.database.query('SELECT points FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s AND apply = 0', (driver_id, self.properties['id']))
         current_points = data[0][0]

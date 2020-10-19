@@ -21,8 +21,6 @@ $("#roleSelect").change(function() {
     $('#title').removeAttr('required');
     $('#title').removeAttr('data-error');
     $('#sponsorid').show();
-    $('#sponsorid').attr('required', '');
-    $('#sponsorid').attr('data-error', 'This field is required.');
   } else {
     $('#sponsorid').hide();
     $('#sponsorid').removeAttr('required');

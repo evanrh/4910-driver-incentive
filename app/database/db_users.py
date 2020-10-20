@@ -103,7 +103,7 @@ class Admin(AbsUser):
         self.properties['suspension'] = False
         self.properties['role'] = 'admin'
         self.properties['sandbox'] = 'NULL'
-        self.properties['points'] = 99999999
+        self.properties['selectedSponsor'] = [1, 99999999]
 
         self.database = getConnection()
 
@@ -431,6 +431,7 @@ class Sponsor(AbsUser):
         self.properties['role'] = 'sponsor'
         self.properties['sandbox'] = 'NULL'
         self.properties['points'] = 99999999
+        self.properties['selectedSponsor'] = [1, 9999999]
         self.database = getConnection()
 
     def setLogIn(self, loggedIn):
@@ -802,6 +803,7 @@ class Driver(AbsUser):
         self.properties['suspension'] = False
         self.properties['role'] = 'driver'
         self.properties['sandbox'] = 'NULL'
+        self.properties['selectedSponsor'] = None
 
         self.database = getConnection()
 
@@ -909,6 +911,20 @@ class Driver(AbsUser):
 
         
         return final_list
+
+    def view_sponsors(self):
+        query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
+        val = (self.properties['id'], )
+        try:
+            username = self.database.query(query, val)
+        except Exception as e:
+                raise Exception(e)
+
+        spon_list = []
+        for user in username:
+            spon_list.append(user)
+
+        return spon_list
     
     # returns user data as a 2D array in the following formart
     # [0][0] = first name
@@ -1000,6 +1016,14 @@ class Driver(AbsUser):
             self.properties['pwd'] = 'NULL'
             self.properties['image'] = data[0][8]
             self.properties['date_join'] = data[0][9]
+            
+            sponsorid = self.view_sponsors()[0][0]
+            points = self.view_sponsors()[0][1]
+
+            if sponsorid:
+                self.properties['selectedSponsor'] = [sponsorid, points]
+            else:
+                self.properties['selectedSponsor'] = None
 
             query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
             vals = (self.properties['id'], )

@@ -191,8 +191,8 @@ def driverPointsLeader():
         return redirect(url_for('home'))
 
     currSponsor = Sponsor()
-    sponsorName = userInfo.get_user_data()[0][5]
-    print(sponsorName)
+    sponsorId = session['userInfo']['properties']['selectedSponsor']
+    sponsorName = getSponsorName(sponsorId)
     currSponsor.populate(sponsorName)
     drivers = currSponsor.view_leaderboard()
 
@@ -411,9 +411,13 @@ def settings():
 # App Functions
 @app.route("/switchSponsor")
 def switchSponsor():
-    if userInfo.getRole() == "admin":
-        userInfo.setSandbox("sponsor")
-    return render_template('sponsor/sponsorHome.html')
+    if userInfo.getRole() == "admin" or "sponsor":
+        pass
+    else:
+        newSponsorid = request.form.get('sponsorSelect')
+        points = 0
+        session['userInfo']['properties']['selectedSponsor'] = [newSponsorid, points]
+    return redirect(url_for('driverView'))
 
 @app.route("/sponsorView")
 def sponsorView():

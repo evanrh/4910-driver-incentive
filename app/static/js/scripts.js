@@ -171,6 +171,12 @@ function setThemeFromCookie() {
   document.documentElement.style.setProperty('--main-theme4', color4);
 }
 
+jQuery(function() {
+  jQuery('#sponsorSelect').change(function() {
+      this.form.submit();
+  });
+});
+
 // Fix URL and add theme
 $(document).ready(function(){
 	var uri = window.location.toString();

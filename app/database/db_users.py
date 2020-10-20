@@ -541,13 +541,23 @@ class Sponsor(AbsUser):
     def getPoints(self):
         return 999999
 
+    def username_from_id(self, id):
+        sql = "SELECT user FROM sponsor WHERE sponsor_id = %s"
+        val = (id, )
+
+        try:
+            data = self.database.query(sql, val)
+        except Exception as e:
+            raise Exception(e)
+        
+        return data[0][0]
+
     def populate(self, username: str):
         query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE user = %s'
         vals = (username, )
 
         try:
             data = self.database.query(query, vals)
-            self.database.commit()
         except Exception as e:
             raise Exception(e)
 

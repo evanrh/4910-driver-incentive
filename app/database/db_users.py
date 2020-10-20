@@ -912,7 +912,7 @@ class Driver(AbsUser):
         return final_list
 
     def view_sponsors(self):
-        query = 'SELECT sponsor.user FROM sponsor INNER JOIN driver_bridge ON sponsor.sponsor_id = driver_bridge.sponsor_id WHERE driver_bridge.driver_id = %s AND apply = 0'
+        query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
         val = (self.properties['id'], )
         try:
             username = self.database.query(query, val)

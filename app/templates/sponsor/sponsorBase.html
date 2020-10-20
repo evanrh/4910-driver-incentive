@@ -10,6 +10,7 @@
             </a>
 
             <div id="top-navbar-right">
+
                 {% if session['userInfo']['properties']['role'] == "admin" %}
                 <div class="dropdown">
                     <img class="dropbtn" src="{{url_for('static', filename='img/viewChange.png')}}" style="width:50px;padding-top:10px;" title="Change View">

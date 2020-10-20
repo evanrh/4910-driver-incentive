@@ -70,6 +70,20 @@ $(function() {
   });
 });
 
+// Remove user from sponsor
+$(function() {
+  $(document).on('click', '#removeFromSponsor', function(e) {
+    var user =  $(this).attr("name")
+    var sponsor = $(this).attr('class');
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/removeFromSponsor', 
+      type: 'POST', 
+      data:{'user': user, 'sponsor': sponsor}
+    })
+  });
+});
+
 // Add points
 $(function() {
   $(document).on('click', '#addpoints', function(e) {

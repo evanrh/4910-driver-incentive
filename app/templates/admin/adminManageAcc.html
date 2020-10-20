@@ -106,7 +106,7 @@
                         {% set datejoined = driver[5] %}
                         <tr>
                             <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
-                            <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
+                            <td><button class="{{ sponsor[1] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
                             <td> {{ user }} </td>
                             <td> {{ first  }} </td>
                             <td> {{ last }} </td>

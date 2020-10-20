@@ -40,6 +40,8 @@ def permissionCheck(allowedRole):
 
     try:
         userInfo.populate(session['userInfo']['properties']['user'])
+
+        print(session['userInfo']['properties'])
     except Exception as e:
         session['logged_in'] = False
         return redirect(url_for('home'))
@@ -188,6 +190,12 @@ def driverPointsLeader():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
+    currSponsor = Sponsor()
+    sponsorName = userInfo.get_user_data()[0][5]
+    print(sponsorName)
+    currSponsor.populate(sponsorName)
+    drivers = currSponsor.view_leaderboard()
+
     return render_template('driver/driverPointsLeader.html', drivers=drivers)
 
 @app.route("/driverNotification")
@@ -313,6 +321,12 @@ def adminManageAcc():
            if sponsorid != 'Null':
                Admin().add_to_sponsor(newUser.getID(), sponsorid)
            flash('Account created!')
+       elif role == "driver":
+            newUser.populate(username)
+            if sponsorid != 'Null':
+                Admin().add_to_sponsor(newUser.getID(), sponsorid)
+            else:
+                flash('No sponsor id entered!')
        else:
            flash('Username taken!')
     
@@ -395,6 +409,12 @@ def settings():
             return render_template('admin/settings.html')
 
 # App Functions
+@app.route("/switchSponsor")
+def switchSponsor():
+    if userInfo.getRole() == "admin":
+        userInfo.setSandbox("sponsor")
+    return render_template('sponsor/sponsorHome.html')
+
 @app.route("/sponsorView")
 def sponsorView():
     if userInfo.getRole() == "admin":
@@ -443,6 +463,23 @@ def remove():
     Admin().remove_user(user)
     return ('', 204)
 
+@app.route("/removeFromSponsor", methods=["GET","POST"])
+def removeFromSponsor():
+
+    print("reached")
+    data = request.get_data().decode("utf-8").split("&")
+    user = data[0].split("=")
+    sponsorname = data[1].split("=")
+
+    driver = Driver()
+    driver.populate(user[1])
+    driver_id = driver.getID()
+
+    sponsor = Sponsor()
+    sponsor.populate(sponsorname[1])
+    sponsor.remove_driver(driver_id)
+
+    return ('', 204)
 
 @app.route("/addpts", methods=["GET","POST"])
 def addpts():

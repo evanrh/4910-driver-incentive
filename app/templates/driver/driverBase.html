@@ -12,6 +12,21 @@
 
             <div id="top-navbar-right">
 
+                <div class="dropdown">
+                    <img class="dropbtn" src="{{url_for('static', filename='img/dropdown.png')}}" style="width:50px;padding-top:10px;" title="Change Sponsor">
+                    <div class="dropdown-content">
+                        <form action="{{ url_for('switchSponsor') }}" method="post">
+                            <select name="sponsorSelect">
+                                {% for sponsor in session['userInfo']['properties']['sponsors'] %}
+                                    {% if not sponsor == session['userInfo']['properties']['selectedSponsor'] %}
+                                    <option value="{{ sponsor }}">{{ sponsor[0] }}</option>
+                                    {% endif %}
+                                {% endfor %}                                              
+                              </select>
+                        </form>
+                    </div>
+                </div>
+                
                 {% if session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
                 <div class="dropdown">
                     <img class="dropbtn" src="{{url_for('static', filename='img/viewChange.png')}}" style="width:50px;padding-top:10px;" title="Change View">
@@ -26,7 +41,11 @@
                 </a>
 
                 <a style="padding-left:0;">
-                    <span>Points: {{ session['userInfo']['properties']['points'] }}</span>
+                    {% if session['userInfo']['properties']['selectedSponsor'][1] %}
+                    <span>Points: {{ session['userInfo']['properties']['selectedSponsor'][1] }}</span>
+                    {% else %}
+                    <span>No Sponsor</span>
+                    {% endif %}
                 </a>
                 
                 {% if session['userInfo']['properties']['image'] %}

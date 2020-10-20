@@ -338,6 +338,7 @@ class Admin(AbsUser):
             self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
             if role == 'driver':
                 id = id[0][0]
+                self.database.delete('DELETE FROM Product_Orders WHERE Driver_ID = %s', (id, ))
                 self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id, ))
                 self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id, ))
             if role == 'sponsor':
@@ -909,6 +910,20 @@ class Driver(AbsUser):
 
         
         return final_list
+
+    def view_sponsors(self):
+        query = 'SELECT sponsor.user FROM sponsor INNER JOIN driver_bridge ON sponsor.sponsor_id = driver_bridge.sponsor_id WHERE driver_bridge.driver_id = %s AND apply = 0'
+        val = (self.properties['id'], )
+        try:
+            username = self.database.query(query, val)
+        except Exception as e:
+                raise Exception(e)
+
+        spon_list = []
+        for user in username:
+            spon_list.append(user[0])
+
+        return spon_list
     
     # returns user data as a 2D array in the following formart
     # [0][0] = first name

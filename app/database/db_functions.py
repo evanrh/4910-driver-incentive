@@ -321,8 +321,24 @@ def get_products_by_name(search):
     print(matches)
     return matches
 
-#main used to test functions
+def getSponsorName(ident):
+    ID = str(ident)
+    cursor.execute("SELECT title FROM sponsor WHERE sponsor_id = '" +ID+"'")
+    got = cursor.fetchall()
+    returninfo = ''.join(str(v) for v in got)
+#    print(returninfo)
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    return returninfo
+
+    #main used to test functions
 if __name__ == "__main__":
+    """
     cancel_suspension('wsherre')
     if username_exist('krod'):
         add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
@@ -333,7 +349,10 @@ if __name__ == "__main__":
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
     print(username_exist('krod'))
     get_users()
+    """
+    getSponsorName(1)
 
+    """
     print(admin_view_users())
     print("David recoo\n")
     recommend("cgaber")
@@ -379,7 +398,7 @@ if __name__ == "__main__":
     cancel_suspension('krod')
     print(get_suspended_users())
     print(if_username_exist('remove'))
-
+    """
     cursor.close()
     database.close()
     

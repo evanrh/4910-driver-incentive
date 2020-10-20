@@ -476,7 +476,8 @@ def removeFromSponsor():
     sponsorname = data[1].split("=")
 
     driver = Driver()
-    driver.populate(user[1])
+    driver_username = user[1].strip('+')
+    driver.populate(driver_username)
     driver_id = driver.getID()
 
     sponsor = Sponsor()

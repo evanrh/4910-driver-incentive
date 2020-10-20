@@ -8,16 +8,17 @@ class DB_Connection():
                                    database = name,
                                    user = user,
                                    password = pwd)
+            self.conn.autocommit = True
 
         except Error as e:
             raise Error(e)
 
     def query(self, query, params=None, multi=False):
-        cursor = self.conn.cursor()
+        cursor = self.conn.cursor(buffered=True)
 
         try:
             cursor.execute(query, params, multi)
-            rows = cursor.fetchall()
+            rows = cursor.fetchall()         
             cursor.close()
             return rows
         except Error as e:
@@ -25,7 +26,7 @@ class DB_Connection():
             print(cursor.statement)
 
     def insert(self, query, params=None, multi=False):
-        cursor = self.conn.cursor()
+        cursor = self.conn.cursor(buffered=True)
 
         try:
             cursor.execute(query, params, multi)
@@ -35,7 +36,7 @@ class DB_Connection():
             print(cursor.statement)
 
     def delete(self, query, params=None, multi=False):
-        cursor = self.conn.cursor()
+        cursor = self.conn.cursor(buffered=True)
 
         try:
             cursor.execute(query, params, multi)

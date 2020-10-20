@@ -12,6 +12,20 @@
 
             <div id="top-navbar-right">
 
+                <div class="dropdown">
+                    <img class="dropbtn" src="{{url_for('static', filename='img/dropdown.png')}}" style="width:50px;padding-top:10px;" title="Change Sponsor">
+                    <div class="dropdown-content">
+                        <form id = "sponsorform" action="{{ url_for('switchSponsor') }}" method="post">
+                        </form>
+
+                        <select id="sponsorSelect" class="dropdown-content" name="sponsorSelect" form="sponsorform">
+                            {% for sponsor in session['userInfo']['properties']['sponsors'] %}
+                                <option value="{{ sponsor [0] }}">{{ sponsor[0] }}</option>
+                            {% endfor %}                                              
+                        </select>
+                    </div>
+                </div>
+                
                 {% if session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
                 <div class="dropdown">
                     <img class="dropbtn" src="{{url_for('static', filename='img/viewChange.png')}}" style="width:50px;padding-top:10px;" title="Change View">
@@ -21,17 +35,27 @@
                 </div>
                 {% endif %}
 
-                <a>
+                <a href="/driverCart">
                     <img src="{{url_for('static', filename='img/cart.png')}}" style="width:50px;padding-top:10px;">
                 </a>
 
                 <a style="padding-left:0;">
-                    <span>Points: {{ session['userInfo']['properties']['points'] }}</span>
+                    {% if session['userInfo']['properties']['selectedSponsor'][1] %}
+                    <span>Points: {{ session['userInfo']['properties']['selectedSponsor'][1] }}</span>
+                    {% else %}
+                    <span>No Sponsor</span>
+                    {% endif %}
                 </a>
-
-                <a>
-                    <img src="{{url_for('static', filename='img/userpic.png')}}" style="width:50px;padding-top:10px;">
-                </a>
+                
+                {% if session['userInfo']['properties']['image'] %}
+                    <a href="/driverProfile">
+                        <img src="{{url_for('static', filename='img/userpic.png')}}" class="pfp">
+                    </a>
+                {% else %}
+                    <a href="/driverProfile">
+                        <img src="{{url_for('static', filename='img/userpic.png')}}" class="pfp">
+                    </a>
+                {% endif %}
 
                 <a style="padding-left:0;">
                     <span>{{ session['userInfo']['properties']['user'].capitalize() }}</span>

@@ -921,7 +921,7 @@ class Driver(AbsUser):
 
         spon_list = []
         for user in username:
-            spon_list.append(user[0])
+            spon_list.append(user)
 
         return spon_list
     

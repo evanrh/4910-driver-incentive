@@ -1045,6 +1045,12 @@ class Driver(AbsUser):
                 sponsor_id = '{}'.format(d[0])
                 self.properties['sponsors'][sponsor_id] = d[1] 
 
+            if self.properties['selectedSponsor'] is None:
+                id = next(iter(self.properties['sponsors']))
+                points = self.properties['sponsors'].get(id)
+                self.properties['selectedSponsor'] = [id, points]
+
+
     def apply_to_sponsor(self, sponsor_id):
         query = 'INSERT INTO driver_bridge VALUES (%s, %s, %s, %s)'
         vals = (self.properties['id'], sponsor_id, 0, 1)

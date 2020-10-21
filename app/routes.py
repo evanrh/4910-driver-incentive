@@ -26,7 +26,6 @@ userInfo = Driver()
 
 def permissionCheck(allowedRole):
     global userInfo
-
     suspendedUsers = Admin().get_suspended_users()
 
     if userInfo.getUsername() == 'NULL':
@@ -39,7 +38,7 @@ def permissionCheck(allowedRole):
 
     try:
         userInfo.populate(session['userInfo']['properties']['user'])
-
+            
     except Exception as e:
         session['logged_in'] = False
         return redirect(url_for('home'))
@@ -183,7 +182,7 @@ def about():
 def driverPointsLeader():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-
+    
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
     sponsorName = currSponsor.username_from_id(sponsorId)

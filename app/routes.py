@@ -6,6 +6,7 @@ from app.database.db_users import *
 from app.database.db_connection import DB_Connection
 from flask.json import JSONEncoder
 from tempfile import TemporaryFile
+from app.products.etsy_driver import EtsyController
 import json
 import time
 
@@ -542,3 +543,14 @@ def updateDriver(username):
         return json.dumps({'status': 'OK', 'user': username})
 
     return render_template("sponsor/sponsorEditDriver.html", driver=driverObj)
+
+# Sponsor Catalog Additions Search
+@app.route('/sponsorSearch', methods=['GET', 'POST'])
+def sponsorSearch():
+    if request.method == 'POST':
+        search = request.form['search']
+
+        # Send query to Etsy Controller
+        cont = EtsyController(os.getenv("ETSY_API_KEY"))
+        results = cont.get_products_keywords(search)
+        return render_template('sponsor/sponsorResults.html', results=results) 

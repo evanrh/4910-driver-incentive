@@ -1,4 +1,13 @@
 {% extends "sponsor/sponsorBase.html" %}
 {% block sponsorContent %}
 <h1>Product Catalog (Edit)</h1>
+<div id="sponsorSearch">
+    <p>Top Text</p>
+    <form action="{{ url_for('sponsorSearch') }}" method="POST">
+        <input type="text" class="tftextinput" name="search" id="search" placeholder="Name, genre, type..."required>
+        <button type="submit" class="tfbutton" id="searchButton">Search</button>
+    </form>
+    <p>Bottom Text</p>
+</div>
+<!-- Show current products below -->
 {% endblock %}

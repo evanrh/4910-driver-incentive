@@ -19,14 +19,21 @@
                 <div class="dropdown">
                     <i class="fa fa-chevron-circle-down" aria-hidden="true" style="font-size: 2em;"></i>
                     <div class="dropdown-content">
+                        
                         <form id = "sponsorform" action="{{ url_for('switchSponsor') }}" method="post">
                         </form>
 
-                        <select id="sponsorSelect" class="dropdown-content" name="sponsorSelect" form="sponsorform">
+                        <select class="dropdown-content" id="sponsorSelect" name="sponsorSelect" form="sponsorform" size="{{session['userInfo']['properties']['sponsors']|length}}" style="width:50px;">
+                            {% if not session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
                             <option hidden disabled selected value> Select </option>
                             {% for sponsor in session['userInfo']['properties']['sponsors'] %}
+                                {% if not sponsor[0] == session['userInfo']['properties']['selectedSponsor'][0] %}
                                 <option value="{{ sponsor [0] }}">{{ sponsor[0] }}</option>
-                            {% endfor %}                                              
+                                {% else %}
+                                <option value="{{ sponsor [0] }}" selected>{{ sponsor[0] }}</option>
+                                {% endif %}
+                            {% endfor %}         
+                            {% endif %}                                     
                         </select>
                     </div>
                 </div>

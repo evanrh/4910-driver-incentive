@@ -1169,6 +1169,11 @@ class Driver(AbsUser):
         self.database.insert(query)
         self.database.commit()
 
+    def getSponsorView(self):
+        return self.properties['selectedSponsor']
+
+    def setSponsorView(self, view):
+        self.properties['selectedSponsor'] = view
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox

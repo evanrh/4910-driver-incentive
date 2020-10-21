@@ -237,8 +237,15 @@ def sponsorPointsLeader():
         return redirect(url_for('home'))
 
     currSponsor = Sponsor()
-    currSponsor.populate(userInfo.getUsername())
-    drivers = currSponsor.view_leaderboard()
+    
+    if (userInfo.getRole() == "sponsor"):
+        currSponsor.populate(userInfo.getUsername())
+        drivers = currSponsor.view_leaderboard()
+    else:
+        sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+        sponsorName = currSponsor.username_from_id(sponsorId)
+        currSponsor.populate(sponsorName)
+        drivers = currSponsor.view_leaderboard()
 
     return render_template('sponsor/sponsorPointsLeader.html', drivers=drivers)
 

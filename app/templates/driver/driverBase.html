@@ -12,13 +12,18 @@
 
             <div id="top-navbar-right">
 
+                <a style="padding-left:0;">
+                    <span>Current Sponsor: {{ session['userInfo']['properties']['selectedSponsor'][0] }}</span>
+                </a>
+
                 <div class="dropdown">
-                    <img class="dropbtn" src="{{url_for('static', filename='img/dropdown.png')}}" style="width:50px;padding-top:10px;" title="Change Sponsor">
+                    <img class="dropbtn" src="{{url_for('static', filename='img/dropdown.png')}}" style="width:20px;padding-top:10px;" title="Change Sponsor">
                     <div class="dropdown-content">
                         <form id = "sponsorform" action="{{ url_for('switchSponsor') }}" method="post">
                         </form>
 
                         <select id="sponsorSelect" class="dropdown-content" name="sponsorSelect" form="sponsorform">
+                            <option hidden disabled selected value> Select </option>
                             {% for sponsor in session['userInfo']['properties']['sponsors'] %}
                                 <option value="{{ sponsor [0] }}">{{ sponsor[0] }}</option>
                             {% endfor %}                                              
@@ -40,7 +45,7 @@
                 </a>
 
                 <a style="padding-left:0;">
-                    {% if session['userInfo']['properties']['selectedSponsor'][1] %}
+                    {% if session['userInfo']['properties']['selectedSponsor'][1] is not none %}
                     <span>Points: {{ session['userInfo']['properties']['selectedSponsor'][1] }}</span>
                     {% else %}
                     <span>No Sponsor</span>

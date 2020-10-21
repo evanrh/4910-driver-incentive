@@ -222,6 +222,20 @@ def cancel_suspension(username):
         cursor.execute(query, vals)
     except Exception as e:
         raise Exception(e)
+    
+def getSponsorName(ident):
+    ID = str(ident)
+    cursor.execute("SELECT user FROM sponsor WHERE sponsor_id = '" +ID+"'")
+    got = cursor.fetchall()
+    returninfo = ''.join(str(v) for v in got)
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    return returninfo
 
 #Clean search and translate into sql search
 def product_search(search):

@@ -970,6 +970,9 @@ class Driver(AbsUser):
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
 
+    def setSponsorView(self, view):
+        self.properties['selectedSponsor'] = view
+
     def getUsername(self):
         return self.properties['user']
     
@@ -984,6 +987,9 @@ class Driver(AbsUser):
 
     def getSandbox(self):
         return self.properties['sandbox']
+
+    def getSponsorView(self):
+        return self.properties['selectedSponsor']
 
     def is_suspended(self):
         
@@ -1026,14 +1032,6 @@ class Driver(AbsUser):
             self.properties['pwd'] = 'NULL'
             self.properties['image'] = data[0][8]
             self.properties['date_join'] = data[0][9]
-            
-            sponsorid = self.view_sponsors()[0][0]
-            points = self.view_sponsors()[0][1]
-
-            if sponsorid:
-                self.properties['selectedSponsor'] = [sponsorid, points]
-            else:
-                self.properties['selectedSponsor'] = None
 
             query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
             vals = (self.properties['id'], )

@@ -551,8 +551,10 @@ class Sponsor(AbsUser):
         query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
         self.properties['END'] = 'NULL'
 
+        # Filter properties to be all except selectedSponsor because list issue
+        params = dict(filter(lambda x: x[0] != 'selectedSponsor', self.properties.items()))
         try:
-            self.database.insert(query, params=self.properties)
+            self.database.insert(query, params=params)
             self.add_to_users()
             self.database.commit()
 

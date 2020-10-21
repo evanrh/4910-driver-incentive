@@ -369,6 +369,106 @@ class Admin(AbsUser):
             raise Exception(e)
         return data
 
+    def get_inbox_list(self):
+        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        vals = (self.properties['user'], self.properties['user'])
+
+        try:
+            data = self.database.query(message_query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        user_list = []
+        if data:
+            for d in data:
+                if (d[0] not in user_list) and (d[0] != self.properties['user']):
+                    user_list.append(d[0])
+                elif (d[1] not in user_list) and (d[1] != self.properties['user']):                       
+                    user_list.append(d[1])
+
+        return user_list
+
+    def messages_are_seen(self, user):
+        if user == "MARK_ALL":
+            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            val = (self.properties['user'], )
+        else:
+            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
+            val = (self.properties['user'], user, user, self.properties['user'])
+
+        try:
+            self.database.insert(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+    def get_msg_info(self, user):
+        sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
+        val = (user, )
+        id = self.database.query(sql, val)
+        if id[0][0] != None:
+            role =  'driver'
+        elif id[0][1] != None:
+            role =  'sponsor'
+        else:
+            role = 'admin'
+        
+        if role == 'driver' or role == 'admin':
+            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+        else:
+            query = 'SELECT title FROM sponsor WHERE user = %s'
+        val = (user, )
+        
+        try:
+            data = self.database.query(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+        data_list = list(data[0])
+        data_list.insert(0, role)
+        return tuple(data_list)
+
+
+    def view_messages(self):
+        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time ASC'
+        vals = (self.properties['user'], self.properties['user'])
+
+        try:
+            data = self.database.query(message_query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        message_dict = {}
+
+        if data:
+            for d in data:
+                user_list = list(message_dict.keys())
+                if (d[0] not in user_list) and (d[0] != self.properties['user']):
+                    message_dict[d[0]] = []
+                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    user = 0
+                elif (d[1] not in user_list) and (d[1] != self.properties['user']):
+                    message_dict[d[1]] = []
+                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    user = 1
+                else:
+                    if d[0] != self.properties['user']:
+                        user = 0
+                    else:
+                        user = 1
+
+                message_dict[d[user]].append((d[1], d[2], d[3]))
+        
+        return message_dict
+
+    def send_message(self, target, message):
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        vals = (target, self.properties['user'], message)
+
+        try:
+            self.database.insert(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:
             image = file.read()
@@ -726,6 +826,107 @@ class Sponsor(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    def get_inbox_list(self):
+        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        vals = (self.properties['user'], self.properties['user'])
+
+        try:
+            data = self.database.query(message_query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        user_list = []
+        if data:
+            for d in data:
+                if (d[0] not in user_list) and (d[0] != self.properties['user']):
+                    user_list.append(d[0])
+                elif (d[1] not in user_list) and (d[1] != self.properties['user']):                       
+                    user_list.append(d[1])
+
+        return user_list
+
+    def messages_are_seen(self, user):
+        if user == "MARK_ALL":
+            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            val = (self.properties['user'], )
+        else:
+            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
+            val = (self.properties['user'], user, user, self.properties['user'])
+
+        try:
+            self.database.insert(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+    def get_msg_info(self, user):
+        sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
+        val = (user, )
+        id = self.database.query(sql, val)
+        if id[0][0] != None:
+            role =  'driver'
+        elif id[0][1] != None:
+            role =  'sponsor'
+        else:
+            role = 'admin'
+        
+        if role == 'driver' or role == 'admin':
+            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+        else:
+            query = 'SELECT title FROM sponsor WHERE user = %s'
+        val = (user, )
+        
+        try:
+            data = self.database.query(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+        data_list = list(data[0])
+        data_list.insert(0, role)
+        return tuple(data_list)
+
+
+    def view_messages(self):
+        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time ASC'
+        vals = (self.properties['user'], self.properties['user'])
+
+        try:
+            data = self.database.query(message_query, vals)
+        except Exception as e:
+            raise Exception(e)
+        
+        message_dict = {}
+
+        if data:
+            for d in data:
+                user_list = list(message_dict.keys())
+                if (d[0] not in user_list) and (d[0] != self.properties['user']):
+                    message_dict[d[0]] = []
+                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    user = 0
+                elif (d[1] not in user_list) and (d[1] != self.properties['user']):
+                    message_dict[d[1]] = []
+                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    user = 1
+                else:
+                    if d[0] != self.properties['user']:
+                        user = 0
+                    else:
+                        user = 1
+
+                message_dict[d[user]].append((d[1], d[2], d[3]))
+        
+        return message_dict
+
+    def send_message(self, target, message):
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        vals = (target, self.properties['user'], message)
+
+        try:
+            self.database.insert(query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+
     
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:
@@ -972,9 +1173,6 @@ class Driver(AbsUser):
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
 
-    def setSponsorView(self, view):
-        self.properties['selectedSponsor'] = view
-
     def getUsername(self):
         return self.properties['user']
     
@@ -989,9 +1187,6 @@ class Driver(AbsUser):
 
     def getSandbox(self):
         return self.properties['sandbox']
-
-    def getSponsorView(self):
-        return self.properties['selectedSponsor']
 
     def is_suspended(self):
         
@@ -1034,6 +1229,13 @@ class Driver(AbsUser):
             self.properties['pwd'] = 'NULL'
             self.properties['image'] = data[0][8]
             self.properties['date_join'] = data[0][9]
+            sponsorid = self.view_sponsors()[0][0]
+            points = self.view_sponsors()[0][1]
+
+            if sponsorid:
+                self.properties['selectedSponsor'] = [sponsorid, points]
+            else:
+                self.properties['selectedSponsor'] = None
 
             query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
             vals = (self.properties['id'], )
@@ -1056,6 +1258,105 @@ class Driver(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    def get_inbox_list(self):
+        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        vals = (self.properties['user'], self.properties['user'])
+
+        try:
+            data = self.database.query(message_query, vals)
+        except Exception as e:
+            raise Exception(e)
+
+        user_list = []
+        if data:
+            for d in data:
+                if (d[0] not in user_list) and (d[0] != self.properties['user']):
+                    user_list.append(d[0])
+                elif (d[1] not in user_list) and (d[1] != self.properties['user']):                       
+                    user_list.append(d[1])
+
+        return user_list
+
+    def messages_are_seen(self, user):
+        if user == "MARK_ALL":
+            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            val = (self.properties['user'], )
+        else:
+            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
+            val = (self.properties['user'], user, user, self.properties['user'])
+
+        try:
+            self.database.insert(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+    def get_msg_info(self, user):
+        sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
+        val = (user, )
+        id = self.database.query(sql, val)
+        if id[0][0] != None:
+            role =  'driver'
+        elif id[0][1] != None:
+            role =  'sponsor'
+        else:
+            role = 'admin'
+        
+        if role == 'driver' or role == 'admin':
+            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+        else:
+            query = 'SELECT title FROM sponsor WHERE user = %s'
+        val = (user, )
+        
+        try:
+            data = self.database.query(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+        data_list = list(data[0])
+        data_list.insert(0, role)
+        return tuple(data_list)
+
+
+    def view_messages(self):
+        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time ASC'
+        vals = (self.properties['user'], self.properties['user'])
+
+        try:
+            data = self.database.query(message_query, vals)
+        except Exception as e:
+            raise Exception(e)
+        
+        message_dict = {}
+
+        if data:
+            for d in data:
+                user_list = list(message_dict.keys())
+                if (d[0] not in user_list) and (d[0] != self.properties['user']):
+                    message_dict[d[0]] = []
+                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    user = 0
+                elif (d[1] not in user_list) and (d[1] != self.properties['user']):
+                    message_dict[d[1]] = []
+                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    user = 1
+                else:
+                    if d[0] != self.properties['user']:
+                        user = 0
+                    else:
+                        user = 1
+
+                message_dict[d[user]].append((d[1], d[2], d[3]))
+        
+        return message_dict
+
+    def send_message(self, target, message):
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        vals = (target, self.properties['user'], message)
+
+        try:
+            self.database.insert(query, vals)
+        except Exception as e:
+            raise Exception(e)
     
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:

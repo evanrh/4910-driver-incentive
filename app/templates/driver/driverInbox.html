@@ -11,15 +11,42 @@
     </div>
 </div>
 
-<div class="row" style="width:80%;">
-    {% for message in messages %}
-    <div class="one-fourth" style="border: 1px solid #BBBBBB;">
-        <p>hi</p>
-    </div>
+<div class="row" style="width:80%;border: 1px solid black;">
+
+    {% for user in messages %}
+        {% set value = messages[user] %}
+        {% if not value[0][0] == "sponsor" %}
+            {% set name = value[0][1] + " " + value[0][2]  %}
+        {% else %}
+            {% set name = value[0][1]  %}
+        {% endif %}
+
+        <div class="one-fourth" style="border-right: 1px solid black;">
+            <p> Messages From: {{ name }} </p>
+        </div>
+
+        {% for tuple in value[1:] %}
+            {% if loop.index > 1 %}
+            <div class="one-fourth" style="border-right: 1px solid black;"></div>
+            {% endif %}
+            {% set message = tuple[1] %}
+            {% set time = tuple[2] %}
+            <div class="three-fourths">
+                <div class="row">
+                    <p style="font-weight: bold;">{{ time }}</p> <p> {{ message }}</p>
+                </div>
+            </div>
+            {% if loop.index == value|length -1 %}
+            <div class="one-fourth" style="border-right: 1px solid black;"></div>
+            <div class="three-fourths">
+                <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Reply'>
+                <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+            </div>
+            {% endif %}
+        {% endfor %}
+
     {% endfor %}
 
-    <div class="three-fourths" style="border: 1px solid #BBBBBB;">
-        <p>hi</p>
-    </div>
 </div>
+
 {% endblock %}

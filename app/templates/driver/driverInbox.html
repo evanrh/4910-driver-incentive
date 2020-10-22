@@ -2,14 +2,24 @@
 {% block driverContent %}
 <h1>Inbox</h1>
 
-<div class="row" style="border-radius: 1px;color:black;">
-    <div class="one-third" style="border-radius: 1px;color:black;">
-        {% for message in messages %}
-            <p>  </p>
-        {% endfor %}
+<div class="row" style="width:80%;">
+    <div class="one-fourth">
+        <h2>Sender</h2>
     </div>
-    <div class="two-thirds" style="border-radius: 1px;color:black;">
+    <div class="three-fourths">
+        <h2>Conversation</h2>
+    </div>
+</div>
 
+<div class="row" style="width:80%;">
+    {% for message in messages %}
+    <div class="one-fourth" style="border: 1px solid #BBBBBB;">
+        <p>hi</p>
+    </div>
+    {% endfor %}
+
+    <div class="three-fourths" style="border: 1px solid #BBBBBB;">
+        <p>hi</p>
     </div>
 </div>
 {% endblock %}

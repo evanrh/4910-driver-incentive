@@ -1234,8 +1234,13 @@ class Driver(AbsUser):
             self.properties['pwd'] = 'NULL'
             self.properties['image'] = data[0][8]
             self.properties['date_join'] = data[0][9]
-            sponsorid = self.view_sponsors()[0][0]
-            points = self.view_sponsors()[0][1]
+            spon_list = self.view_sponsors()
+            if not spon_list:
+                sponsorid = None
+                points = None
+            else:
+                sponsorid = spon_list[0][0]
+                points = spon_list[0][1]
 
             if sponsorid:
                 self.properties['selectedSponsor'] = [sponsorid, points]
@@ -1254,7 +1259,7 @@ class Driver(AbsUser):
                 sponsor_id = '{}'.format(d[0])
                 self.properties['sponsors'][sponsor_id] = d[1] 
 
-            if self.properties['selectedSponsor'] is None:
+            if self.properties['selectedSponsor'] is not None:
                 id = next(iter(self.properties['sponsors']))
                 points = self.properties['sponsors'].get(id)
                 self.properties['selectedSponsor'] = [id, points]

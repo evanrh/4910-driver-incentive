@@ -28,8 +28,5 @@ steps:
     sshEndpoint: 'Ansible Control Node'
     runOptions: 'inline'
     inline: |
-      cd project;
-      git pull;
-      cd ..;
       ansible-playbook auto-deploy.yaml;
     readyTimeout: '20000'

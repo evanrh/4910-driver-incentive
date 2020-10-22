@@ -159,7 +159,10 @@
                 <td><button name="{{ user }}" id='suspend'>X</button></td>
                 {% endif %}
                 <td> {{ datejoined }} </td>
-                <td><input name="{{ user }}" id='sendmessage{{ user }}' placeholder='Message'><button name='{{ user }}' id='sendmessage'>Send</button></td>
+                <td> 
+                    <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+                </td>
             </tr>
         {% endfor %}
     </table>

@@ -291,7 +291,13 @@ def sponsorViewDriver():
 def adminInbox():
     if permissionCheck(["admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('admin/adminInbox.html')
+    
+    currentAdmin = Admin()
+    currentAdmin.populate(session['userInfo']['properties']['user'])
+
+    messages = currentAdmin.view_messages()
+
+    return render_template('admin/adminInbox.html', messages=messages)
 
 @app.route("/adminManageAcc", methods=["GET", "POST"])
 def adminManageAcc():

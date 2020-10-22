@@ -71,7 +71,7 @@ def home():
     # Using the global class to access data
     global userInfo
 
-    if not session.get('logged_in'):
+    if not session.get('logged_in') or not session.get('userInfo'):
         return render_template('landing/login.html')
     else:
         if permissionCheck(["driver", "sponsor", "admin"]) == False:

@@ -1,0 +1,25 @@
+{% extends "sponsor/sponsorBase.html" %}
+{% block header %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+{% endblock %}
+{% block sponsorContent %}
+    {% set trunc = 40 %}
+    {% if results %}
+        <div id="results">
+        {% for result in results %}
+            <div class="card" style="width: 18rem;">
+                <a target="_blank" href="{{ result['url'] }}"><img class="card-img-top" src="{{ result['Images'] }}"></a>
+                <div class="card-body">
+                    <h5>{{ result['title'][0:trunc] }}</h5>
+                    {% if result['description'] | length > trunc %}
+                    <p class="card-text">{{ result['description'][0:trunc] + '...' }}</p>
+                    {% else %}
+                    <p class="card-text">{{ result['description'] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+                
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

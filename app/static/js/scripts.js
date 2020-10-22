@@ -99,6 +99,21 @@ $(function() {
   });
 });
 
+// send message
+$(function() {
+  $(document).on('click', '#sendmessage', function(e) {
+    var user =  $(this).attr("name")
+    var sender = $(this).attr('class');
+    var message = document.getElementById("sendmessage" + user + sender).value;
+    $.ajax({ 
+      contentType: "application/x-www-form-urlencoded",
+      url: '/sendmessage', 
+      type: 'POST', 
+      data:{'user': user, 'sender': sender, 'message': message}
+    })
+  });
+});
+
 // Theme code
 $("#themeSelect").change(function() {
   if ($(this).val() == "dark") {

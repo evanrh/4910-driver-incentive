@@ -121,8 +121,8 @@
                                 <button class="{{ sponsor[1] }}" name='{{ user }}' id='addpoints'>+</button>
                             </td>
                             <td>
-                                <input name="{{ user }}" id='sendmessage{{ user }}{{ sponsor[1] }}' placeholder='Message'>
-                                <button name='{{ user }}' id='sendmessage'>Send</button>
+                                <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                                <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
                             </td>
                             <td> {{ datejoined }} </td>
                         </tr>

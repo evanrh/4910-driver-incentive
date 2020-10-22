@@ -1,4 +1,15 @@
 {% extends "driver/driverBase.html" %}
 {% block driverContent %}
 <h1>Inbox</h1>
+
+<div class="row" style="border-radius: 1px;color:black;">
+    <div class="one-third" style="border-radius: 1px;color:black;">
+        {% for message in messages %}
+            <p>  </p>
+        {% endfor %}
+    </div>
+    <div class="two-thirds" style="border-radius: 1px;color:black;">
+
+    </div>
+</div>
 {% endblock %}

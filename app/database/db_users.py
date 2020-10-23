@@ -441,7 +441,7 @@ class Admin(AbsUser):
         message_dict = {}
 
         if data:
-            for d in data:
+            for d in reversed(data):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
@@ -457,7 +457,7 @@ class Admin(AbsUser):
                     else:
                         user = 1
                     
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
@@ -900,7 +900,7 @@ class Sponsor(AbsUser):
         message_dict = {}
 
         if data:
-            for d in data:
+            for d in reversed(data):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
@@ -916,7 +916,7 @@ class Sponsor(AbsUser):
                     else:
                         user = 1
 
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
@@ -1351,7 +1351,7 @@ class Driver(AbsUser):
         message_dict = {}
 
         if data:
-            for d in data:
+            for d in reversed(data):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
@@ -1367,7 +1367,7 @@ class Driver(AbsUser):
                     else:
                         user = 1
 
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 

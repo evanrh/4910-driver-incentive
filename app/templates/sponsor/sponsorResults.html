@@ -24,6 +24,7 @@
         background-color: var(--main-theme2);
         border-color: var(--main-theme-1);
     }
+
 </style>
 {% endblock %}
 {% block sponsorContent %}
@@ -50,7 +51,7 @@
                     </div>
                 </div>
             </div> 
-        {% if loop.index0 % 3 == 2 or loop.index == (results | length) - 1 %}
+        {% if loop.index0 % 3 == 2 or loop.index0 == (results | length) - 1 %}
         </div>
         {% endif %}
         {% endfor %}

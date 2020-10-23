@@ -594,8 +594,10 @@ def updateDriver(username):
 def sponsorSearch():
     if request.method == 'POST':
         search = request.form['search']
+        limit = int(request.form['limit'])
 
         # Send query to Etsy Controller
         cont = EtsyController(os.getenv("ETSY_API_KEY"))
+        cont.limit = limit
         results = cont.get_products_keywords(search)
         return render_template('sponsor/sponsorResults.html', results=results) 

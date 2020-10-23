@@ -8,8 +8,6 @@ from abc import ABC
 from abc import abstractmethod
 from werkzeug.security import check_password_hash
 from app.database.db_functions import *
-import datetime
-import time
 
 connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
 
@@ -21,6 +19,7 @@ def getConnection():
 
 def getNewConnection():
     return DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
+    
 
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
@@ -458,18 +457,17 @@ class Admin(AbsUser):
                     else:
                         user = 1
                     
-                date = d[3]
-                date -= datetime.timedelta(hours = 4)
-
-                message_dict[d[user]].append((d[1], d[2], date))
+                message_dict[d[user]].append((d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
+        time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
         vals = (target, self.properties['user'], message)
 
         try:
+            self.database.insert(time)
             self.database.insert(query, vals)
         except Exception as e:
             raise Exception(e)
@@ -918,18 +916,17 @@ class Sponsor(AbsUser):
                     else:
                         user = 1
 
-                date = d[3]
-                date -= datetime.timedelta(hours = 4)
-
-                message_dict[d[user]].append((d[1], d[2], date))
+                message_dict[d[user]].append((d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
+        time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
         vals = (target, self.properties['user'], message)
 
         try:
+            self.database.insert(time)
             self.database.insert(query, vals)
         except Exception as e:
             raise Exception(e)
@@ -1370,18 +1367,17 @@ class Driver(AbsUser):
                     else:
                         user = 1
 
-                date = d[3]
-                date -= datetime.timedelta(hours = 4)
-
-                message_dict[d[user]].append((d[1], d[2], date))
+                message_dict[d[user]].append((d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
+        time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
         vals = (target, self.properties['user'], message)
 
         try:
+            self.database.insert(time)
             self.database.insert(query, vals)
         except Exception as e:
             raise Exception(e)

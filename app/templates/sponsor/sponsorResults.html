@@ -1,25 +1,64 @@
 {% extends "sponsor/sponsorBase.html" %}
 {% block header %}
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<style>
+    .card {
+        border: 1px solid rgba(0,0,0,.125);
+        border-radius: .25rem;
+        padding: 10px;
+        width: 100%;
+        justify-content: center;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+
+    .card:hover {
+        box-shadow: 0 12px 24px 0 rgba(0,0,0,0.2);
+    }
+
+    .card-body h5 {
+        text-transform: capitalize;
+    }
+
+    .btn-primary {
+        background-color: var(--main-theme2);
+        border-color: var(--main-theme-1);
+    }
+
+</style>
 {% endblock %}
 {% block sponsorContent %}
     {% set trunc = 40 %}
     {% if results %}
         <div id="results">
         {% for result in results %}
-            <div class="card" style="width: 18rem;">
-                <a target="_blank" href="{{ result['url'] }}"><img class="card-img-top" src="{{ result['Images'] }}"></a>
-                <div class="card-body">
-                    <h5>{{ result['title'][0:trunc] }}</h5>
-                    {% if result['description'] | length > trunc %}
-                    <p class="card-text">{{ result['description'][0:trunc] + '...' }}</p>
-                    {% else %}
-                    <p class="card-text">{{ result['description'] }}</p>
-                    {% endif %}
+        {% if loop.index0 % 3 == 0 %}
+        <div class="row">
+        {% endif %}
+            <div class="one-third">
+                <div class="card">
+                    <img class="card-img-top" src="{{ result['Images'] }}">
+                    <div class="card-body">
+                        <h5><strong>{{ result['title'][0:trunc] }}</strong></h5>
+                        <h4>${{ result['price'] }}</h4>
+                        {% if result['description'] | length > trunc %}
+                        <p class="card-text">{{ result['description'][0:trunc] + '...' }}</p>
+                        {% else %}
+                        <p class="card-text">{{ result['description'] }}</p>
+                        {% endif %}
+                        <a target="_blank" href="{{ result['url'] }}"><button type="buton" class="tfbutton">View</button></a>
+                        <a href="#"><button type="button" class="btn btn-primary" name="add">Add</button></a>
+                    </div>
                 </div>
-            </div>
-                
+            </div> 
+        {% if loop.index0 % 3 == 2 or loop.index0 == (results | length) - 1 %}
+        </div>
+        {% endif %}
         {% endfor %}
         </div>
     {% endif %}
+{% endblock %}
+{% block footer %}
+<script type="text/javascript">
+</script>
 {% endblock %}

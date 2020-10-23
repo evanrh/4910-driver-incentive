@@ -8,6 +8,8 @@ from abc import ABC
 from abc import abstractmethod
 from werkzeug.security import check_password_hash
 from app.database.db_functions import *
+import datetime
+import time
 
 connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
 
@@ -455,8 +457,11 @@ class Admin(AbsUser):
                         user = 0
                     else:
                         user = 1
+                    
+                date = d[3]
+                date -= datetime.timedelta(hours = 4)
 
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                message_dict[d[user]].append((d[1], d[2], date))
         
         return message_dict
 
@@ -913,7 +918,10 @@ class Sponsor(AbsUser):
                     else:
                         user = 1
 
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                date = d[3]
+                date -= datetime.timedelta(hours = 4)
+
+                message_dict[d[user]].append((d[1], d[2], date))
         
         return message_dict
 
@@ -1362,7 +1370,10 @@ class Driver(AbsUser):
                     else:
                         user = 1
 
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                date = d[3]
+                date -= datetime.timedelta(hours = 4)
+
+                message_dict[d[user]].append((d[1], d[2], date))
         
         return message_dict
 

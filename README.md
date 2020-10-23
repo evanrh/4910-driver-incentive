@@ -3,6 +3,7 @@ This project is a driver incentive program developed in Python using the Flask f
 
 # Dependencies
 * [flask](https://flask.palletsprojects.com/en/1.1.x/)
+* [flask-restx](https://flask-restx.readthedocs.io/en/latest/)
 * [mysql-connector-python](https://pypi.org/project/mysql-connector-python/)
 * [requests](https://requests.readthedocs.io/en/master/)
 * [etsy-python2](https://github.com/sscheetz/etsy-python2)

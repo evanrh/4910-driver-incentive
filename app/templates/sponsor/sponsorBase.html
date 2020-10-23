@@ -59,10 +59,11 @@
                     <ul class="side-navbar">
                         {{ nav_link('home', 'Home') }}
                         {{ nav_link('sponsorPointsLeader', 'Points Leaderboard') }}
-                        {{ nav_link('sponsorViewDriver', 'View Driver Profiles') }}
+                        {{ nav_link('sponsorViewDriver', 'My Drivers') }}
                         {{ nav_link('sponsorSystemSettings', 'System Settings') }}
-                        {{ nav_link('sponsorNotification', 'Notifications') }}
                         {{ nav_link('sponsorProfile', 'Profile') }}
+                        {{ nav_link('inbox', 'Inbox') }}
+                        
                         <li>
                             <a href="/settings">
                                 <img src="{{url_for('static', filename='img/settings.png')}}" style="width:30px;vertical-align:middle;padding-right: 5px;">

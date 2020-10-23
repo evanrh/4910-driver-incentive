@@ -183,12 +183,15 @@ def about():
 def driverPointsLeader():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    
+    elif not session['userInfo']['properties']['selectedSponsor']:
+        flash("No sponsor selected!")
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
     sponsorName = currSponsor.username_from_id(sponsorId)
     currSponsor.populate(sponsorName)
-    print(sponsorName)
+
     drivers = currSponsor.view_leaderboard()
 
 
@@ -211,19 +214,6 @@ def driverProfile():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
     return render_template('driver/driverProfile.html')
-
-@app.route("/driverInbox")
-def driverInbox():
-    if permissionCheck(["driver", "sponsor", "admin"]) == False:
-        return redirect(url_for('home'))
-    
-    currentDriver = Driver()
-    currentDriver.populate(session['userInfo']['properties']['user'])
-
-    messages = currentDriver.view_messages()
-    print(messages)
-
-    return render_template('driver/driverInbox.html', messages = messages)
 
 @app.route("/driverCart")
 def driverCart():
@@ -285,19 +275,6 @@ def sponsorViewDriver():
         drivers = userInfo.view_drivers()
 
     return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, suspendedUsers=suspendedUsers, sponsor=sponsor)
-
-# Admin Page Routes
-@app.route("/adminInbox")
-def adminInbox():
-    if permissionCheck(["admin"]) == False:
-        return redirect(url_for('home'))
-    
-    currentAdmin = Admin()
-    currentAdmin.populate(session['userInfo']['properties']['user'])
-
-    messages = currentAdmin.view_messages()
-
-    return render_template('admin/adminInbox.html', messages=messages)
 
 @app.route("/adminManageAcc", methods=["GET", "POST"])
 def adminManageAcc():
@@ -386,6 +363,35 @@ def adminSysSettings():
         return redirect(url_for('home'))
     return render_template('admin/adminSysSettings.html')
 
+# Consolidated Inbox route 
+@app.route('/inbox', defaults={'username': None}, methods=["GET","POST"])
+@app.route("/inbox/<username>", methods=["GET","POST"])
+def inbox(username):
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
+    if userInfo.getRole() == "driver":
+        currentDriver = Driver()
+        currentDriver.populate(session['userInfo']['properties']['user'])
+        messages = currentDriver.view_messages()
+
+        return render_template('driver/driverInbox.html', messages = messages, selectedUser = username)
+    
+    if userInfo.getRole() == "sponsor":
+        currentDriver = Sponsor()
+        currentDriver.populate(session['userInfo']['properties']['user'])
+        messages = currentDriver.view_messages()
+
+        return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username)
+
+    if userInfo.getRole() == "admin":
+        currentDriver = Admin()
+        currentDriver.populate(session['userInfo']['properties']['user'])
+        messages = currentDriver.view_messages()
+
+        return render_template('admin/adminInbox.html', messages = messages, selectedUser = username)
+
+
 # Settings page
 @app.route("/settings", methods=["GET","POST"])
 def settings():
@@ -434,7 +440,6 @@ def switchSponsor():
             if int(sponsor[0]) == int(newSponsorid):
                 points = sponsor[1]
 
-        print(points)
         userInfo.setSponsorView([newSponsorid, points])
         session['userInfo']['properties']['selectedSponsor'] = [newSponsorid, points]
         session.modified = True
@@ -526,13 +531,11 @@ def addpts():
 
 @app.route("/sendmessage", methods=["GET","POST"])
 def sendmessage():
-    print("madeit")
     data = request.get_data().decode("utf-8").split("&")
     reciever = data[0].split("=")
     sender = data[1].split("=")
     message = data[2].split("=")
 
-    print(sender[1])
     id, role = get_table_id(sender[1])
 
     if role == "admin":

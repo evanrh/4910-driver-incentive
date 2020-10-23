@@ -1263,6 +1263,7 @@ class Driver(AbsUser):
                 id = next(iter(self.properties['sponsors']))
                 points = self.properties['sponsors'].get(id)
                 self.properties['selectedSponsor'] = [id, points]
+                
 
 
     def apply_to_sponsor(self, sponsor_id):

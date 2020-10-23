@@ -95,10 +95,10 @@
                     <ul class="side-navbar">
                         {{ nav_link('home', 'Home') }}
                         {{ nav_link('driverPointsLeader', 'Points Leaderboard') }}
-                        {{ nav_link('driverNotification', 'Notifications') }}
                         {{ nav_link('driverManagePurchase', 'Manage Purchases') }}
                         {{ nav_link('driverProfile', 'Profile') }}
-                        {{ nav_link('driverInbox', 'Inbox') }}
+                        {{ nav_link('inbox', 'Inbox') }}
+                        
                         <li>
                             <a href="/settings">
                                 <img src="{{url_for('static', filename='img/settings.png')}}" style="width:30px;vertical-align:middle;padding-right: 5px;">
@@ -119,4 +119,5 @@
                 </div>
         </div>
     </article>
+
 {% endblock %}

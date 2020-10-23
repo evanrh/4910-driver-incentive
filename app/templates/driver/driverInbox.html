@@ -2,51 +2,107 @@
 {% block driverContent %}
 <h1>Inbox</h1>
 
-<div class="row" style="width:80%;">
-    <div class="one-fourth">
-        <h2>Sender</h2>
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+<div class="container bootstrap snippets bootdey">
+    <div class="row">
+        <a href="#" class="btn btn-info  send-message-btn" role="button"><i class="fa fa-plus"></i> Search</a>
+        <a href="#" class="btn btn-info  send-message-btn" role="button"><i class="fa fa-gears"></i> Settings</a>
     </div>
-    <div class="three-fourths">
-        <h2>Conversation</h2>
-    </div>
-</div>
+    <div class="row">
+        <div class="conversation-wrap col-md-3">
 
-<div class="row" style="width:80%;border: 1px solid black;">
+            {% if not selectedUser %}
+                {% set selectedUser = messages | first %}
+            {% endif %}
 
-    {% for user in messages %}
-        {% set value = messages[user] %}
-        {% if not value[0][0] == "sponsor" %}
-            {% set name = value[0][1] + " " + value[0][2]  %}
-        {% else %}
-            {% set name = value[0][1]  %}
-        {% endif %}
+            {% if not messages[selectedUser][0][0] == "sponsor" %}
+                {% set Name = messages[selectedUser][0][1] + " " + messages[selectedUser][0][2]  %}
+            {% else %}
+                {% set Name = messages[selectedUser][0][1]  %}
+            {% endif %}
 
-        <div class="one-fourth" style="border-right: 1px solid black;">
-            <p> Messages From: {{ name }} </p>
+            {% for user in messages %}
+
+            {% set value = messages[user] %}
+
+            {% if not value[0][0] == "sponsor" %}
+                {% set name = value[0][1] + " " + value[0][2]  %}
+            {% else %}
+                {% set name = value[0][1]  %}
+            {% endif %}
+
+            {% set msgprvw = value[value|length -1][1]|truncate(20) + "..." %}
+            <a href='{{ url_for("inbox", username=user) }}'>
+                <div class="media conversation" style="cursor: pointer; {% if user == selectedUser %}background-color:#e2e2e2; {% endif %} ">
+                    <span class="pull-left">
+                        <img class="pfp" style="width: 50px; margin:15px;" src="{{url_for('static', filename='img/userpic2.png')}}">
+                    </span>
+                    <div class="media-body">
+                        <h5 {% if user == selectedUser %} style="color:var(--main-theme2);" {% endif %} class="media-heading"> {{ name }} </h5>
+                        <small class="text-muted"> {{ msgprvw }} </small>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
         </div>
 
-        {% for tuple in value[1:] %}
-            {% if loop.index > 1 %}
-            <div class="one-fourth" style="border-right: 1px solid black;"></div>
-            {% endif %}
-            {% set message = tuple[1] %}
-            {% set time = tuple[2] %}
-            <div class="three-fourths">
-                <div class="row">
-                    <p style="font-weight: bold;">{{ time }}</p> <p> {{ message }}</p>
+        <div class="message-wrap col-md-8">
+            <div class="msg-wrap">
+                {% set value = messages[selectedUser] %}
+                {% set lasttime = namespace(time=None) %}
+                    {% for tuple in value[1:] %}
+                    {% set message = tuple[1] %}
+                    {% set time = tuple[2] %}
+
+
+                    {% if lasttime.time == None or time.strftime('%d') != lasttime.time.strftime('%d') %}
+                    {% set lasttime.time = time %}
+                    <div class="alert alert-info msg-date">
+                        <strong>{{ time.strftime('%m-%d-%Y')}}</strong>
+                    </div>
+                    {% endif %}
+
+                    {% if tuple[0] == selectedUser %}
+                    <div class="media msg ">
+                        <a class="pull-left" href="#">
+                            <img class="pfp" style="width: 32px; margin:15px;" src="{{url_for('static', filename='img/userpic2.png')}}">
+                        </a>
+                        <div class="media-body">
+                            <small class="pull-right time"><i class="fa fa-clock-o"></i> {{ time.strftime('%I:%M %p') }} </small>
+                            <h5 class="media-heading">{{ Name }}</h5>
+                            <small class="col-md-10 text-muted">{{ message }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="media msg ">
+                        <a class="align-right" href="#">
+                            <img class="pfp" style="width: 32px; margin:15px;" src="{{url_for('static', filename='img/userpic2.png')}}">
+                        </a>
+                        <div class="media-body">
+                            <small class="pull-left time"><i class="fa fa-clock-o"></i> {{ time.strftime('%I:%M %p') }} </small>
+                            <h5 class="media-heading" style="text-align: right;">{{ session['userInfo']['properties']['fname'] + " " + session['userInfo']['properties']['lname'] }}</h5>
+                            <small class="col-md-10 text-muted align-right">{{ message }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% endfor %}
+
+            </div>
+            
+            <div class="row">
+                <div class="send-wrap">
+                    <textarea class="form-control send-message" rows="3" name="{{ selectedUser }}" id="sendmessage{{ selectedUser }}{{ session['userInfo']['properties']['user'] }}" 
+                            placeholder="Write a reply..."></textarea>
+                </div>
+                <div class="btn-panel">
+                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ selectedUser }}' id='sendmessage' onclick="javascript:eraseText();">
+                        <i class="fa fa-share"></i> Send
+                    </button>
                 </div>
             </div>
-            {% if loop.index == value|length -1 %}
-            <div class="one-fourth" style="border-right: 1px solid black;"></div>
-            <div class="three-fourths">
-                <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Reply'>
-                <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
-            </div>
-            {% endif %}
-        {% endfor %}
-
-    {% endfor %}
-
-</div>
+        </div>
+    </div>
+</div>  
 
 {% endblock %}

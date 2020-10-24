@@ -326,7 +326,70 @@ def getgenres():
 def recommend(userna):
     cursor.execute("SELECT driver_id FROM driver WHERE user='"+userna+"'")
     ID = cursor.fetchall()
-    print(ID)
+    print(ID) 
+    List = list(ID)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Driver_ID = '"+returninfo+"'")
+    ID = cursor.fetchall()
+    List2 = list(ID)
+    got = str(List2[0])
+    got = got.replace("[", "")
+    got = got.replace("]", "")
+    got = got.replace("(", "") 
+    got = got.replace(")", "")
+    got = got.replace(",", "")
+    got = got.replace("'", "")
+    print(got)
+    cursor.execute("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID != '"+returninfo+"' AND Product_ID= '"+got+"'" )
+    result = cursor.fetchall()
+    print(result)
+    List = list(result)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Product_ID !=  '"+got+"' AND Driver_ID = '"+returninfo+"'")
+    gotcha = cursor.fetchall()
+    print(gotcha)
+    List = list(gotcha)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    cursor.execute("SELECT name FROM product WHERE product_id = '"+returninfo+"'")
+    final = cursor.fetchall()
+    List = list(final)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    return(returninfo)
+#    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE ")
+
+
 
 def get_products_by_name(search):
     query = "SELECT name FROM product WHERE name REGEXP(%s)"
@@ -335,8 +398,24 @@ def get_products_by_name(search):
     print(matches)
     return matches
 
-#main used to test functions
+def getSponsorName(ident):
+    ID = str(ident)
+    cursor.execute("SELECT title FROM sponsor WHERE sponsor_id = '" +ID+"'")
+    got = cursor.fetchall()
+    returninfo = ''.join(str(v) for v in got)
+#    print(returninfo)
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    return returninfo
+
+    #main used to test functions
 if __name__ == "__main__":
+    """
     cancel_suspension('wsherre')
     if username_exist('krod'):
         add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
@@ -347,10 +426,13 @@ if __name__ == "__main__":
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
     print(username_exist('krod'))
     get_users()
+     print(admin_view_users())
 
-    print(admin_view_users())
+    """
+    
     print("David recoo\n")
-    recommend("cgaber")
+    recommend("testdrive")
+    """
     print("David Search\n")
     search = "Bike Tool: car: Luxury: sponge priceup"
     product_search(search) 
@@ -393,7 +475,7 @@ if __name__ == "__main__":
     cancel_suspension('krod')
     print(get_suspended_users())
     print(if_username_exist('remove'))
-
+    """
     cursor.close()
     database.close()
     

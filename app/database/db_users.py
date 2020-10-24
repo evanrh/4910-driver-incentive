@@ -19,6 +19,7 @@ def getConnection():
 
 def getNewConnection():
     return DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
+    
 
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
@@ -440,7 +441,7 @@ class Admin(AbsUser):
         message_dict = {}
 
         if data:
-            for d in data:
+            for d in reversed(data):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
@@ -455,16 +456,18 @@ class Admin(AbsUser):
                         user = 0
                     else:
                         user = 1
-
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                    
+                message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
+        time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
         vals = (target, self.properties['user'], message)
 
         try:
+            self.database.insert(time)
             self.database.insert(query, vals)
         except Exception as e:
             raise Exception(e)
@@ -897,7 +900,7 @@ class Sponsor(AbsUser):
         message_dict = {}
 
         if data:
-            for d in data:
+            for d in reversed(data):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
@@ -913,15 +916,17 @@ class Sponsor(AbsUser):
                     else:
                         user = 1
 
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
+        time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
         vals = (target, self.properties['user'], message)
 
         try:
+            self.database.insert(time)
             self.database.insert(query, vals)
         except Exception as e:
             raise Exception(e)
@@ -1346,7 +1351,7 @@ class Driver(AbsUser):
         message_dict = {}
 
         if data:
-            for d in data:
+            for d in reversed(data):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
@@ -1362,15 +1367,17 @@ class Driver(AbsUser):
                     else:
                         user = 1
 
-                message_dict[d[user]].append((d[1], d[2], d[3]))
+                message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
+        time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
         vals = (target, self.properties['user'], message)
 
         try:
+            self.database.insert(time)
             self.database.insert(query, vals)
         except Exception as e:
             raise Exception(e)

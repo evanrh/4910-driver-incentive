@@ -82,7 +82,12 @@ def home():
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
             genres = getgenres()
             userna = session['userInfo']['properties']['user']
-            return render_template('driver/driverHome.html', genres = genres)
+            rec = recommend(userna)
+            if(userna == "testdrive"):
+                Message = "You are on thin ice bud!"
+            else:
+                Message = ""
+            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message)
 
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':

@@ -1,5 +1,8 @@
+
 {% extends "driver/driverBase.html" %}
 {% block driverContent %}
+<div class = "header-banner">{{head}} </div>
+
 <h1>Product Catalog</h1>
 
 
@@ -11,7 +14,14 @@
 
 
 <form action="/productsearch" method="POST">
-	<p style="margin:0">The types of genres for search are: {{genres}}   </p>	
+	<p style="margin:0">The types of genres for search are: </p>
+	<p style="margin:0">
+		{% for genre in genres%}
+		<button id = "signupbutton" type="submit" class="tfbutton" value={{genre}}>{{genre}}</button> 
+		{% endfor %}
+
+	</p>
+
 	<select name="SearchBox" id="productsearch">
 		<option hidden disabled selected value> Select </option>
 		<option value ="">
@@ -22,7 +32,7 @@
 	<input type="text" placeholder="Search for products" id="search" name="search" class="tftextinput" required>
 	<button id="signupbutton" type="submit" class="tfbutton">Search</button>
 
-	<p style="margin:0">I'll recommend you stuff here</p>
+	<p style="margin:0">You may love {{resultrec}}!</p>
 
 </form>
 

@@ -1,0 +1,66 @@
+
+{% extends "driver/driverBase.html" %}
+{% block driverContent %}
+<div class = "header-banner">{{head}} </div>
+
+<h1>Product Catalog</h1>
+
+
+<div class="row">
+	<p style="margin:0">Enter your search below.</p>
+	<p style="margin:0">To search by genre, write Genre:search. An example would be "Tool:Sponge"   </p>
+	<p style="margin:0"> To search by Price or Rating, writing PriceUp: or PriceDown:, RatingUp: or RatingDown: for desc and asdencing respectively</p>
+</div>
+
+
+<form action="/productsearch" method="POST">
+	<p style="margin:0">The types of genres for search are: </p>
+	<p style="margin:0">
+		{% for genre in genres%}
+		<button id = "signupbutton" type="submit" class="tfbutton" value={{genre}}>{{genre}}</button> 
+		{% endfor %}
+
+	</p>
+
+	<select name="SearchBox" id="productsearch">
+		<option hidden disabled selected value> Select </option>
+		<option value ="">
+		
+
+
+
+	<input type="text" placeholder="Search for products" id="search" name="search" class="tftextinput" required>
+	<button id="signupbutton" type="submit" class="tfbutton">Search</button>
+
+	<p style="margin:0">You may love {{resultrec}}!</p>
+
+</form>
+
+<h2>Contact Info</h2>
+<p>{{ session['userInfo']['properties']['sponsors'] }}</p>
+
+
+
+{% endblock %}
+{% block footer %}
+    <script type="text/javascript">
+        $(function () {
+            $(document).on('keyup', '#search', function(e) {
+                var search = document.getElementById('search').value;
+                if (search.length == 0)
+                    return;
+                $.ajax({
+                    contentType: "application/json; charset=utf-8",
+                    dataType: 'json',
+                    url: '/productAJAX',
+                    type: 'POST',
+                    data: JSON.stringify({'search': search}),
+                    success: function(args) {
+                        $('#search').autocomplete({
+                            source: args
+                        })}
+                    })
+                });
+            });
+    </script>
+{% endblock %}

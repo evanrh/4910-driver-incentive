@@ -1,0 +1,20 @@
+{% extends "driver/driverBase.html" %}
+{% block driverContent %}
+<h1>Search Results</h1>
+
+	<div class="row">
+		<p> Query: {{query}} </p>
+	</div>
+	
+	<div class="row">
+		<p> Found {{numresults}}  Results: </p>
+
+	
+		{% for segment in results%}
+			<p>
+				 {{segment}}
+
+			</p>
+		{% endfor %}
+
+{% endblock %}

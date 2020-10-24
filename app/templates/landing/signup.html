@@ -15,8 +15,10 @@
 </div>
 
 <div class="row">
-    <p style="margin:0">Fill out the form below.</p>
+    {% if sponsor %} <p style="margin:0">Application For Sponsor: {{ sponsor }} </p> {% endif %}
 </div>
+
+<p style="margin:0"> Fill out the form below.</p>
 
 <form action="{{ url_for('signup') }}" method="POST">
     <div class="row">

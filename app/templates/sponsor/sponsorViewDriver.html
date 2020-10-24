@@ -47,6 +47,29 @@
                     </tr>
                 {% endfor %}
         </table>
+
+        <table style="border-spacing:5px;">
+            <tr>
+                <td class='driverRow'>Drivers</td>
+                <td class='driverRow'>Remove</td>
+                <td class='driverRow'>User Name</td>
+                <td class='driverRow'>First Name</td>
+                <td class='driverRow'>Last Name</td>
+                <td class='driverRow'>Suspend</td>
+                <td class='driverRow'>Points</td>
+                <td class='driverRow'>Add Points</td>
+                <td class='driverRow'>Send Message</td>
+                <td class='driverRow'>Date Joined</td>
+            </tr>
+
+            {% for driver in applications %}
+            <tr>
+                <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
+                <td><button class="{{ sponsor[1] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
+                <td> {{ datejoined }} </td>
+            </tr>
+            {% endfor %}
+        </table>
     </form>
 </div>
 {% endblock %}

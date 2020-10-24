@@ -142,37 +142,46 @@ def logout():
 
 
 @app.route("/signup", methods=["GET", "POST"])
-def signup():
+@app.route("/signup/<int:sponsor>", methods=["GET", "POST"])
+def signup(sponsor = None):
+    session['sponsorApplication'] = sponsor
     if request.method == "POST":
-       form = request.form
-       username = form['user']
-       pwd = form['pass']
-       pwd_check = form['pass_repeat']
-
-       if pwd != pwd_check:
-          flash('Passwords do not match!')
-          return render_template('landing/signup.html')
+        sponsor = session['sponsorApplication']
+        form = request.form
+        username = form['user']
+        pwd = form['pass']
+        pwd_check = form['pass_repeat']
+        
+        if pwd != pwd_check:
+            flash('Passwords do not match!')
+            return render_template('landing/signup.html')
        
-       fname = form['fname']
-       mname = form['mname'] or 'NULL'
-       lname = form['lname']
-       address = form['address'] or 'NULL' # Need to look into address fetching
-       phone = form['phone']
-       email = form['email'] or 'NULL'
-       pwd_hash = generate_password_hash(pwd, method='sha256')
-       img = 'NULL'
+        fname = form['fname']
+        mname = form['mname'] or 'NULL'
+        lname = form['lname']
+        address = form['address'] or 'NULL' # Need to look into address fetching
+        phone = form['phone']
+        email = form['email'] or 'NULL'
+        pwd_hash = generate_password_hash(pwd, method='sha256')
+        img = 'NULL'
 
-       newDriver = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
+        newDriver = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
 
-       if newDriver.check_username_available():
-           newDriver.add_user()
-           flash('Account created!')
-           return redirect(url_for('home'))
-       else:
+        if newDriver.check_username_available():
+            newDriver.add_user()
+           
+            if not sponsor == None:
+                print(sponsor)
+                newDriver.apply_to_sponsor(int(sponsor))
+                flash("No sponsor found!")
+
+            flash('Account created!')
+            return redirect(url_for('home'))
+        else:
            flash('Username taken!')
 
     # TODO Add in password hash generation to sign up
-    return render_template('landing/signup.html')
+    return render_template('landing/signup.html', sponsor=sponsor)
 
 @app.route("/about")
 def about():
@@ -265,16 +274,20 @@ def sponsorViewDriver():
         return redirect(url_for('home'))
     suspendedUsers = Admin().get_suspended_users()
 
+    currSponsor = Sponsor()
+
     if userInfo.getRole() == 'admin' or userInfo.getSandbox() == 'sponsor':
-        currSponsor = Sponsor()
         sponsor = currSponsor.get_users()[0][1]
-        currSponsor.populate(sponsor)
         drivers = currSponsor.view_drivers()
     else:
         sponsor = userInfo.getUsername()
         drivers = userInfo.view_drivers()
 
-    return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, suspendedUsers=suspendedUsers, sponsor=sponsor)
+    currSponsor.populate(sponsor)
+    applications = currSponsor.view_applications()
+    print(applications)
+
+    return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, applications = applications, suspendedUsers=suspendedUsers, sponsor=sponsor)
 
 @app.route("/adminManageAcc", methods=["GET", "POST"])
 def adminManageAcc():

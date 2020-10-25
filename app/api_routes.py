@@ -3,14 +3,12 @@ from flask_restx import reqparse
 from flask import request
 from app import api
 from app import app
-from app.products.etsy_driver import EtsyController
+from app.products.catalog import CatalogController, ItemInDB
 from app.database.db_users import *
 from itsdangerous import (TimedJSONWebSignatureSerializer
                             as Serializer, BadSignature, SignatureExpired)
 from functools import wraps
 import os
-
-conn = EtsyController(os.getenv('ETSY_API_KEY'))
 
 # Generate timed and encrypted JSON token
 def generate_auth_token(sponsor_username, expiration = 3600):
@@ -35,6 +33,17 @@ def verify_auth_token(token):
     except BadSignature:
         return False
     return True
+
+def get_id(token):
+    s = Serializer(app.config['SECRET_KEY'])
+    try:
+        data = s.loads(token)
+        return data['id']
+    except SignatureExpired:
+        return None
+    except BadSignature:
+        return None
+
 
 # Decorator to do token based auth
 def token_required(f):
@@ -75,9 +84,24 @@ class SponsorCatalog(Resource):
     @token_required
     @api.expect(catalog_item)
     def post(self):
+        id = get_id(request.headers['X-API-KEY'])
         item = api.payload
-        print(item)
-        return {'data': 'Item added'}, 200
+        cont = CatalogController()
+        try:
+            added = cont.insert(item, id)
+
+            if added:
+                return {'message': 'Item added'}, 200
+            else:
+                return {'message': 'Item not added'}, 400
+
+        except ItemInDB:
+            return {'message': 'Item already in database'}, 400
+            
+        if added:
+            return {'message': 'Item added'}, 200
+        else:
+            return {'message': 'Item not added'}, 400
         
 @api.route('/auth/<string:sponsor_username>')
 class SponsorAPIAuth(Resource):

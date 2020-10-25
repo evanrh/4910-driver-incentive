@@ -94,6 +94,7 @@
                 },
                 error: function(response) {
                     $('#' + id).addClass('fa fa-times-circle-o').removeClass('fa-spinner');
+                    console.log(response);
                 }
             });
         });

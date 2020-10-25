@@ -82,12 +82,12 @@ def home():
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
             genres = getgenres()
             userna = session['userInfo']['properties']['user']
-            rec = recommend(userna)
+            #rec = recommend(userna)
             if(userna == "testdrive"):
                 Message = "You are on thin ice bud!"
             else:
                 Message = ""
-            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message)
+            return render_template('driver/driverHome.html', genres = genres, head = Message)
 
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
@@ -147,11 +147,8 @@ def logout():
 
 
 @app.route("/signup", methods=["GET", "POST"])
-@app.route("/signup/<int:sponsor>", methods=["GET", "POST"])
-def signup(sponsor = None):
-    session['sponsorApplication'] = sponsor
+def signup():
     if request.method == "POST":
-        sponsor = session['sponsorApplication']
         form = request.form
         username = form['user']
         pwd = form['pass']
@@ -160,7 +157,8 @@ def signup(sponsor = None):
         if pwd != pwd_check:
             flash('Passwords do not match!')
             return render_template('landing/signup.html')
-       
+        
+        sponsor = form['sponsorid'] or 'NULL'
         fname = form['fname']
         mname = form['mname'] or 'NULL'
         lname = form['lname']
@@ -175,10 +173,12 @@ def signup(sponsor = None):
         if newDriver.check_username_available():
             newDriver.add_user()
            
-            if not sponsor == None:
-                print(sponsor)
-                newDriver.apply_to_sponsor(int(sponsor))
-                flash("No sponsor found!")
+            if not sponsor == "NULL":
+                try:
+                    print(sponsor)
+                    newDriver.apply_to_sponsor(int(sponsor))
+                except:
+                    flash("No sponsor found!")
 
             flash('Account created!')
             return redirect(url_for('home'))
@@ -186,7 +186,7 @@ def signup(sponsor = None):
            flash('Username taken!')
 
     # TODO Add in password hash generation to sign up
-    return render_template('landing/signup.html', sponsor=sponsor)
+    return render_template('landing/signup.html')
 
 @app.route("/about")
 def about():
@@ -490,6 +490,37 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
+
+@app.route("/acceptapp", methods=["GET","POST"])
+def acceptapp():
+    print("made it")
+    data = request.get_data().decode("utf-8").split("&")
+    user = data[0].split("=")
+    sponsorname = data[1].split("=")
+
+    sponsor = Sponsor()
+    print(sponsorname[1])
+    sponsor.populate(sponsorname[1])
+    print(sponsor.__dict__)
+
+    sponsor.accept_application(user[1].strip('+'))
+    print(user[1].strip('+'))
+    return ('', 204)
+
+@app.route("/rejectapp", methods=["GET","POST"])
+def rejectapp():
+    print("made it")
+    data = request.get_data().decode("utf-8").split("&")
+    user = data[0].split("=")
+    sponsorname = data[1].split("=")
+
+    sponsor = Sponsor()
+    print(sponsorname[1])
+    sponsor.populate(sponsorname[1])
+    print(sponsor.__dict__)
+    sponsor.decline_application(user[1].strip('+'))
+    print(user[1].strip('+'))
+    return ('', 204)
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():

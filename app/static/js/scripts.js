@@ -99,6 +99,34 @@ $(function() {
   });
 });
 
+// reject application
+$(function() {
+  $(document).on('click', '#rejectapp', function(e) {
+    var user =  $(this).attr("name")
+    var sponsor = $(this).attr('class');
+    $.ajax({ 
+      contentType: "application/x-www-form-urlencoded",
+      url: '/rejectapp', 
+      type: 'POST', 
+      data:{'user': user, 'sponsor': sponsor}
+    })
+  });
+});
+
+// accept application
+$(function() {
+  $(document).on('click', '#acceptapp', function(e) {
+    var user =  $(this).attr("name")
+    var sponsor = $(this).attr('class');
+    $.ajax({ 
+      contentType: "application/x-www-form-urlencoded",
+      url: '/acceptapp', 
+      type: 'POST', 
+      data:{'user': user, 'sponsor': sponsor}
+    })
+  });
+});
+
 // send message
 $(function() {
   $(document).on('click', '#sendmessage', function(e) {

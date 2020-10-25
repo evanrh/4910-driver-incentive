@@ -46,8 +46,8 @@
                         {% else %}
                         <p class="card-text">{{ result['description'] }}</p>
                         {% endif %}
-                        <a target="_blank" href="{{ result['url'] }}"><button type="buton" class="tfbutton">View</button></a>
-                        <a href="#"><button type="button" class="btn btn-primary" name="add">Add</button></a>
+                        <a target="_blank" href="{{ result['url'] }}"><button type="button" class="tfbutton">View</button></a>
+                        <button id="{{ result['listing_id'] }}" type="button" class="add btn btn-primary" name="add">Add</button>
                     </div>
                 </div>
             </div> 
@@ -58,7 +58,45 @@
         </div>
     {% endif %}
 {% endblock %}
+
 {% block footer %}
 <script type="text/javascript">
+   var token = "";
+   $.get("/sponsor/api/auth/" + "{{ session['userInfo']['properties']['user'] }}",
+            function (result) {
+                token = result['token'];
+                console.log(token);
+            }
+        );
+   $(function () {
+        $(document).on('click', ".add", function(e) {
+            var id = $(this).attr('id');
+            var title = $(this).siblings('h5')[0].innerText;
+            var price = $(this).siblings('h4')[0].innerText.replace('$','');
+            var desc = $(this).siblings('.card-text')[0].innerText;
+            var url = $(this).siblings('a')[0].href;
+            var img_url = $(this).parent().siblings('.card-img-top')[0].src;
+            var arr = {'title': title, 'price': price, 'description': desc,
+                        'url': url, 'img_url': img_url, 'listing_id': id};
+            console.log(arr);
+
+            $(this).addClass('fa fa-spinner');
+            $(this).prop('disabled', true);
+            $.ajax({
+                contentType: 'application/json;charset=utf-8',
+                url: '/sponsor/api/',
+                type: 'POST',
+                data: JSON.stringify(arr),
+                headers: {'X-API-KEY': token},
+                success: function(response) {
+                    $('#' + id).addClass('fa fa-check').removeClass('fa-spinner');
+                    console.log(response);
+                },
+                error: function(response) {
+                    $('#' + id).addClass('fa fa-times-circle-o').removeClass('fa-spinner');
+                }
+            });
+        });
+   })
 </script>
 {% endblock %}

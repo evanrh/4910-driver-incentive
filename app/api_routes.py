@@ -12,6 +12,7 @@ import os
 
 conn = EtsyController(os.getenv('ETSY_API_KEY'))
 
+# Generate timed and encrypted JSON token
 def generate_auth_token(sponsor_username, expiration = 3600):
     s = Serializer(app.config['SECRET_KEY'], expires_in = expiration)
     db = getConnection()
@@ -22,6 +23,7 @@ def generate_auth_token(sponsor_username, expiration = 3600):
     else:
         return None
 
+# Check if token is valid
 def verify_auth_token(token):
     # Fetch token from database
     s = Serializer(app.config['SECRET_KEY'])
@@ -41,41 +43,43 @@ def token_required(f):
         if 'X-API-KEY' in request.headers:
             token = request.headers['X-API-KEY']
             if not token:
-                return {'message': 'Token is missing'}
+                return {'message': 'Token is missing'}, 401
 
             if not verify_auth_token(token):
-                return {'message': 'Your token is bad. Generate a new one.'}
+                return {'message': 'Your token is bad. Generate a new one.'}, 401
             print('TOKEN: {}'.format(token))
             return f(*args, **kwargs)
         else:
-            return {'message': 'Token is missing'}
+            return {'message': 'Token is missing'}, 401
     return decorated
 
+# Catalog JSON description
 catalog_item = api.model('Catalog_Item', {
     'title': fields.String,
     'url': fields.Url,
     'price': fields.Float,
     'description': fields.String,
-    'img_url': fields.Url
+    'img_url': fields.Url,
+    'listing_id': fields.Integer
 })
 
-@api.route('/sponsor/api/')
+@api.route('/')
+@api.doc(security='apikey')
 class SponsorCatalog(Resource):
 
     @token_required
-    @api.doc(security='apikey')
+    @api.expect(api.model('Listing_ID', {'id': fields.Integer}))
     def get(self):
         return {'pid': 1}
 
     @token_required
-    @api.doc(security='apikey')
     @api.expect(catalog_item)
     def post(self):
         item = api.payload
         print(item)
         return {'data': 'Item added'}, 200
         
-@api.route('/sponsor/api/auth/<string:sponsor_username>')
+@api.route('/auth/<string:sponsor_username>')
 class SponsorAPIAuth(Resource):
     def get(self, sponsor_username):
         token = generate_auth_token(sponsor_username)

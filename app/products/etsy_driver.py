@@ -17,7 +17,10 @@ class EtsyController():
         needed_elems = ['title', 'description', 'price', 'url', 'views', 'listing_id', 'Images']
         for i in range(0,len(results)):
             results[i] = dict(filter(lambda elem: elem[0] in needed_elems, results[i].items()))
-            results[i]['Images'] = results[i]['Images'][0]['url_170x135']
+            try:
+                results[i]['Images'] = results[i]['Images'][0]['url_170x135']
+            except IndexError as e:
+                print(results[i]['Images'])
         return results
 
     def get_products_tags(self, tags=[]):

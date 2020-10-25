@@ -149,31 +149,40 @@ def logout():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-       form = request.form
-       username = form['user']
-       pwd = form['pass']
-       pwd_check = form['pass_repeat']
+        form = request.form
+        username = form['user']
+        pwd = form['pass']
+        pwd_check = form['pass_repeat']
+        
+        if pwd != pwd_check:
+            flash('Passwords do not match!')
+            return render_template('landing/signup.html')
+        
+        sponsor = form['sponsorid'] or 'NULL'
+        fname = form['fname']
+        mname = form['mname'] or 'NULL'
+        lname = form['lname']
+        address = form['address'] or 'NULL' # Need to look into address fetching
+        phone = form['phone']
+        email = form['email'] or 'NULL'
+        pwd_hash = generate_password_hash(pwd, method='sha256')
+        img = 'NULL'
 
-       if pwd != pwd_check:
-          flash('Passwords do not match!')
-          return render_template('landing/signup.html')
-       
-       fname = form['fname']
-       mname = form['mname'] or 'NULL'
-       lname = form['lname']
-       address = form['address'] or 'NULL' # Need to look into address fetching
-       phone = form['phone']
-       email = form['email'] or 'NULL'
-       pwd_hash = generate_password_hash(pwd, method='sha256')
-       img = 'NULL'
+        newDriver = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
 
-       newDriver = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
+        if newDriver.check_username_available():
+            newDriver.add_user()
+           
+            if not sponsor == "NULL":
+                try:
+                    print(sponsor)
+                    newDriver.apply_to_sponsor(int(sponsor))
+                except:
+                    flash("No sponsor found!")
 
-       if newDriver.check_username_available():
-           newDriver.add_user()
-           flash('Account created!')
-           return redirect(url_for('home'))
-       else:
+            flash('Account created!')
+            return redirect(url_for('home'))
+        else:
            flash('Username taken!')
 
     # TODO Add in password hash generation to sign up
@@ -270,16 +279,20 @@ def sponsorViewDriver():
         return redirect(url_for('home'))
     suspendedUsers = Admin().get_suspended_users()
 
+    currSponsor = Sponsor()
+
     if userInfo.getRole() == 'admin' or userInfo.getSandbox() == 'sponsor':
-        currSponsor = Sponsor()
         sponsor = currSponsor.get_users()[0][1]
-        currSponsor.populate(sponsor)
         drivers = currSponsor.view_drivers()
     else:
         sponsor = userInfo.getUsername()
         drivers = userInfo.view_drivers()
 
-    return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, suspendedUsers=suspendedUsers, sponsor=sponsor)
+    currSponsor.populate(sponsor)
+    applications = currSponsor.view_applications()
+    print(applications)
+
+    return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, applications = applications, suspendedUsers=suspendedUsers, sponsor=sponsor)
 
 @app.route("/adminManageAcc", methods=["GET", "POST"])
 def adminManageAcc():
@@ -477,6 +490,37 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
+
+@app.route("/acceptapp", methods=["GET","POST"])
+def acceptapp():
+    print("made it")
+    data = request.get_data().decode("utf-8").split("&")
+    user = data[0].split("=")
+    sponsorname = data[1].split("=")
+
+    sponsor = Sponsor()
+    print(sponsorname[1])
+    sponsor.populate(sponsorname[1])
+    print(sponsor.__dict__)
+
+    sponsor.accept_application(user[1].strip('+'))
+    print(user[1].strip('+'))
+    return ('', 204)
+
+@app.route("/rejectapp", methods=["GET","POST"])
+def rejectapp():
+    print("made it")
+    data = request.get_data().decode("utf-8").split("&")
+    user = data[0].split("=")
+    sponsorname = data[1].split("=")
+
+    sponsor = Sponsor()
+    print(sponsorname[1])
+    sponsor.populate(sponsorname[1])
+    print(sponsor.__dict__)
+    sponsor.decline_application(user[1].strip('+'))
+    print(user[1].strip('+'))
+    return ('', 204)
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():

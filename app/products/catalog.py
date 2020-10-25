@@ -22,6 +22,40 @@ class CatalogController():
         except Exception as e:
             return False
 
+    def fetch_catalog_items(self, sponsor_id):
+        sql = "SELECT name, description, price, listing_id, img_url FROM product WHERE sponsor_id=%s"
+
+        try:
+            out = self.conn.query(sql, (sponsor_id, ))
+            print(out)
+            items = list(map(lambda elem:
+                                   {
+                                        'title': elem[0],
+                                        'description': elem[1],
+                                        'price': elem[2],
+                                        'listing_id': elem[3],
+                                        'img_url': elem[4]
+                                    },
+                             out
+                             )
+                        )
+            print(items)
+            return {'items': items}
+        except Exception as e:
+            print(e)
+            return {'items': []}
+
+    def remove(self, sponsor_id, item_id):
+        sql = "DELETE FROM product WHERE sponsor_id=%s and listing_id=%s"
+        vals = (sponsor_id, item_id)
+        
+        try:
+            self.conn.query(sql, vals)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
     def item_in_db(self, listing_id, sponsor_id):
         """ item_in_db = True iff listing_id and sponsor_id pair is contained in database"""
         sql = "SELECT COUNT(*) FROM product WHERE listing_id=%s AND sponsor_id=%s"

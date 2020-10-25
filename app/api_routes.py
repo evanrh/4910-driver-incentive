@@ -65,21 +65,29 @@ def token_required(f):
 # Catalog JSON description
 catalog_item = api.model('Catalog_Item', {
     'title': fields.String,
-    'url': fields.Url,
     'price': fields.Float,
     'description': fields.String,
     'img_url': fields.Url,
     'listing_id': fields.Integer
 })
 
-@api.route('/')
+# Full catalog view
+catalog = api.model('Catalog', {
+    'items': fields.List(fields.Nested(catalog_item))
+})
+
+@api.route('/catalog')
 @api.doc(security='apikey')
 class SponsorCatalog(Resource):
 
     @token_required
-    @api.expect(api.model('Listing_ID', {'id': fields.Integer}))
+    @api.marshal_with(catalog)
     def get(self):
-        return {'pid': 1}
+        id = get_id(request.headers['X-API-KEY'])
+        cont = CatalogController()
+        out = cont.fetch_catalog_items(id)
+        print(out)
+        return out
 
     @token_required
     @api.expect(catalog_item)
@@ -103,6 +111,18 @@ class SponsorCatalog(Resource):
         else:
             return {'message': 'Item not added'}, 400
         
+    @token_required
+    @api.expect(api.model('Listing', {'listing_id': fields.Integer}))
+    def delete(self):
+        id = get_id(request.headers['X-API-KEY'])
+        listing = api.payload['listing_id']
+        cont = CatalogController()
+        val = cont.remove(id, listing)
+        if val:
+            return {'message': 'Item removed'}
+        else:
+            return {'message': 'Item not removed'}
+
 @api.route('/auth/<string:sponsor_username>')
 class SponsorAPIAuth(Resource):
     def get(self, sponsor_username):

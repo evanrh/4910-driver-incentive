@@ -84,7 +84,7 @@
             $(this).prop('disabled', true);
             $.ajax({
                 contentType: 'application/json;charset=utf-8',
-                url: '/sponsor/api/',
+                url: '/sponsor/api/catalog',
                 type: 'POST',
                 data: JSON.stringify(arr),
                 headers: {'X-API-KEY': token},

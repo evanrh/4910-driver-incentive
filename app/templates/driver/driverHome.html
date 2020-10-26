@@ -1,31 +1,62 @@
 
 {% extends "driver/driverBase.html" %}
 {% block driverContent %}
+{% set limits = [1,5, 10,50] %}
 <div class = "header-banner">{{head}} </div>
 
 <h1>Product Catalog</h1>
 
 
 <div class="row">
-	<p style="margin:0">Enter your search below.</p>
-	<p style="margin:0">To search by genre, write Genre:search. An example would be "Tool:Sponge"   </p>
-	<p style="margin:0"> To search by Price or Rating, writing PriceUp: or PriceDown:, RatingUp: or RatingDown: for desc and asdencing respectively</p>
+	<p style="margin:0">Enter your search below. You can search from among {{numprod}} products</p>
+
 </div>
 
 
 <form action="/productsearch" method="POST">
-	<p style="margin:0">The types of genres for search are: </p>
-	<p style="margin:0">
-		{% for genre in genres%}
-		<button id = "signupbutton" type="submit" class="tfbutton" value={{genre}}>{{genre}}</button> 
-		{% endfor %}
+<div class="dropdown">
+  <button class="dropbtn">Select how many products to display</button>
+  <div class="dropdown-content">
+        <select id = "amount" name="amount">
+        {%for limit in limits%}
 
-	</p>
+        <option value= "{{limit}}">{{limit}}</option>
+        {%endfor%}
+        </select>
+  </div>
+</div>
 
-	<select name="SearchBox" id="productsearch">
-		<option hidden disabled selected value> Select </option>
-		<option value ="">
-		
+
+	
+<div class="dropdown">
+  <button class="dropbtn">Select Genres</button>
+  <div class="dropdown-content">
+	<select id = "mylist" name="mylist">
+	{%for genre in genres%}
+
+	<option value= "{{genre}}">{{genre}}</option>
+	{%endfor%}
+	</select>
+  </div>
+</div>
+
+	
+<div class="dropdown">
+  <button class="dropbtn">Order By?</button>
+  <div class="dropdown-content">
+	<select id = "orderby" name="orderby">
+
+
+	<option value= "pricedown">Ascending on Price</option>
+	<option value= "priceup">Descending on Price</option>
+	<option value= "ratingdown">Ascedning on Rating</option>
+	<option value= "ratingup">Descending on Rating</option>
+
+	</select>
+  </div>
+</div>
+
+
 
 
 
@@ -34,6 +65,10 @@
 
 	<p style="margin:0">You may love {{resultrec}}!</p>
 
+	<p style="margin:0"> The most popular items are:</p>
+		{% for item in popular%}
+		<p> {{item}}</p>
+		{%endfor%}
 </form>
 
 <h2>Contact Info</h2>

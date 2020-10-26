@@ -122,11 +122,12 @@ class Admin(AbsUser):
 
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO admin VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s)'
         self.properties['END'] = 'NULL'
+        query = 'INSERT INTO admin VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\')'.format(**self.properties)
+        
         
         try:
-            self.database.insert(query, self.properties)
+            self.database.insert(query)
             self.add_to_users()
             self.database.commit()
 
@@ -757,11 +758,13 @@ class Sponsor(AbsUser):
 
 
     def accept_application(self, driver_id):
-        query = 'UPDATE driver_bridge SET apply = 0 WHERE driver_id = %s AND sponsor_id = %s'
+        bridge = 'UPDATE driver_bridge SET apply = 0 WHERE driver_id = %s AND sponsor_id = %s'
+        leader = 'INSERT INTO points_leaderboard VALUES (%s, %s, 0)'
         vals = (driver_id, self.properties['id'])
 
         try: 
-            self.database.insert(query, vals)
+            self.database.insert(bridge, vals)
+            self.database.insert(leader, vals)
             self.database.commit()
         except Exception as e:
             raise Exception(e)

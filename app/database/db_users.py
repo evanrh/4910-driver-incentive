@@ -122,11 +122,12 @@ class Admin(AbsUser):
 
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO admin VALUES (%(fname)s, %(mname)s, %(lname)s, %(user)s, %(id)s, %(phone)s, %(email)s, %(pwd)s, NOW(), %(END)s)'
         self.properties['END'] = 'NULL'
+        query = 'INSERT INTO admin VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\')'.format(**self.properties)
+        
         
         try:
-            self.database.insert(query, self.properties)
+            self.database.insert(query)
             self.add_to_users()
             self.database.commit()
 

@@ -80,9 +80,14 @@ def home():
         session.pop('_flashes', None)
 
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
-            genres = getgenres()
+            rec = []
+            genres = []
             userna = session['userInfo']['properties']['user']
-            rec = recommend(userna)
+
+            if not session['userInfo']['properties']['selectedSponsor'] == None:
+                genres = getgenres()
+                rec = recommend(userna)
+                pass
             if(userna == "testdrive"):
                 Message = "You are on thin ice bud!"
             else:

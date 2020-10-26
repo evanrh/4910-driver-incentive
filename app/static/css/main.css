@@ -29,9 +29,11 @@
 }
 
 body {
-	font-family: 'Oxygen', sans-serif;
-	height: 100%;
-	padding: 0;
+	font-family: 'Oxygen', sans-serif !important; 
+    line-height: normal !important;
+    height: 100% !important;
+    font-size: 16px !important;
+	padding: 0 !important;
 	background-color: var(--main-theme4);
 }
 

@@ -757,11 +757,13 @@ class Sponsor(AbsUser):
 
 
     def accept_application(self, driver_id):
-        query = 'UPDATE driver_bridge SET apply = 0 WHERE driver_id = %s AND sponsor_id = %s'
+        bridge = 'UPDATE driver_bridge SET apply = 0 WHERE driver_id = %s AND sponsor_id = %s'
+        leader = 'INSERT INTO points_leaderboard VALUES (%s, %s, 0)'
         vals = (driver_id, self.properties['id'])
 
         try: 
-            self.database.insert(query, vals)
+            self.database.insert(bridge, vals)
+            self.database.insert(leader, vals)
             self.database.commit()
         except Exception as e:
             raise Exception(e)

@@ -25,7 +25,7 @@ class DB_Connection():
             self.conn = ms.connect(host = self.host,
                                    database = self.database,
                                    user = self.user,
-                                   pwd = self.pwd)
+                                   password = self.pwd)
             self.conn.autocommit = True
             cursor = self.conn.cursor(buffered=True)
 

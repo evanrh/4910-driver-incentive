@@ -92,7 +92,12 @@ def home():
                 Message = "You are on thin ice bud!"
             else:
                 Message = ""
-            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message)
+
+            spon_id_dic = session['userInfo']['properties']['sponsors']
+            spon_id_list = list(spon_id_dic.keys())
+            numproducts = getnumproducts(spon_id_list)
+            popitems = getpopitems()
+            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems)
 
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
@@ -634,13 +639,28 @@ def sendto():
 def productsearch():
     search = "no input"
     results = "blah blah blah blah"  
+    limitedresults = [" "] * 50
+    spon_id_dic = session['userInfo']['properties']['sponsors']
+    spon_id_list = list(spon_id_dic.keys())
 
     if request.method == 'POST':
         form = request.form
         search = form['search']
-        results = product_search(search)
+        mylist = form['mylist']
+        order = form['orderby']
+        amount = int(form['amount'])
+        results = product_search(search, spon_id_list, mylist, order)
+    
+    count = 0; 
+    for i in results:
+        if(count < amount):
+            limitedresults[count] = str(i)
+        else:
+            break
+        count += 1
     numresults = len(results) 
-    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = results)
+    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults, displaynum = amount)
+
 
 @app.route("/productAJAX", methods=["POST"])
 def productAJAX():

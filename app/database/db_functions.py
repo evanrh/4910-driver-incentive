@@ -332,13 +332,14 @@ def getnumproducts(spon_id):
 
     cursor.execute(sql)
     returnnum = cursor.fetchall()
-    listt = list(returnnum)
-    returnnum = str(listt[0])
-    returnnum = returnnum.replace("(","")
-    returnnum = returnnum.replace(")","")
-    returnnum = returnnum.replace(",","")
-    print(returnnum)
-    return returnnum
+    
+    # Removed shady string manipulation
+    num = 0
+    if returnnum:
+        num = returnnum[0][0]
+
+    print('numProducts = {}'.format(num))
+    return num
 
 def recommend(userna):
 

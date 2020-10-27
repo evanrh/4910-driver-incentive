@@ -95,7 +95,11 @@ def home():
 
             spon_id_dic = session['userInfo']['properties']['sponsors']
             spon_id_list = list(spon_id_dic.keys())
-            numproducts = getnumproducts(spon_id_list)
+
+            numproducts = []
+            # Fix sponsorless driver issue
+            if spon_id_list:
+                numproducts = getnumproducts(spon_id_list)
             popitems = getpopitems()
             return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems)
 

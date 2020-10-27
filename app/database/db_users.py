@@ -536,6 +536,7 @@ class Sponsor(AbsUser):
         self.properties['sandbox'] = 'NULL'
         self.properties['points'] = 99999999
         self.properties['selectedSponsor'] = [1, 9999999]
+        self.properties['point_value'] = 0.01
         self.database = getConnection()
 
     def setLogIn(self, loggedIn):
@@ -659,7 +660,7 @@ class Sponsor(AbsUser):
         return data[0][0]
 
     def populate(self, username: str):
-        query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE user = %s'
+        query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor WHERE user = %s'
         vals = (username, )
 
         try:
@@ -678,6 +679,7 @@ class Sponsor(AbsUser):
             self.properties['pwd'] = 'NULL'
             self.properties['image'] = data[0][6]
             self.properties['date_join'] = data[0][7]
+            self.properties['point_value'] = data[0][8]
 
     def is_suspended(self):
         

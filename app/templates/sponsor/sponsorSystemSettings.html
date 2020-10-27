@@ -1,4 +1,8 @@
 {% extends "sponsor/sponsorBase.html" %}
 {% block sponsorContent %}
 <h1>System Settings</h1>
+<form method="POST">
+    <input name="rate" type="number" min="0.001" step="0.001" class="tfinput" value="{{ rate }}">
+    <button type="submit" class="tfbutton">Submit</button>
+</form>
 {% endblock %}

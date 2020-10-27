@@ -606,6 +606,30 @@ def sendmessage():
 
     return ('', 204)
 
+@app.route("/sendto", methods=["GET","POST"])
+def sendto():
+    data = request.get_data().decode("utf-8").split("&")
+    sender = data[0].split("=")
+    receiver = data[1].split("=")
+    message = data[2].split("=")
+
+    id, role = get_table_id(sender[1])
+
+    if role == "admin":
+        user = Admin()
+    elif role == "sponsor":
+        user = Sponsor()
+    else:
+        user = Driver()
+    
+    username = sender[1].strip('+')
+    user.populate(username)
+    print(username)
+    
+    user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
+
+    return ('', 204)
+
 @app.route("/productsearch", methods=["GET","POST"])
 def productsearch():
     search = "no input"

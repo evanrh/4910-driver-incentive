@@ -5,8 +5,15 @@
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 <div class="container bootstrap snippets bootdey">
     <div class="row">
-        <a href="#" class="btn btn-info  send-message-btn" role="button"><i class="fa fa-plus"></i> Search</a>
+        <a href="#" class="btn btn-info  send-message-btn" role="button" onclick="showCompose()"><i class="fa fa-plus"></i> Compose</a>
         <a href="#" class="btn btn-info  send-message-btn" role="button"><i class="fa fa-gears"></i> Settings</a>
+    </div>
+    <div class="row" id="hide" style="display: none;">
+        <form>
+            <input class="tftextinput" id="recipient" placeholder='Username' required>
+            <input class="tftextinput" id="composeMessage" placeholder='Message' required>
+            <button class="tfbutton" name="{{ session['userInfo']['properties']['user'] }}" id='sendTomessage'>Send</button>
+        </form>
     </div>
     <div class="row">
         <div class="conversation-wrap col-md-3">
@@ -31,7 +38,7 @@
                 {% set name = value[0][1]  %}
             {% endif %}
 
-            {% set msgprvw = value[value|length -1][1]|truncate(20) + "..." %}
+            {% set msgprvw = value[value|length -1][1]|truncate(15) %}
             <a href='{{ url_for("inbox", username=user) }}'>
                 <div class="media conversation" style="cursor: pointer; {% if user == selectedUser %}background-color:#e2e2e2; {% endif %} ">
                     <span class="pull-left">
@@ -103,6 +110,6 @@
             </div>
         </div>
     </div>
-</div>  
+</div>      
 
 {% endblock %}

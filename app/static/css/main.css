@@ -28,6 +28,10 @@
 	--main-theme4: var(--blue-theme4);
 }
 
+html {
+    height: auto !important;
+}
+
 body {
 	font-family: 'Oxygen', sans-serif !important; 
     line-height: normal !important;

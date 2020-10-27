@@ -276,12 +276,19 @@ def sponsorProfile():
         return redirect(url_for('home'))
     return render_template('sponsor/sponsorProfile.html')
 
-@app.route("/sponsorSystemSettings")
+@app.route("/sponsorSystemSettings", methods=['GET', 'POST'])
 def sponsorSystemSettings():
     if permissionCheck(["sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
-    return render_template('sponsor/sponsorSystemSettings.html')
+    if request.method == 'POST':
+        rate = request.form['rate']
+        sid = session['userInfo']['properties']['id']
+        userInfo.properties['point_value'] = rate
+        update_sponsor_rate(sid, rate)
+        flash('Conversion rate updated!')
+
+    return render_template('sponsor/sponsorSystemSettings.html', rate=userInfo.properties['point_value'])
 
 @app.route("/sponsorViewDriver")
 def sponsorViewDriver():

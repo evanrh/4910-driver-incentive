@@ -455,7 +455,13 @@ def getSponsorName(ident):
     print(returninfo)
     return returninfo
 
-    #main used to test functions
+def update_sponsor_rate(sponsor_id, rate):
+    sql = "UPDATE sponsor SET point_value=%s WHERE sponsor_id=%s"
+    cursor.execute(sql, (rate, sponsor_id))
+    database.commit()
+    print(cursor.rowcount)
+
+#main used to test functions
 if __name__ == "__main__":
     """
     cancel_suspension('wsherre')

@@ -1,6 +1,7 @@
 ---
 
 - name: Copy over new code
+
   hosts: project-server
   tasks:
           - name: Copy project from git
@@ -9,6 +10,12 @@
                 dest: "/home/ubuntu/project"
                 version: "master"
 
+- name: Update packages
+  hosts: project-server
+  tasks:
+        - name: pip task
+          pip:
+                  requirements: /home/ubuntu/project/requirements.txt
 - name: Deploy new code
   hosts: project-server
   become: true

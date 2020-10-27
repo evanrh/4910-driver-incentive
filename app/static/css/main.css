@@ -28,10 +28,16 @@
 	--main-theme4: var(--blue-theme4);
 }
 
+html {
+    height: auto !important;
+}
+
 body {
-	font-family: 'Oxygen', sans-serif;
-	height: 100%;
-	padding: 0;
+	font-family: 'Oxygen', sans-serif !important; 
+    line-height: normal !important;
+    height: 100% !important;
+    font-size: 16px !important;
+	padding: 0 !important;
 	background-color: var(--main-theme4);
 }
 
@@ -164,11 +170,17 @@ header p{
 	display: none;
 	position: absolute;
 	background-color: var(--main-theme1);
-	/*min-width: 140px;*/
+	color: white;
 	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 	right: 0;
 }
-  
+
+.dropdown-content select {
+    overflow-y: auto;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
 /* Links inside the dropdown */
 .dropdown-content a {
 	color: black;
@@ -200,6 +212,7 @@ header p{
 	border-top-right-radius: 5px 5px;
 	border-bottom-right-radius: 5px 5px;
 }
+
 .tfbutton {
 	height: 35px;
 	width: 80px;
@@ -522,6 +535,69 @@ img  {
   }
 
 }
+
+/*Banner for messages*/
+.header-banner{
+    position: absolute;
+    z-index: 101;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #00FFFF;
+    text-align: center;
+    line-height: 2.5;
+    overflow: hidden; 
+    -webkit-box-shadow: 0 0 5px black;
+    -moz-box-shadow:    0 0 5px black;
+    box-shadow:         0 0 5px black;
+}
+
+/* Dropdown Button */
+.dropbtn2 {
+  background-color: #4CAF50;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown2 {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content2 {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content2 a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content2 a:hover {background-color: #ddd;}
+
+/* Show the dropdown menu on hover */
+.dropdown2:hover .dropdown-content2 {display: block;}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown2:hover .dropbtn2 {background-color: #3e8e41;}
+
+
+
+
+
 
 @media screen and (max-width: 800px)
 {

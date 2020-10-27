@@ -4,6 +4,10 @@ import mysql.connector as ms
 class DB_Connection():
     def __init__(self, host, name, user, pwd):
         try:
+            self.host = host
+            self.database = name
+            self.user = user
+            self.pwd = pwd
             self.conn = ms.connect(host = host,
                                    database = name,
                                    user = user,
@@ -14,7 +18,16 @@ class DB_Connection():
             raise Error(e)
 
     def query(self, query, params=None, multi=False):
-        cursor = self.conn.cursor(buffered=True)
+        try:
+            cursor = self.conn.cursor(buffered=True)
+        except Exception as e:
+            # Fix stupid issue on production where database connection times out hopefully
+            self.conn = ms.connect(host = self.host,
+                                   database = self.database,
+                                   user = self.user,
+                                   password = self.pwd)
+            self.conn.autocommit = True
+            cursor = self.conn.cursor(buffered=True)
 
         try:
             cursor.execute(query, params, multi)

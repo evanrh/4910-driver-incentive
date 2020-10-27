@@ -222,32 +222,47 @@ def cancel_suspension(username):
         cursor.execute(query, vals)
     except Exception as e:
         raise Exception(e)
+    
+def getSponsorName(ident):
+    ID = str(ident)
+    cursor.execute("SELECT user FROM sponsor WHERE sponsor_id = '" +ID+"'")
+    got = cursor.fetchall()
+    returninfo = ''.join(str(v) for v in got)
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    return returninfo
 
 #Clean search and translate into sql search
-def product_search(search):
-    print(search)
-    cursor.execute("SELECT DISTINCT Genre FROM product")
-    returngenre = cursor.fetchall()
-    print(returngenre)
-    strgenre = ' '.join(str(v) for v in returngenre)
-    print("strgenre--------------")
-    print(strgenre)
-    strgenre = strgenre.replace("[", "")
-    strgenre = strgenre.replace("]", "")
-    strgenre = strgenre.replace("(", "") 
-    strgenre = strgenre.replace(")", ":")
-    strgenre = strgenre.replace(",", "")
-    strgenre = strgenre.replace("'", "")
-    print(strgenre)
+def product_search(search, spon_id, mylist, order):
+    print(mylist)
+
     dirty_search = search
     numwords = len(dirty_search.split())
     clean_search = [None] * numwords
-    sql = "SELECT name, description FROM product WHERE  available = 1 AND name = '"
-    #This searches by multiple genres
+
+    #for loop to add as many spon_ids to search
+#    print(spon_id[1])    
     multigenrelong = "SELECT name,price,rating, description FROM product WHERE available = 1 AND ("
+    
+    for i in spon_id[:-1]:
+        multigenrelong += "sponsor_id = '"+ str(i)+"' OR "
+    else:
+        multigenrelong += "sponsor_id = '"+ str(spon_id[-1])+"' "
+    multigenrelong += ")"
+    if mylist != "None":
+        multigenrelong += " AND ("
+
+    
+
+    #This searches by multiple genres
+#    multigenrelong = "SELECT name,price,rating, description FROM product WHERE available = 1 AND ("
     multiOR = " OR "
     multigenre = "Genre ="
-    #This seraches by multiple genres and Orders by price or rating
     returninfo = "\n"
     searchup = "priceup: ratingup:"
     searchdown = "pricedown: ratingdown:"
@@ -256,27 +271,25 @@ def product_search(search):
     pricedown = 0
     ratingup = 0
     ratingdown = 0
-    for i in range(numwords):
-        clean_search = dirty_search.split(' ')[i]
-        clean_search = clean_search.lower()
-        if clean_search in strgenre:
-            print("Got a genre")
-            if one == 1:
-                multigenrelong = multigenrelong + multiOR
-            multigenrelong = multigenrelong + multigenre + "'"+clean_search +"'"+ " "
-            one = 1
 
-        elif clean_search in "priceup":
-            priceup = 1
-        elif clean_search in "ratingup":
-            ratingup = 1
-        elif clean_search in "pricedown":
-            pricedown = 1
-        elif clean_search in "ratingdown":
-            ratingdown = 1
+    dirty_search.lower()
+    if(dirty_search != " "):
+        multigenrelong += "name= '"+dirty_search +"' AND "
 
+
+    print(multigenrelong)
+    if order == "priceup":
+         priceup = 1
+    elif order == "ratingup":
+         ratingup = 1
+    elif order == "pricedown":
+         pricedown = 1
+    elif order == "ratingdown":
+         ratingdown = 1
+    if mylist != "None":
+        multigenrelong += "Genre = '" +mylist+"')"
     multigenrelong = multigenrelong.replace(":","")
-    multigenrelong = multigenrelong + ")"
+
     if priceup == 1:
         multigenrelong = multigenrelong + " ORDER BY price DESC"
     elif pricedown == 1:
@@ -288,7 +301,7 @@ def product_search(search):
     print(multigenrelong)
     cursor.execute(multigenrelong) 
     got = cursor.fetchall()
-    print(got)
+#    print(got)
     returninfo = '\n'.join(str(v) for v in got)
 #    print(returninfo)
     returninfo = returninfo.replace("[", "")
@@ -297,7 +310,7 @@ def product_search(search):
     returninfo = returninfo.replace(")", "")
 #    returninfo = returninfo.replace(",", "")
     returninfo = returninfo.replace("'", "")
-    print(returninfo)
+#    print(returninfo)
     listt = returninfo.splitlines()
 #    print(listt[1])
     return listt
@@ -309,10 +322,117 @@ def getgenres():
     # Return a list of all genres
     return list(map(lambda x: x[0], returngenre))
 
+def getnumproducts(spon_id):
+
+    sql = "SELECT COUNT(sponsor_id) FROM product WHERE "
+    for i in spon_id[:-1]:
+        sql += "sponsor_id = '"+ str(i)+"' OR "
+    else:
+        sql += "sponsor_id = '"+ str(spon_id[-1])+"' "
+
+    cursor.execute(sql)
+    returnnum = cursor.fetchall()
+    
+    # Removed shady string manipulation
+    num = 0
+    if returnnum:
+        num = returnnum[0][0]
+
+    print('numProducts = {}'.format(num))
+    return num
+
 def recommend(userna):
+
+    #Get ID from username
     cursor.execute("SELECT driver_id FROM driver WHERE user='"+userna+"'")
     ID = cursor.fetchall()
-    print(ID)
+    print(ID) 
+    List = list(ID)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    #Get Latest product bought
+    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Driver_ID = '"+returninfo+"' ORDER BY TimeStamp ASC")
+    ID = cursor.fetchall()
+    List2 = list(ID)
+    got = str(List2[0])
+    got = got.replace("[", "")
+    got = got.replace("]", "")
+    got = got.replace("(", "") 
+    got = got.replace(")", "")
+    got = got.replace(",", "")
+    got = got.replace("'", "")
+    print(got)
+    #Get a similarity with another user ordered by time
+    cursor.execute("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID != '"+returninfo+"' AND Product_ID= '"+got+"' ORDER BY TimeStamp ASC" )
+    result = cursor.fetchall()
+    print(result)
+    List = list(result)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    #Select the Product_ID history from the other user
+    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Product_ID !=  '"+got+"' AND Driver_ID = '"+returninfo+"' ORDER BY TimeStamp ASC")
+    gotcha = cursor.fetchall()
+    print(gotcha)
+    List = list(gotcha)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    cursor.execute("SELECT name FROM product WHERE product_id = '"+returninfo+"'")
+    final = cursor.fetchall()
+    List = list(final)
+    print(List)
+    returninfo = str(List[0])
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    return(returninfo)
+#    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE ")
+
+def getpopitems():
+    cursor.execute("SELECT Product_ID FROM   Product_Orders GROUP BY Product_ID ORDER BY COUNT(*) DESC ")
+    poptuple = cursor.fetchall()
+    popstr = "\n".join(str(v) for v in poptuple)
+    popstr = popstr.replace("(","")
+    popstr = popstr.replace(")","")
+    popstr = popstr.replace(",","")
+    poplist = popstr.split()
+    print(poplist)
+    popname = poplist[:3]
+    for i in range(0, 3):
+        cursor.execute("SELECT name FROM product WHERE product_id = '" +poplist[i]+"'")
+        poptuple = cursor.fetchall()
+        popstr = "\n".join(str(v) for v in poptuple)
+        popstr = popstr.replace("(","")
+        popstr = popstr.replace(")","")
+        popstr = popstr.replace(",","")
+        popstr = popstr.replace("'","")
+        popname[i] = popstr
+    print(popname)
+    return popname
 
 def get_products_by_name(search):
     query = "SELECT name FROM product WHERE name REGEXP(%s)"
@@ -321,8 +441,30 @@ def get_products_by_name(search):
     print(matches)
     return matches
 
+def getSponsorName(ident):
+    ID = str(ident)
+    cursor.execute("SELECT title FROM sponsor WHERE sponsor_id = '" +ID+"'")
+    got = cursor.fetchall()
+    returninfo = ''.join(str(v) for v in got)
+#    print(returninfo)
+    returninfo = returninfo.replace("[", "")
+    returninfo = returninfo.replace("]", "")
+    returninfo = returninfo.replace("(", "") 
+    returninfo = returninfo.replace(")", "")
+    returninfo = returninfo.replace(",", "")
+    returninfo = returninfo.replace("'", "")
+    print(returninfo)
+    return returninfo
+
+def update_sponsor_rate(sponsor_id, rate):
+    sql = "UPDATE sponsor SET point_value=%s WHERE sponsor_id=%s"
+    cursor.execute(sql, (rate, sponsor_id))
+    database.commit()
+    print(cursor.rowcount)
+
 #main used to test functions
 if __name__ == "__main__":
+    """
     cancel_suspension('wsherre')
     if username_exist('krod'):
         add_driver('Kevin', 'NULL', 'Rodgers', 'krod', 'address', 5, 'email', 'cool', 'Null')
@@ -333,10 +475,17 @@ if __name__ == "__main__":
     add_admin('Admin', '', 'Cool', 'admin', 0, 'email', 'pwd', '')
     print(username_exist('krod'))
     get_users()
+     print(admin_view_users())
+    spons = [1,2,3]
+ #   getnumproducts(3)    
+    product_search("bike", spons, "None", "pricedown")
 
-    print(admin_view_users())
+
+    """
     print("David recoo\n")
-    recommend("cgaber")
+    recommend("testdrive")
+    getpopitems()
+    """
     print("David Search\n")
     search = "Bike Tool: car: Luxury: sponge priceup"
     product_search(search) 
@@ -379,7 +528,7 @@ if __name__ == "__main__":
     cancel_suspension('krod')
     print(get_suspended_users())
     print(if_username_exist('remove'))
-
+    """
     cursor.close()
     database.close()
     

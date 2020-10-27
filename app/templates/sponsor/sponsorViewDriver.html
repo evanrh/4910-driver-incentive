@@ -6,7 +6,7 @@
         <table style="border-spacing:5px;">
             <tr>
                 <td class='driverRow'>Drivers</td>
-                <td class='driverRow'>Delete</td>
+                <td class='driverRow'>Remove</td>
                 <td class='driverRow'>User Name</td>
                 <td class='driverRow'>First Name</td>
                 <td class='driverRow'>Last Name</td>
@@ -25,7 +25,7 @@
                     {% set datejoined = driver[5] %}
                     <tr>
                         <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
-                        <td><button class="{{ sponsor[1] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
+                        <td><button class="{{ sponsor }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
                         <td> {{ user }} </td>
                         <td> {{ first  }} </td>
                         <td> {{ last }} </td>
@@ -35,11 +35,44 @@
                         <td><button name="{{ user }}" id='suspend'>X</button></td>
                         {% endif %}
                         <td> {{ points }} </td>
-                        <td><input name="{{ user }}" id='addpoints{{ user }}' placeholder='Add Pts'><button class="{{ sponsor[1] }}" name='{{ user }}' id='addpoints'>+</button></td>
-                        <td><input name="{{ user }}" id='sendmessage{{ user }}' placeholder='Message'><button name='{{ user }}' id='sendmessage'>Send</button></td>
+                        <td>
+                            <input name="{{ user }}" id='addpoints{{ user }}{{ sponsor }}' placeholder='Add Pts'>
+                            <button class="{{ sponsor }}" name='{{ user }}' id='addpoints'>+</button>
+                        </td>
+                        <td>
+                            <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                            <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+                        </td>
                         <td> {{ datejoined }} </td>
                     </tr>
                 {% endfor %}
+        </table>
+
+        <table style="border-spacing:5px;">
+            <tr>
+                <td class='driverRow'>Applications</td>
+                <td class='driverRow'>User Name</td>
+                <td class='driverRow'>First Name</td>
+                <td class='driverRow'>Last Name</td>
+                <td class='driverRow'>Accept Application</td>
+                <td class='driverRow'>Reject Application</td>
+                <td class='driverRow'>Send Message</td>
+            </tr>
+
+            {% for driver in applications %}
+            <tr>
+                <td style="padding-left: 30px;"><button name="{{ driver[0] }}" id='edit'><a href="{{ url_for('updateDriver', username=driver[0]) }}">Edit</a></button></td>
+                <td> {{ driver[0] }}</td>
+                <td> {{ driver[1] }}</td>
+                <td> {{ driver[2] }}</td>
+                <td><button class="{{ sponsor }}" name=" {{ driver[3] }} " id='acceptapp' style='color:green;'>&#10003</button></td>
+                <td><button class="{{ sponsor }}" name=" {{ driver[3] }} " id='rejectapp' style='color:red;'>X</button></td>
+                <td>
+                    <input name="{{ driver[0] }}" id="sendmessage{{ driver[0] }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+                </td>
+            </tr>
+            {% endfor %}
         </table>
     </form>
 </div>

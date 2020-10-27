@@ -1,17 +1,21 @@
 ---
 
 - name: Copy over new code
+
   hosts: project-server
   tasks:
-        - name: Copy over project dir
-          copy:
-                src: F20-Team15-Hastings.Gaber.Gleaton.Sherrer/project
-                dest: ~/project/
-        - name: Copy over .py files in repo
-          copy:
-                src: F20-Team15-Hastings.Gaber.Gleaton.Sherrer/*.py
-                dest: ~/project/
+          - name: Copy project from git
+            git:
+                repo: "git@ssh.dev.azure.com:v3/F20-Team15-Hastings-Gaber-Gleaton-Sherrer/F20-Team15-Hastings.Gaber.Gleaton.Sherrer/F20-Team15-Hastings.Gaber.Gleaton.Sherrer"
+                dest: "/home/ubuntu/project"
+                version: "master"
 
+- name: Update packages
+  hosts: project-server
+  tasks:
+        - name: pip task
+          pip:
+                  requirements: /home/ubuntu/project/requirements.txt
 - name: Deploy new code
   hosts: project-server
   become: true

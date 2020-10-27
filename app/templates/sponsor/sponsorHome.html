@@ -1,4 +1,20 @@
 {% extends "sponsor/sponsorBase.html" %}
 {% block sponsorContent %}
+{% set limits = [25, 50, 100] %}
 <h1>Product Catalog (Edit)</h1>
+<div id="sponsorSearch">
+    <p>Search for items to add to your catalog below</p>
+    <form action="{{ url_for('sponsorSearch') }}" method="POST">
+        <input type="text" class="tftextinput" name="search" id="search" placeholder="Name, genre, type..."required>
+        <label for="limit"># of products shown:</label>
+        <select name="limit" id="limit">
+        {% for limit in limits %}
+            <option value="{{ limit }}">{{ limit }}</option>
+        {% endfor %}
+        </select>
+        <button type="submit" class="tfbutton" id="searchButton">Search</button>
+    </form>
+    <p>Beta Feature</p>
+</div>
+<!-- Show current products below -->
 {% endblock %}

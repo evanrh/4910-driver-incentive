@@ -552,7 +552,7 @@ class Sponsor(AbsUser):
     
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s)'
+        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s, 0.01)'
         self.properties['END'] = 'NULL'
 
         # Filter properties to be all except selectedSponsor because list issue

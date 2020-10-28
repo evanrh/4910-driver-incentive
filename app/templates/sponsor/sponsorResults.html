@@ -30,13 +30,19 @@
         z-index: 999;
         transform: translateX(-200%);
     }
+
+    #searchbar {
+        position: fixed;
+        z-index: 999;
+        background-color: rgba(255,255,255,1);
+    }
 </style>
 {% endblock %}
 {% block sponsorContent %}
     {% set trunc = 40 %}
     {% set limits = [25, 50, 100] %}
     {% if results %}
-        <form action="{{ url_for('sponsorSearch') }}" method="POST">
+        <form id="searchbar" action="{{ url_for('sponsorSearch') }}" method="POST">
         <input type="text" class="tftextinput" name="search" id="search" placeholder="Name, genre, type..."required>
         <label for="limit"># of products shown:</label>
         <select name="limit" id="limit">
@@ -46,7 +52,7 @@
         </select>
         <button type="submit" class="tfbutton" id="searchButton">Search</button>
     </form>
-
+        <hr>
         <div id="results">
         <input class="tfbutton back-btn" type="button" value="Go Back" onclick="history.back(-1)">
         {% for result in results %}

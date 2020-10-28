@@ -452,6 +452,10 @@ class Admin(AbsUser):
                     message_dict[d[1]] = []
                     message_dict[d[1]].append(self.get_msg_info(d[1]))
                     user = 1
+                elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
+                    message_dict[d[0]] = []
+                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    user = 0
                 else:
                     if d[0] != self.properties['user']:
                         user = 0

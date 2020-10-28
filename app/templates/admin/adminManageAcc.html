@@ -43,6 +43,7 @@
                 <th>User Name</th>
                 <th>First Name</th>
                 <th>Last Name</th>
+                <th>Send Message</th>
             </tr>
 
             {% for admin in adminList %}
@@ -52,6 +53,10 @@
                 <td> {{ admin[3] }} </td>
                 <td> {{ admin[0] }} </td>
                 <td> {{ admin[2] }} </td>
+                <td>
+                    <input name="{{ admin[3] }}" id="sendmessage{{ admin[3] }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ admin[3] }}' id='sendmessage'>Send</button>
+                </td>
             </tr>
             {% endfor %}
 
@@ -68,6 +73,7 @@
                     <th>Sponsor ID</th>
                     <th>Suspend</th>
                     <th>Date Joined</th>
+                    <th>Send Message</th>
                 </tr>
 
                 <tr>
@@ -82,6 +88,10 @@
                     <td><button name=" {{ user }} " id='suspend'>X</button></td>
                     {% endif %}
                     <td> {{ datejoined }} </td>
+                    <td>
+                        <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                        <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+                    </td>
                 </tr>
 
                 {% if getDriverList(sponsor[1]) %}

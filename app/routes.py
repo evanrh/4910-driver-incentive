@@ -93,15 +93,16 @@ def home():
             else:
                 Message = ""
 
-            spon_id_dic = session['userInfo']['properties']['sponsors']
-            spon_id_list = list(spon_id_dic.keys())
+            currSponsor = Sponsor()
+            sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
-            numproducts = []
+
+
             # Fix sponsorless driver issue
-            if spon_id_list:
-                numproducts = getnumproducts(spon_id_list)
+            if sponsorId:
+                numproducts = getnumproducts(sponsorId)
             popitems = getpopitems()
-            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems)
+            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
@@ -651,8 +652,10 @@ def productsearch():
     search = "no input"
     results = "blah blah blah blah"  
     limitedresults = [" "] * 50
-    spon_id_dic = session['userInfo']['properties']['sponsors']
-    spon_id_list = list(spon_id_dic.keys())
+
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
 
     if request.method == 'POST':
         form = request.form
@@ -660,7 +663,7 @@ def productsearch():
         mylist = form['mylist']
         order = form['orderby']
         amount = int(form['amount'])
-        results = product_search(search, spon_id_list, mylist, order)
+        results = product_search(search, sponsorId, mylist, order)
     
     count = 0; 
     for i in results:

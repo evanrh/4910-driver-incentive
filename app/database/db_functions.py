@@ -239,7 +239,7 @@ def getSponsorName(ident):
 
 #Clean search and translate into sql search
 def product_search(search, spon_id, mylist, order):
-    print(mylist)
+#    print(mylist)
 
     dirty_search = search
     numwords = len(dirty_search.split())
@@ -248,15 +248,15 @@ def product_search(search, spon_id, mylist, order):
     #for loop to add as many spon_ids to search
 #    print(spon_id[1])    
     multigenrelong = "SELECT name,price,rating, description FROM product WHERE available = 1 AND ("
-    
-    for i in spon_id[:-1]:
-        multigenrelong += "sponsor_id = '"+ str(i)+"' OR "
-    else:
-        multigenrelong += "sponsor_id = '"+ str(spon_id[-1])+"' "
-    multigenrelong += ")"
-    if mylist != "None":
-        multigenrelong += " AND ("
 
+    multigenrelong += "sponsor_id= '"+spon_id+"')"
+
+    if mylist != "None":
+        multigenrelong += " AND Genre = '"+mylist+"'"
+        print(multigenrelong)
+    else:
+        
+        print(multigenrelong)
     
 
     #This searches by multiple genres
@@ -273,9 +273,10 @@ def product_search(search, spon_id, mylist, order):
     ratingdown = 0
 
     dirty_search.lower()
-    if(dirty_search != " "):
-        multigenrelong += "name= '"+dirty_search +"' AND "
+#    print(dirty_search)
 
+    if(dirty_search != " "):
+        multigenrelong += " AND name= '"+dirty_search +"' "
 
     print(multigenrelong)
     if order == "priceup":
@@ -286,8 +287,7 @@ def product_search(search, spon_id, mylist, order):
          pricedown = 1
     elif order == "ratingdown":
          ratingdown = 1
-    if mylist != "None":
-        multigenrelong += "Genre = '" +mylist+"')"
+
     multigenrelong = multigenrelong.replace(":","")
 
     if priceup == 1:
@@ -324,12 +324,8 @@ def getgenres():
 
 def getnumproducts(spon_id):
 
-    sql = "SELECT COUNT(sponsor_id) FROM product WHERE "
-    for i in spon_id[:-1]:
-        sql += "sponsor_id = '"+ str(i)+"' OR "
-    else:
-        sql += "sponsor_id = '"+ str(spon_id[-1])+"' "
-
+    sql = "SELECT COUNT(sponsor_id) FROM product WHERE available = 1 AND "
+    sql += "sponsor_id = '"+spon_id+"'"
     cursor.execute(sql)
     returnnum = cursor.fetchall()
     
@@ -478,13 +474,13 @@ if __name__ == "__main__":
      print(admin_view_users())
     spons = [1,2,3]
  #   getnumproducts(3)    
-    product_search("bike", spons, "None", "pricedown")
 
-
-    """
     print("David recoo\n")
     recommend("testdrive")
     getpopitems()
+    """
+    product_search(" ", "1", "None", "pricedown")
+
     """
     print("David Search\n")
     search = "Bike Tool: car: Luxury: sponge priceup"

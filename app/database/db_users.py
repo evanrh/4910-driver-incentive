@@ -181,7 +181,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT * FROM admin"
+        query = "SELECT * FROM admin WHERE active = 1"
 
         try:
             out = self.database.query(query)
@@ -407,7 +407,7 @@ class Admin(AbsUser):
 
     def reactivate_user(self, username):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
-        id = conn.query(sql)
+        id = self.database.query(sql)
         if id[0][0] != None:
             role =  'driver'
         elif id[0][1] != None:

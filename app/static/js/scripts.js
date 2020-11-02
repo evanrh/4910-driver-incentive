@@ -70,6 +70,19 @@ $(function() {
   });
 });
 
+// Reactivate user
+$(function() {
+  $(document).on('click', '#reactivate', function(e) {
+    var user =  $(this).attr("name")
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/reactivate', 
+      type: 'POST', 
+      data: user
+    })
+  });
+});
+
 // Remove user from sponsor
 $(function() {
   $(document).on('click', '#removeFromSponsor', function(e) {

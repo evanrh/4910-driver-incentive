@@ -371,13 +371,17 @@ def adminManageAcc():
     adminList = admin.get_users()
     sponsorList = Sponsor().get_users()
     sponsorlessDrivers = Admin().get_sponsorless_drivers()
-
+    disabledDrivers = Admin().get_disabled_drivers()
+    disabledSponsors = Admin().get_disabled_sponsors()
+    disabledAdmins = Admin().get_disabled_admins()
     def getDriverList(sponsorName):
         currSponsor = Sponsor()
         currSponsor.populate(sponsorName)
         return currSponsor.view_drivers()
     
-    return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, suspendedUsers = suspendedUsers, getDriverList = getDriverList, sponsorlessDrivers = sponsorlessDrivers)
+    return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
+                                                        suspendedUsers = suspendedUsers, getDriverList = getDriverList, 
+                                                        sponsorlessDrivers = sponsorlessDrivers, disabled = (disabledDrivers, disabledSponsors, disabledAdmins))
 
 @app.route("/adminNotifications")
 def adminNotifications():
@@ -570,6 +574,13 @@ def remove():
     user = request.get_data().decode("utf-8") 
     user = user.strip()
     Admin().remove_user(user)
+    return ('', 204)
+
+@app.route("/reactivate", methods=["GET","POST"])
+def reactivate():
+    user = request.get_data().decode("utf-8") 
+    user = user.strip()
+    Admin().reactivate_user(user)
     return ('', 204)
 
 @app.route("/removeFromSponsor", methods=["GET","POST"])

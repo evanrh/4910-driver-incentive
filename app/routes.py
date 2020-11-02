@@ -94,13 +94,18 @@ def home():
                 Message = ""
 
             currSponsor = Sponsor()
-            sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+            if session['userInfo']['properties']['selectedSponsor'] == None:
+                sponsorId = None
+            else:
+                sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
 
 
             # Fix sponsorless driver issue
             if sponsorId:
                 numproducts = getnumproducts(sponsorId)
+            else:
+                numproducts = 0
             popitems = getpopitems()
             return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
@@ -127,6 +132,8 @@ def do_admin_login():
     # Do basic login verification
     if not username_exist(username):
         flash('Incorrect login credentials!')
+    elif not isActive(username):
+        flash("This account has been disabled! Please contact us if you think this is a mistake")
     elif username in suspendedUsers:
         flash('Your account is currently suspended! Please contact us if you think this is a mistake.')
     else:

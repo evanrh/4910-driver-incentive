@@ -1,13 +1,15 @@
 try:
     from .db_connection import DB_Connection
+    from .db_functions import *
 except Exception:
     from app.database.db_connection import DB_Connection
+    from app.database.db_functions import *
 
 import os
 from abc import ABC
 from abc import abstractmethod
 from werkzeug.security import check_password_hash
-from app.database.db_functions import *
+
 
 connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
 
@@ -20,6 +22,19 @@ def getConnection():
 def getNewConnection():
     return DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
     
+def isActive(username):
+    conn = getConnection()
+    sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
+    id = conn.query(sql)
+    if id[0][0] != None:
+        role =  'driver'
+    elif id[0][1] != None:
+        role =  'sponsor'
+    else:
+        role = 'admin'
+    query = "SELECT active FROM " + role + ' WHERE user = \'{}\''.format(username)
+    active = conn.query(query)
+    return active[0][0] == 1
 
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
@@ -123,7 +138,8 @@ class Admin(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         self.properties['END'] = 'NULL'
-        query = 'INSERT INTO admin VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\')'.format(**self.properties)
+        self.properties['active'] = 1
+        query = 'INSERT INTO admin VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{active}\')'.format(**self.properties)
         
         
         try:
@@ -336,16 +352,7 @@ class Admin(AbsUser):
 
         try:
             self.database.delete('DELETE FROM suspend WHERE user = %s', (username, ))
-            self.database.delete('DELETE FROM users WHERE UserName = \'{}\''.format(username))
-            self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
-            if role == 'driver':
-                id = id[0][0]
-                self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id, ))
-                self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id, ))
-            if role == 'sponsor':
-                id = id[0][1]
-                self.database.delete('DELETE FROM driver_bridge WHERE sponsor_id = {}'.format(id))
-                self.database.delete('DELETE FROM points_leaderboard WHERE sponsor_id = {}'.format(id))
+            self.database.delete('UPDATE ' + role + ' SET active = 0 WHERE user = %s', (username, ))
             self.database.commit()
         except Exception as e:
             raise Exception(e)
@@ -363,13 +370,56 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_sponsorless_drivers(self):
-        sql = 'select driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join from driver where driver.driver_id not in (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id)'
+        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id) AND active = 1'
         
         try:
             data = self.database.query(sql)
         except Exception as e:
             raise Exception(e)
         return data
+
+    def get_disabled_drivers(self):
+        sql = 'select user, first_name, last_name, driver_id, date_join FROM driver WHERE active = 0'
+        
+        try:
+            data = self.database.query(sql)
+        except Exception as e:
+            raise Exception(e)
+        return data
+    
+    def get_disabled_sponsors(self):
+        sql = 'select user, title, sponsor_id, date_join FROM sponsor WHERE active = 0'
+        
+        try:
+            data = self.database.query(sql)
+        except Exception as e:
+            raise Exception(e)
+        return data
+
+    def get_disabled_admins(self):
+        sql = 'select user, first_name, last_name, admin_id, date_join FROM admin WHERE active = 0'
+        
+        try:
+            data = self.database.query(sql)
+        except Exception as e:
+            raise Exception(e)
+        return data
+
+    def reactivate_user(self, username):
+        sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
+        id = conn.query(sql)
+        if id[0][0] != None:
+            role =  'driver'
+        elif id[0][1] != None:
+            role =  'sponsor'
+        else:
+            role = 'admin'
+        
+        query = 'UPDATE ' + role + ' SET active = 1 WHERE user = \'{}\''.format(username)
+        try:
+            data = self.database.insert(query)
+        except Exception as e:
+            raise Exception(e)
 
     def get_inbox_list(self):
         message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
@@ -415,9 +465,9 @@ class Admin(AbsUser):
             role = 'admin'
         
         if role == 'driver' or role == 'admin':
-            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+            query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title FROM sponsor WHERE user = %s'
+            query = 'SELECT title, active FROM sponsor WHERE user = %s'
         val = (user, )
         
         try:
@@ -427,7 +477,7 @@ class Admin(AbsUser):
 
         data_list = list(data[0])
         data_list.insert(0, role)
-        return tuple(data_list)
+        return data_list
 
 
     def view_messages(self):
@@ -446,15 +496,29 @@ class Admin(AbsUser):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
-                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    #get info about user from database
+                    info = self.get_msg_info(d[0])
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
                     user = 0
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
                     message_dict[d[1]] = []
-                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    info = self.get_msg_info(d[1])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[1]].append(info)
                     user = 1
                 elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
                     message_dict[d[0]] = []
-                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    info = self.get_msg_info(d[0])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
                     user = 0
                 else:
                     if d[0] != self.properties['user']:
@@ -509,11 +573,10 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def delete(self):
-        """ Deletes an admin from the users table and from the admin table """
-        user_query = "DELETE FROM users WHERE Admin_ID=%s"
-        user_vals = (self.properties['id'], )
+        """ Disables an admin """
+        
 
-        query = "DELETE FROM admin WHERE admin_id=%s"
+        query = "UPDATE admin SET active = 0 WHERE admin_id=%s"
         vals = (self.properties['id'], )
         try:
             self.database.query(user_query, user_vals)
@@ -557,7 +620,8 @@ class Sponsor(AbsUser):
     
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s, 0.01)'
+        self.properties['active'] = 1
+        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s, 0.01, %(active)s)'
         self.properties['END'] = 'NULL'
 
         # Filter properties to be all except selectedSponsor because list issue
@@ -602,7 +666,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor"
+        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor where active = 1"
 
         try:
             out = self.database.query(query)
@@ -740,7 +804,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def view_applications(self):
-        query = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1'
+        query = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1 AND active = 1'
         vals = (self.properties['id'], )
 
         try: 
@@ -752,7 +816,7 @@ class Sponsor(AbsUser):
 
 
     def view_drivers(self):
-        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, driver_bridge.points, driver.date_join FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
+        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, driver_bridge.points, driver.date_join FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 AND active = 1 ORDER BY driver_bridge.points DESC'
         vals = (self.properties['id'], )
 
         try: 
@@ -815,7 +879,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def view_leaderboard(self):
-        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s ORDER BY points_leaderboard.points DESC'
+        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s  AND active = 1 ORDER BY points_leaderboard.points DESC'
         val = (self.properties['id'], )
 
         try: 
@@ -882,9 +946,9 @@ class Sponsor(AbsUser):
             role = 'admin'
         
         if role == 'driver' or role == 'admin':
-            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+            query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title FROM sponsor WHERE user = %s'
+            query = 'SELECT title, active FROM sponsor WHERE user = %s'
         val = (user, )
         
         try:
@@ -894,7 +958,7 @@ class Sponsor(AbsUser):
 
         data_list = list(data[0])
         data_list.insert(0, role)
-        return tuple(data_list)
+        return data_list
 
 
     def view_messages(self):
@@ -905,7 +969,7 @@ class Sponsor(AbsUser):
             data = self.database.query(message_query, vals)
         except Exception as e:
             raise Exception(e)
-        
+
         message_dict = {}
 
         if data:
@@ -913,18 +977,36 @@ class Sponsor(AbsUser):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
-                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    #get info about user from database
+                    info = self.get_msg_info(d[0])
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
                     user = 0
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
                     message_dict[d[1]] = []
-                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    info = self.get_msg_info(d[1])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[1]].append(info)
                     user = 1
+                elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
+                    message_dict[d[0]] = []
+                    info = self.get_msg_info(d[0])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
+                    user = 0
                 else:
                     if d[0] != self.properties['user']:
                         user = 0
                     else:
                         user = 1
-
+                    
                 message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
@@ -996,10 +1078,8 @@ class Sponsor(AbsUser):
 
     def delete(self):
         """ Deletes a sponsor from the users table and from the sponsor table """
-        user_query = "DELETE FROM users WHERE Sponsor_ID=%s"
-        user_vals = (self.properties['id'], )
 
-        query = "DELETE FROM sponsor WHERE sponsor_id=%s"
+        query = "UPDATE sponsor SET active = 0 WHERE sponsor_id=%s"
         vals = (self.properties['id'], )
         try:
             self.database.query(user_query, user_vals)
@@ -1049,7 +1129,8 @@ class Driver(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         self.properties['END'] = 'NULL'
-        query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\')'.format(**self.properties)
+        self.properties['active'] = 1
+        query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\', \'{active}\')'.format(**self.properties)
         print(query)
 
         try:
@@ -1207,6 +1288,9 @@ class Driver(AbsUser):
     def getSandbox(self):
         return self.properties['sandbox']
 
+    #def isActive(self):
+
+
     def is_suspended(self):
         
         sql = 'SELECT user FROM suspend WHERE user = %s'
@@ -1333,9 +1417,9 @@ class Driver(AbsUser):
             role = 'admin'
         
         if role == 'driver' or role == 'admin':
-            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+            query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title FROM sponsor WHERE user = %s'
+            query = 'SELECT title, active FROM sponsor WHERE user = %s'
         val = (user, )
         
         try:
@@ -1345,7 +1429,7 @@ class Driver(AbsUser):
 
         data_list = list(data[0])
         data_list.insert(0, role)
-        return tuple(data_list)
+        return data_list
 
 
     def view_messages(self):
@@ -1356,7 +1440,7 @@ class Driver(AbsUser):
             data = self.database.query(message_query, vals)
         except Exception as e:
             raise Exception(e)
-        
+
         message_dict = {}
 
         if data:
@@ -1364,18 +1448,36 @@ class Driver(AbsUser):
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
-                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    #get info about user from database
+                    info = self.get_msg_info(d[0])
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
                     user = 0
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
                     message_dict[d[1]] = []
-                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    info = self.get_msg_info(d[1])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[1]].append(info)
                     user = 1
+                elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
+                    message_dict[d[0]] = []
+                    info = self.get_msg_info(d[0])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
+                    user = 0
                 else:
                     if d[0] != self.properties['user']:
                         user = 0
                     else:
                         user = 1
-
+                    
                 message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
@@ -1423,10 +1525,8 @@ class Driver(AbsUser):
 
     def delete(self):
         """ Deletes a driver from the users table and from the driver table """
-        user_query = "DELETE FROM users WHERE Driver_ID=%s"
-        user_vals = (self.properties['id'], )
 
-        query = "DELETE FROM driver WHERE driver_id=%s"
+        query = "UPDATE driver SET active = 0 WHERE driver_id=%s"
         vals = (self.properties['id'], )
         try:
             self.database.query(user_query, user_vals)

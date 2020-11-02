@@ -1192,7 +1192,7 @@ class Driver(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        main_query = "SELECT first_name, mid_name, last_name, user, date_join, driver_id FROM driver"
+        main_query = "SELECT first_name, mid_name, last_name, user, date_join, driver_id FROM driver where active = 1"
         try:
             out = self.database.query(main_query)
         except Exception as e:

@@ -106,3 +106,11 @@
 	border-bottom-left-radius: 5px 5px;
 	background-repeat: no-repeat;
 }
+
+.dot {
+    height: 15px;
+    width: 15px;
+    float: left;
+    background-color: var(--main-theme2);
+    border-radius: 50%;
+  }

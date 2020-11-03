@@ -1,6 +1,6 @@
 import mysql.connector
 import datetime
-from .db_users import getConnection
+from .db_users import getConnection, getNewConnection
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -206,7 +206,7 @@ def username_exist(user = 'NULL'):
 def get_table_id(user):
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
     val = (user, )
-    id = getConnection().query(sql, val)
+    id = getNewConnection().query(sql, val)
     if id[0][0] != None:
         return id[0][0], 'driver'
     elif id[0][1] != None:

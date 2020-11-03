@@ -25,6 +25,9 @@ app.json_encoder = CustomJSONEncoder
 # Chooses a class to use for User
 userInfo = Driver()
 
+#Message for alerts
+Message = ""
+
 def permissionCheck(allowedRole):
     global userInfo
     suspendedUsers = Admin().get_suspended_users()
@@ -70,6 +73,7 @@ def upload_file(f):
 def home():
     # Using the global class to access data
     global userInfo
+    global Message
 
     if not session.get('logged_in') or not session.get('userInfo'):
         return render_template('landing/login.html')
@@ -88,10 +92,7 @@ def home():
                 genres = getgenres()
                 rec = recommend(userna)
                 pass
-            if(userna == "testdrive"):
-                Message = "You are on thin ice bud!"
-            else:
-                Message = ""
+            
 
             currSponsor = Sponsor()
             if session['userInfo']['properties']['selectedSponsor'] == None:
@@ -99,6 +100,15 @@ def home():
             else:
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
+            inbox_list = userInfo.get_inbox_list()
+            if 'System Management' in inbox_list and len(inbox_list) == 1:
+                Message = "You have an important message from System Management"
+            elif 'System Management' in inbox_list and len(inbox_list > 1):
+                Message += ' and ' + str(len(inbox_list) - 1) + ' other unread message'
+            elif len(inbox_list) > 0:
+                Message = "You have " + str(len(inbox_list)) + ' unread messages'
+            else:
+                Message = ""
 
 
             # Fix sponsorless driver issue
@@ -111,10 +121,20 @@ def home():
 
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
-            return render_template('sponsor/sponsorHome.html')
+            inbox_list = userInfo.get_inbox_list()
+            if len(inbox_list) > 0:
+                Message = "You have " + str(len(inbox_list)) + ' unread messages'
+            else:
+                Message = ""
+            return render_template('sponsor/sponsorHome.html', head = Message)
 
         if userInfo.getRole() == "admin":
-            return render_template('admin/adminHome.html')
+            inbox_list = userInfo.get_inbox_list()
+            if len(inbox_list) > 0:
+                Message = "You have " + str(len(inbox_list)) + ' unread messages'
+            else:
+                Message = ""
+            return render_template('admin/adminHome.html', head = Message)
 
     return render_template('landing/login.html')
 
@@ -425,22 +445,30 @@ def inbox(username):
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        inbox_list = currentDriver.get_inbox_list()
+        def mark_as_seen(username):
+            currentDriver.messages_are_seen(username)
 
-        return render_template('driver/driverInbox.html', messages = messages, selectedUser = username)
-    
+        return render_template('driver/driverInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
     if userInfo.getRole() == "sponsor":
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        inbox_list = currentDriver.get_inbox_list()
+        def mark_as_seen(username):
+            currentDriver.messages_are_seen(username)
 
-        return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username)
+        return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
     if userInfo.getRole() == "admin":
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        inbox_list = currentDriver.get_inbox_list()
+        def mark_as_seen(username):
+            currentDriver.messages_are_seen(username)
 
-        return render_template('admin/adminInbox.html', messages = messages, selectedUser = username)
+        return render_template('admin/adminInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
 
 # Settings page

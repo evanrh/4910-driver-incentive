@@ -42,10 +42,13 @@
             <a href='{{ url_for("inbox", username=user) }}'>
                 <div class="media conversation" style="cursor: pointer; {% if user == selectedUser %}background-color:#e2e2e2; {% endif %} ">
                     <span class="pull-left">
+                        {% if user in inbox_list %} 
+                        <span class="dot"></span>
+                        {% endif %}
                         <img class="pfp" style="width: 50px; margin:15px;" src="{{url_for('static', filename='img/userpic2.png')}}">
                     </span>
                     <div class="media-body">
-                        <h5 {% if user == selectedUser %} style="color:var(--main-theme2);" {% endif %} class="media-heading"> {{ name }} </h5>
+                        <h5 {% if user == selectedUser %} style="color:var(--main-theme2);" {{ seen(user) }} {% endif %} class="media-heading"> {{ name }} </h5>
                         <small class="text-muted"> {{ msgprvw }} </small>
                     </div>
                 </div>

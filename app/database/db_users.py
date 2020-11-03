@@ -234,6 +234,7 @@ class Admin(AbsUser):
         return self.properties['points']
 
     def populate(self, username: str):
+        self.database = getNewConnection()
         query = 'SELECT first_name, mid_name, last_name, user, admin_id, phone, email, date_join FROM admin WHERE user = %s'
         vals = (username, )
 
@@ -422,7 +423,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_inbox_list(self):
-        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
@@ -442,16 +443,26 @@ class Admin(AbsUser):
 
     def messages_are_seen(self, user):
         if user == "MARK_ALL":
-            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
+            query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
             val = (self.properties['user'], )
+            try:
+                self.database.insert(query, val)
+                self.database.insert(query2, val)
+            except Exception as e:
+                raise Exception(e)
         else:
-            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
-            val = (self.properties['user'], user, user, self.properties['user'])
+            query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
+            query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
+            val1 = (self.properties['user'], user)
+            val2 = (user, self.properties['user'])
+            try:
+                self.database.insert(query, val1)
+                self.database.insert(query2, val2)
+            except Exception as e:
+                raise Exception(e)
 
-        try:
-            self.database.insert(query, val)
-        except Exception as e:
-            raise Exception(e)
+
 
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
@@ -532,7 +543,7 @@ class Admin(AbsUser):
 
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
-        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
         vals = (target, self.properties['user'], message)
 
         try:
@@ -728,6 +739,7 @@ class Sponsor(AbsUser):
         return data[0][0]
 
     def populate(self, username: str):
+        self.database = getNewConnection()
         query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor WHERE user = %s'
         vals = (username, )
 
@@ -903,7 +915,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_inbox_list(self):
-        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
@@ -923,16 +935,26 @@ class Sponsor(AbsUser):
 
     def messages_are_seen(self, user):
         if user == "MARK_ALL":
-            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
+            query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
             val = (self.properties['user'], )
+            try:
+                self.database.insert(query, val)
+                self.database.insert(query2, val)
+            except Exception as e:
+                raise Exception(e)
         else:
-            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
-            val = (self.properties['user'], user, user, self.properties['user'])
+            query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
+            query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
+            val1 = (self.properties['user'], user)
+            val2 = (user, self.properties['user'])
+            try:
+                self.database.insert(query, val1)
+                self.database.insert(query2, val2)
+            except Exception as e:
+                raise Exception(e)
 
-        try:
-            self.database.insert(query, val)
-        except Exception as e:
-            raise Exception(e)
+
 
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
@@ -1013,7 +1035,7 @@ class Sponsor(AbsUser):
 
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
-        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
         vals = (target, self.properties['user'], message)
 
         try:
@@ -1311,6 +1333,7 @@ class Driver(AbsUser):
 
 
     def populate(self, username: str):
+        self.database = getNewConnection()
         query = 'SELECT first_name, mid_name, last_name, user, driver_id, address, phone, email, image, date_join FROM driver WHERE user = %s'
         vals = (username, )
 
@@ -1374,7 +1397,7 @@ class Driver(AbsUser):
             raise Exception(e)
 
     def get_inbox_list(self):
-        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
@@ -1394,16 +1417,25 @@ class Driver(AbsUser):
 
     def messages_are_seen(self, user):
         if user == "MARK_ALL":
-            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
+            query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
             val = (self.properties['user'], )
+            try:
+                self.database.insert(query, val)
+                self.database.insert(query2, val)
+            except Exception as e:
+                raise Exception(e)
         else:
-            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
-            val = (self.properties['user'], user, user, self.properties['user'])
+            query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
+            query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
+            val1 = (self.properties['user'], user)
+            val2 = (user, self.properties['user'])
+            try:
+                self.database.insert(query, val1)
+                self.database.insert(query2, val2)
+            except Exception as e:
+                raise Exception(e)
 
-        try:
-            self.database.insert(query, val)
-        except Exception as e:
-            raise Exception(e)
 
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
@@ -1484,7 +1516,7 @@ class Driver(AbsUser):
 
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
-        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
         vals = (target, self.properties['user'], message)
 
         try:

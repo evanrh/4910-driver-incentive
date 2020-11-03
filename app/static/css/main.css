@@ -543,7 +543,8 @@ img  {
     top: 0;
     left: 0;
     right: 0;
-    background: #00FFFF;
+    background: var(--main-theme1);
+    color: #FFFFFF;
     text-align: center;
     line-height: 2.5;
     overflow: hidden; 

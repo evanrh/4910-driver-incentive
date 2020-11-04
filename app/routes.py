@@ -664,9 +664,10 @@ def sendmessage():
         user = Driver()
     
     username = sender[1].strip('+')
-    user.populate(username)
 
-    user.send_message(reciever[1].strip('+'), message[1].replace('+', " "))
+    if not message == "":
+        user.populate(username)
+        user.send_message(reciever[1].strip('+'), message[1].replace('+', " "))
 
     return ('', 204)
 
@@ -687,10 +688,10 @@ def sendto():
         user = Driver()
     
     username = sender[1].strip('+')
-    user.populate(username)
-    print(username)
-    
-    user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
+
+    if Admin().username_exist(receiver) and not message == "":
+        user.populate(username)
+        user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
 
     return ('', 204)
 

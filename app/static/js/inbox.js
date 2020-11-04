@@ -1,19 +1,10 @@
-var input = document.querySelector('#sendmessage');
-var textarea = document.querySelector('.send-message');
+$("#sendmessage").click(function(){
+  location.reload();
+});
 
-input.addEventListener('click', function () {
-    location.reload();
-}, false);
-
-function showCompose()
-{
-    element = document.getElementById('hide')
-    if (element.style.display == 'none'){
-        element.style.display = 'block';
-    } else {
-        element.style.display = 'none';
-    }
-}
+$("#showcompose").click(function(){
+  $("#hide").toggle();
+});
 
 $(function() {
     $(document).on('click', '#sendTomessage', function(e) {

@@ -9,6 +9,11 @@ database = mysql.connector.connect(
     database = 'website'
 )
 
+config = {'host': 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
+    'user': 'admin',
+    'password':'cpsc4910',
+    'database': 'website', 
+    'autocommit': True}
 #cursor for the database
 cursor = database.cursor(buffered=True)
 
@@ -186,7 +191,9 @@ def get_password(user='NULL'):
     
     sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
     val = (user, )
-    current_password = getConnection().query(sql, val)
+    conn = getConnection()
+    current_password = conn.exec(sql, val)
+    conn.close()
 
     return current_password[0][0]
 
@@ -199,14 +206,19 @@ def username_exist(user = 'NULL'):
 
     sql = "SELECT * FROM users WHERE UserName = %s"
     val = (user, )
-    row = getConnection().query(sql, val)
+    conn = getConnection()
+    row = conn.exec(sql, val)
+    conn.close()
+    
     return row
 
 #returns id and table that the user is in
 def get_table_id(user):
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
     val = (user, )
-    id = getNewConnection().query(sql, val)
+    conn = getConnection()
+    id = conn.exec(sql, val)
+    conn.close()
     if id[0][0] != None:
         return id[0][0], 'driver'
     elif id[0][1] != None:

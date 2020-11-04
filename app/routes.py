@@ -3,7 +3,7 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 from app.database.db_users import *
-from app.database.db_connection import DB_Connection
+from app.database.db_connection import *
 from flask.json import JSONEncoder
 from tempfile import TemporaryFile
 from app.products.etsy_driver import EtsyController
@@ -143,7 +143,8 @@ def home():
 def do_admin_login():
     # Using the global class to access data
     global userInfo
-    suspendedUsers = Admin().get_suspended_users()
+    admin = Admin()
+    suspendedUsers = admin.get_suspended_users()
 
     # Get user input from web page
     username = request.form['username']
@@ -390,10 +391,10 @@ def adminManageAcc():
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
     sponsorList = Sponsor().get_users()
-    sponsorlessDrivers = Admin().get_sponsorless_drivers()
-    disabledDrivers = Admin().get_disabled_drivers()
-    disabledSponsors = Admin().get_disabled_sponsors()
-    disabledAdmins = Admin().get_disabled_admins()
+    sponsorlessDrivers = admin.get_sponsorless_drivers()
+    disabledDrivers = admin.get_disabled_drivers()
+    disabledSponsors = admin.get_disabled_sponsors()
+    disabledAdmins = admin.get_disabled_admins()
     def getDriverList(sponsorName):
         currSponsor = Sponsor()
         currSponsor.populate(sponsorName)

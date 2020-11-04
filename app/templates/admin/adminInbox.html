@@ -106,7 +106,8 @@
                             placeholder="Write a reply..." required></textarea>
                 </div>
                 <div class="btn-panel">
-                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ selectedUser }}' id='sendmessage' onclick="javascript:eraseText();">
+                    {% set loc = url_for("inbox", username=selectedUser) %}
+                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ selectedUser }}' id='sendmessage' onclick="window.location.href='{{ loc }}'">
                         <i class="fa fa-share"></i> Send
                     </button>
                 </div>

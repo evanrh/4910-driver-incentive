@@ -1,5 +1,5 @@
 $("#sendmessage").click(function(){
-  location.reload();
+  //location.reload();
 });
 
 $("#showcompose").click(function(){

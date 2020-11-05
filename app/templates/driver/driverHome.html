@@ -14,9 +14,9 @@
 <form action="/productsearch" method="POST">
   <div class="row">
   <!-- Button for filtering items -->
-  <a href='javascript:showCompose();' style="font-size:25px;vertical-align: middle;"><span class="fa fa-filter" aria-hidden="true" style="font-size:25px;vertical-align: middle;"></span></a>
+  <!--  <a href='javascript:showCompose();' style="font-size:25px;vertical-align: middle;"><span class="fa fa-filter" aria-hidden="true" style="font-size:25px;vertical-align: middle;"></span></a> -->
 
-      <div id="hide" style="display: none;border:1px solid black;">
+  <!--      <div id="hide" style="display: none;border:1px solid black;">-->
         <div class="row" style="vertical-align: middle;">
           <p>Number of Products: </p>
           <select style="height: 30%;" id = "amount" name="amount">
@@ -24,7 +24,7 @@
             <option value= "{{limit}}">{{limit}}</option>
             {%endfor%}
           </select>
-        </div>
+	  <!--        </div>-->
         
         <div class="row" style="vertical-align: middle;">
           <p>Genre:</p>

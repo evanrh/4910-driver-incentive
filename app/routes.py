@@ -714,15 +714,25 @@ def productsearch():
         results = product_search(search, sponsorId, mylist, order)
     
     count = 0; 
-    for i in results:
+    limitedresults = []
+    for i in range(0, amount):
         if(count < amount):
-            limitedresults[count] = str(i)
+            limitedresults.append(results[i])
         else:
             break
         count += 1
-    numresults = len(results) 
-    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults, displaynum = amount)
 
+    numresults = len(results) 
+    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults)
+
+@app.route("/productpage", methods=["GET","POST"])
+def productpage():
+    
+    if request.method == 'POST':
+        form = request.form
+
+
+    return render_template('driver/driverProduct.html')
 
 @app.route("/productAJAX", methods=["POST"])
 def productAJAX():

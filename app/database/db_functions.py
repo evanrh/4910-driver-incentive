@@ -259,9 +259,9 @@ def product_search(search, spon_id, mylist, order):
 
     #for loop to add as many spon_ids to search
 #    print(spon_id[1])    
-    multigenrelong = "SELECT name,price,rating, description FROM product WHERE available = 1 AND ("
+    multigenrelong = "SELECT name,price,rating, description, img_url FROM product WHERE available = 1 AND ("
 
-    multigenrelong += "sponsor_id= '"+spon_id+"')"
+    multigenrelong += "sponsor_id= '"+str(spon_id)+"')"
 
     if mylist != "None":
         multigenrelong += " AND Genre = '"+mylist+"'"
@@ -313,19 +313,17 @@ def product_search(search, spon_id, mylist, order):
     print(multigenrelong)
     cursor.execute(multigenrelong) 
     got = cursor.fetchall()
-#    print(got)
-    returninfo = '\n'.join(str(v) for v in got)
-#    print(returninfo)
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-#    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-#    print(returninfo)
-    listt = returninfo.splitlines()
-#    print(listt[1])
-    return listt
+
+    products = []
+    for row in got:
+        prod = {"name":row[0], "price":row[1], "rating":row[2], "description":row[3], "img_url":row[4]
+}
+        products.append(prod)
+#    finalprod["product_info"] = products
+    print()
+    print(products[1])
+
+    return products
 
 def getgenres():
     cursor.execute("SELECT DISTINCT Genre FROM product")
@@ -491,7 +489,7 @@ if __name__ == "__main__":
     recommend("testdrive")
     getpopitems()
     """
-    product_search(" ", "1", "None", "pricedown")
+    product_search(" ", "3", "None", "pricedown")
 
     """
     print("David Search\n")

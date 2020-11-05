@@ -714,14 +714,17 @@ def productsearch():
         results = product_search(search, sponsorId, mylist, order)
     
     count = 0; 
+    print(results)
     limitedresults = []
+
     for i in range(0, amount):
-        if(count < amount):
+        if(count < len(results)):
             limitedresults.append(results[i])
         else:
             break
         count += 1
-
+    print(results)
+    print(limitedresults)
     numresults = len(results) 
     return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults)
 

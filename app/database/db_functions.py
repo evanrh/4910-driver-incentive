@@ -320,9 +320,6 @@ def product_search(search, spon_id, mylist, order):
 }
         products.append(prod)
 #    finalprod["product_info"] = products
-    print()
-    print(products[1])
-
     return products
 
 def getgenres():

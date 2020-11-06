@@ -6,13 +6,19 @@
 <div class="container bootstrap snippets bootdey">
     <div class="row">
         <a href="#" class="btn btn-info  send-message-btn" role="button" id="showcompose"><i class="fa fa-plus"></i> Compose</a>
-        <a href="#" class="btn btn-info  send-message-btn" role="button"><i class="fa fa-gears"></i> Settings</a>
+        <a href="#" class="btn btn-info  send-message-btn" role="button" id="report"><i class="fa fa-gears"></i> Report Issues</a>
     </div>
     <div class="row" id="hide" style="display: none;">
         <form>
             <input class="tftextinput" id="recipient" placeholder='Username' required>
             <input class="tftextinput" id="composeMessage" placeholder='Message' required>
             <button class="tfbutton" name="{{ session['userInfo']['properties']['user'] }}" id='sendTomessage'>Send</button>
+        </form>
+    </div>
+    <div class="row" id="hide2" style="display: none;">
+        <form>
+            <input name="{{ System }}" id="sendmessageSystem{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+            <button class="{{ session['userInfo']['properties']['user'] }}" name='System' id='sendmessage'>Send</button>
         </form>
     </div>
     <div class="row">

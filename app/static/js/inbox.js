@@ -6,6 +6,10 @@ $("#showcompose").click(function(){
   $("#hide").toggle();
 });
 
+$("#report").click(function(){
+  $("#hide2").toggle();
+});
+
 $(function() {
     $(document).on('click', '#sendTomessage', function(e) {
       var user =  $(this).attr("name")

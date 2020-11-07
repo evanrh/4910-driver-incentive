@@ -743,6 +743,9 @@ def productAJAX():
     search = data['search']
     return json.dumps(get_products_by_name(search))
 
+# IMPORTANT: Route becoming deprecated
+# Evan: I changed the location of the edit button to use updateAccount so that it can be shared by
+# both the admins and the sponsors
 @app.route("/updateDriver/<username>", methods=["GET","POST"])
 def updateDriver(username):
     """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
@@ -763,7 +766,55 @@ def updateDriver(username):
         flash("Information updated!")
         return json.dumps({'status': 'OK', 'user': username})
 
-    return render_template("sponsor/sponsorEditDriver.html", driver=driverObj)
+    return render_template("sponsor/sponsorEditDriver.html", user=driverObj)
+
+@app.route('/updateAccount/<username>', methods=['GET','POST'])
+def updateAccount(username):
+    """ Route for an admin to update any user account. Figures out role from table and generates a template
+        accordingly
+    """
+    sessRole = session['userInfo']['properties']['role']
+    print(sessRole)
+    if sessRole == 'admin':
+        uid, role = get_table_id(username)
+        user = None
+        if role == 'driver':
+            user = Driver()
+        elif role == 'sponsor':
+            user = Sponsor()
+        else:
+            user = Admin()
+        user.populate(username)
+        return render_template('admin/adminUpdateAccount.html', user=user, role=role)
+
+    elif sessRole == 'sponsor':
+        allDrivers = userInfo.view_drivers()
+        driver = list(filter(lambda d: d[3] == username, allDrivers))
+
+        if driver:
+            user = Driver()
+            user.populate(username)
+
+            if request.method == 'POST':
+                data = request.json
+                if 'addPoints' in data.keys():
+                    add_points_to_driver(username, 0, data['addPoints'])
+                    return json.dumps({'status': 'OK', 'ptsAdded': data['addPoints']})
+
+                # Data should be formatted in the way update_info expects
+                user.update_info(data)
+                flash("Information updated!")
+                return json.dumps({'status': 'OK', 'user': username})
+
+
+            return render_template('sponsor/sponsorEditDriver.html', user=user, sponsor=session['userInfo']['properties']['user'], points=driver[0][4])
+        else:
+            flash('Driver not in your list!')
+            return redirect(url_for('sponsorViewDriver'))
+        
+    else:
+        return redirect(url_for('home'))
+
 
 # Sponsor Catalog Additions Search
 @app.route('/sponsorSearch', methods=['GET', 'POST'])

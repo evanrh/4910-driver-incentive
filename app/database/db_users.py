@@ -945,7 +945,7 @@ class Sponsor(AbsUser):
         leader = 'UPDATE points_leaderboard SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
         try: 
             self.database.exec(leader, vals)
-            sself.database.close()
+            self.database.close()
         except Exception as e:
             raise Exception(e)
 

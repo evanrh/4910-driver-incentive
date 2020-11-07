@@ -119,7 +119,7 @@
                         {% set points = driver[4] %}
                         {% set datejoined = driver[5] %}
                         <tr>
-                            <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
+                            <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
                             <td><button class="{{ sponsor[1] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
                             <td> {{ user }} </td>
                             <td> {{ first  }} </td>
@@ -164,7 +164,7 @@
             {% set last = driver[2] %}
             {% set datejoined = driver[4] %}
             <tr>
-                <td><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
+                <td><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
                 <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
                 <td> {{ user }} </td>
                 <td> {{ first  }} </td>

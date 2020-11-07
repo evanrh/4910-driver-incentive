@@ -50,7 +50,8 @@
 
             {% for admin in adminList %}
             <tr>
-                <td></td>
+                
+                <td style="padding-left: 30px;"><button name="{{ admin[3] }}" id='edit'><a href="{{ url_for('updateAccount', username=admin[3]) }}">Edit</a></button></td>
                 <td><button name=" {{ admin[3] }} " id='remove' style='color:red;'>X</button></td>
                 <td> {{ admin[3] }} </td>
                 <td> {{ admin[0] }} </td>
@@ -81,7 +82,7 @@
                 </tr>
 
                 <tr>
-                    <td></td>
+                    <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
                     <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
                     <td> {{ user }} </td>
                     <td> {{ title }} </td>

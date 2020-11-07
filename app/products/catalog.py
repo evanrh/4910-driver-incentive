@@ -17,17 +17,19 @@ class CatalogController():
             raise ItemInDB("Item already in database")
 
         try:
-            self.conn.query(sql, item)
+            self.conn.exec(sql, item)
             return True
         except Exception as e:
             return False
 
-    def fetch_catalog_items(self, sponsor_id):
+    def fetch_catalog_items(self, sponsor_id, search = None):
         sql = "SELECT name, description, price, listing_id, img_url FROM product WHERE sponsor_id=%s"
+        if search:
+            sql += " AND (name REGEXP {} OR description REGEXP {}".format(search)
 
         try:
-            out = self.conn.query(sql, (sponsor_id, ))
-            print(out)
+            out = self.conn.exec(sql, (sponsor_id, ))
+            print('items found: ', out)
             items = list(map(lambda elem:
                                    {
                                         'title': elem[0],
@@ -50,7 +52,7 @@ class CatalogController():
         vals = (sponsor_id, item_id)
         
         try:
-            self.conn.query(sql, vals)
+            self.conn.exec(sql, vals)
             return True
         except Exception as e:
             print(e)
@@ -62,12 +64,15 @@ class CatalogController():
         
         try:
             # Will be 0
-            out = self.conn.query(sql, (listing_id, sponsor_id))
+            out = self.conn.exec(sql, (listing_id, sponsor_id))
             if out:
                 return out[0][0] > 0
             print(num)
         except Exception as e:
             return False
+    def __del__(self):
+        global pool1
+        self.conn.close()
 
 class ItemInDB(Exception):
     pass

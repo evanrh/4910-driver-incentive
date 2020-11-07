@@ -182,7 +182,7 @@ class Admin(AbsUser):
         query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
 
         try:
-            self.database.exec(query, params=tuple(data.values()))
+            self.database.exec(query, args=tuple(data.values()))
             #self.database.close()
 
         except Exception as e:
@@ -719,7 +719,7 @@ class Sponsor(AbsUser):
         query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
 
         try:
-            self.database.exec(query, params=tuple(data.values()))
+            self.database.exec(query, args=tuple(data.values()))
             #self.database.close()
 
         except Exception as e:
@@ -1279,7 +1279,7 @@ class Driver(AbsUser):
         query += ", ".join(q_list) + " WHERE user=\"{}\"".format(username)
 
         try:
-            self.database.exec(query, params=tuple(data.values()))
+            self.database.exec(query, args=tuple(data.values()))
             #self.database.close()
 
         except Exception as e:

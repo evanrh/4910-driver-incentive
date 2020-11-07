@@ -1,7 +1,13 @@
 {% extends "sponsor/sponsorBase.html" %}
 {% block sponsorContent %}
 <h1>Settings</h1>
-
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+    <p>Error: {{ message }}</p>
+{% endfor %}
+{% endif %}
+{% endwith %}
 <h3>Update Password</h3>
 <form action="/settings" name="passForm", id="passForm" method="POST">
     <div class="row">
@@ -18,7 +24,7 @@
    </div>
 
    <div class="row">
-       <button id="signupbutton" type="submit" class="tfbutton" disabled=true style="width:100px;height:50px;">Change Password</button>
+       <button name="pwd-submit" id="signupbutton" type="submit" class="tfbutton" disabled=true style="width:100px;height:50px;">Change Password</button>
    </div>
 </form>
 

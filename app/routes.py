@@ -7,6 +7,7 @@ from app.database.db_connection import *
 from flask.json import JSONEncoder
 from tempfile import TemporaryFile
 from app.products.etsy_driver import EtsyController
+from app.products.catalog import CatalogController
 import json
 import time
 
@@ -159,6 +160,7 @@ def do_admin_login():
         flash('Your account is currently suspended! Please contact us if you think this is a mistake.')
     else:
         current_hash = get_password(username)
+        print(current_hash, check_password_hash(current_hash, pwd))
         if check_password_hash(current_hash, pwd):
             session['logged_in'] = True
             
@@ -498,6 +500,18 @@ def settings():
                 userInfo.update_info(data)
                 return render_template(userInfo.getRole() + "/settings.html")
 
+            elif 'pwd-submit' in request.form.keys():
+                oldPwd = request.form['old_pass']
+                currentHash = get_password(session['userInfo']['properties']['user'])
+                if not check_password_hash(currentHash, oldPwd):
+                    print(oldPwd)
+                    flash("Wrong old password!")
+                    return render_template(session['userInfo']['properties']['role'] + "/settings.html")
+                pwd = generate_password_hash(request.form['pass'], 'sha256')
+                print(pwd)
+                userInfo.update_info({'pwd': pwd})
+                return render_template(userInfo.getRole() + "/settings.html")
+
         if userInfo.getRole() == "driver":
             return render_template('driver/settings.html')
         if userInfo.getRole() == "sponsor":
@@ -773,6 +787,15 @@ def updateAccount(username):
     """ Route for an admin to update any user account. Figures out role from table and generates a template
         accordingly
     """
+    def posted(username, user):
+        if request.method == 'POST':
+            data = request.json
+            if 'pwd' in data.keys():
+                data['pwd'] = generate_password_hash(data['pwd'], 'sha256')
+            # Data should be formatted in the way update_info expects
+            user.update_info(data)
+            return json.dumps({'status': 'OK', 'user': username})
+
     sessRole = session['userInfo']['properties']['role']
     print(sessRole)
     if sessRole == 'admin':
@@ -785,6 +808,7 @@ def updateAccount(username):
         else:
             user = Admin()
         user.populate(username)
+        posted(username, user)
         return render_template('admin/adminUpdateAccount.html', user=user, role=role)
 
     elif sessRole == 'sponsor':
@@ -794,18 +818,7 @@ def updateAccount(username):
         if driver:
             user = Driver()
             user.populate(username)
-
-            if request.method == 'POST':
-                data = request.json
-                if 'addPoints' in data.keys():
-                    add_points_to_driver(username, 0, data['addPoints'])
-                    return json.dumps({'status': 'OK', 'ptsAdded': data['addPoints']})
-
-                # Data should be formatted in the way update_info expects
-                user.update_info(data)
-                flash("Information updated!")
-                return json.dumps({'status': 'OK', 'user': username})
-
+            posted(username, user)
 
             return render_template('sponsor/sponsorEditDriver.html', user=user, sponsor=session['userInfo']['properties']['user'], points=driver[0][4])
         else:
@@ -813,6 +826,7 @@ def updateAccount(username):
             return redirect(url_for('sponsorViewDriver'))
         
     else:
+        flash('Please login before trying to edit accounts')
         return redirect(url_for('home'))
 
 
@@ -828,3 +842,33 @@ def sponsorSearch():
         cont.limit = limit
         results = cont.get_products_keywords(search)
         return render_template('sponsor/sponsorResults.html', results=results) 
+
+# Admin view sponsor catalog
+@app.route('/catalog/<sponsor>', methods=['GET', 'POST'])
+def catalog(sponsor):
+    if session['userInfo']['properties']['role'] == 'admin':
+        sid, role = get_table_id(sponsor)
+        if role != 'sponsor':
+            return redirect(url_for('home'))
+        cont = CatalogController()
+
+        search = None
+
+        if request.method == 'POST':
+            if request.json:
+                data = request.json
+                listing = data['listing_id']
+                val = cont.remove(sid, listing)
+                message = {'message': 'Item removed' if val else 'Item not removed'}
+                return json.dumps(message)
+
+            else:
+                search = request.form['search']
+
+        items = cont.fetch_catalog_items(sid, search)
+        del cont
+        return render_template('admin/adminViewCatalog.html', results=items['items'], sponsor=sponsor)
+        
+    else:
+        flash('Access not allowed')
+        return redirect(url_for('home'))

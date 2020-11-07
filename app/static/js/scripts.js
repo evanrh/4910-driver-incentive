@@ -246,4 +246,96 @@ $(document).ready(function(){
 
 
 
+// updateAccount JS
+var finished = function(response) {
+    console.log("Hot dog");
+    console.log(response);
+    window.location.reload();
+};
+var accUpdatePath = "/updateAccount/";
+$(function() {
+    $(document).on('click', '#update-email', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var email = document.getElementById("email").value;
+        var arr = {'email': email};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update user names
+$(function() {
+    $(document).on('click', '#update-names', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var first_name = document.getElementById("first_name").value;
+        var mid_name = document.getElementById("mid_name").value;
+        var last_name = document.getElementById("last_name").value;
+        var arr = {'first_name': first_name, 'mid_name': mid_name,
+                   'last_name': last_name};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update address
+$(function() {
+    $(document).on('click', '#update-address', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var address = document.getElementById("address").value;
+        var arr = {'address': address};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update phone number
+$(function() {
+    $(document).on('click', '#update-phone', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var phone = document.getElementById("phone").value;
+        var arr = {'phone': phone};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update user password
+$("#update-password").click(function() {
+    var driver = document.getElementById("username").innerText;
+    var pwd = document.getElementById("pwd").value;
+    var conf = document.getElementById("confirm").value;
+    var arr = {'pwd': pwd};
+    if( pwd !== conf ) {
+        console.log("Passwords do not match!");
+        return;
+    }
 
+    $.ajax({
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        url: accUpdatePath + driver,
+        type: 'POST',
+        data: JSON.stringify(arr),
+        success: finished
+    });
+});

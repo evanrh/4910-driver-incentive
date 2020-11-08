@@ -29,7 +29,6 @@ class CatalogController():
 
         try:
             out = self.conn.exec(sql, (sponsor_id, ))
-            print('items found: ', out)
             items = list(map(lambda elem:
                                    {
                                         'title': elem[0],
@@ -41,7 +40,6 @@ class CatalogController():
                              out
                              )
                         )
-            print(items)
             return {'items': items}
         except Exception as e:
             print(e)

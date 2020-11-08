@@ -16,6 +16,7 @@ def generate_auth_token(sponsor_username, expiration = 3600):
     db = getConnection()
     query = "SELECT sponsor_id FROM sponsor WHERE user=%s"
     results = db.exec(query, (sponsor_username, ))
+    del db
     if results:
         return s.dumps({'id': results[0][0]})
     else:
@@ -87,6 +88,7 @@ class SponsorCatalog(Resource):
         cont = CatalogController()
         out = cont.fetch_catalog_items(id)
         print(out)
+        del cont
         return out
 
     @token_required
@@ -97,6 +99,7 @@ class SponsorCatalog(Resource):
         cont = CatalogController()
         try:
             added = cont.insert(item, id)
+            del cont
 
             if added:
                 return {'message': 'Item added'}, 200
@@ -106,6 +109,7 @@ class SponsorCatalog(Resource):
         except ItemInDB:
             return {'message': 'Item already in database'}, 400
             
+        del cont
         if added:
             return {'message': 'Item added'}, 200
         else:
@@ -118,6 +122,7 @@ class SponsorCatalog(Resource):
         listing = api.payload['listing_id']
         cont = CatalogController()
         val = cont.remove(id, listing)
+        del cont
         if val:
             return {'message': 'Item removed'}
         else:

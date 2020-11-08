@@ -25,7 +25,7 @@ class CatalogController():
     def fetch_catalog_items(self, sponsor_id, search = None):
         sql = "SELECT name, description, price, listing_id, img_url FROM product WHERE sponsor_id=%s"
         if search:
-            sql += " AND (name REGEXP {} OR description REGEXP {}".format(search)
+            sql += " AND (name REGEXP '{}' OR description REGEXP '{}')".format(search, search)
 
         try:
             out = self.conn.exec(sql, (sponsor_id, ))

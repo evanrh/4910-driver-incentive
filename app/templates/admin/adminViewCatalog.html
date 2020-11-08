@@ -10,6 +10,7 @@
         justify-content: center;
         box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
         transition: 0.3s;
+        min-height: 300px;
     }
 
     .card:hover {
@@ -36,6 +37,7 @@
         z-index: 999;
         background-color: rgba(255,255,255,1);
     }
+
 </style>
 {% endblock %}
 {% block adminContent %}
@@ -44,9 +46,10 @@
     <form id="searchbar" action="{{ url_for('catalog', sponsor=sponsor) }}" method="POST">
         <input type="text" class="tftextinput" name="search" id="search" placeholder="Name, genre, type..."required>
         <label for="sort">Sort on:</label>
-        <select id="sort">
-            <option>Price</option>
-            <option>Name</option>
+        <select name="sort" id="sort">
+            <option class="opt" selected="selected">Choose</option>
+            <option class="opt">Price</option>
+            <option class="opt">Name</option>
         </select>
         <button type="submit" class="tfbutton" id="searchButton">Search</button>
     </form>
@@ -58,7 +61,7 @@
         <div class="row">
         {% endif %}
             <div class="one-third">
-                <div class="card">
+                <div class="card" name="{{ result['title'] }}" data-price="{{ result['price'] }}">
                     {% if result['img_url'] %}
                     <img class="card-img-top" src="{{ result['img_url'] }}">
                     {% else %}
@@ -82,29 +85,6 @@
 
 {% block footer %}
 <script type="text/javascript">
-
-    var sort_by_name = (a,b) => {
-        return a.innerHTML.toLowerCase().localeCompare(b.innerHTML.toLowerCase());
-    };
-    var sort_by_price = (a,b) => {
-        var a_ = a.innerHTML.replace("$","");
-        var b_ = b.innerHTML.replace("$","");
-        return a_ < b_;
-    };
-    // Sort items
-    $("#sort option").click(() => {
-        var type = $(this).innerHTML;
-        var list = $();
-        if (type == 'Price') {
-            
-        }
-        else if (type == 'Name') {
-
-        }
-        else {
-
-        }
-    });
 
     // Delete item from sponsor catalog
     $(".card-body .delete").click(function() {

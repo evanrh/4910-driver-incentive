@@ -59,7 +59,7 @@
 		<p> Found {{numresults}}  Results: </p>
 
 
-	
+
 		{% for segment in results %}
 
 			<div class="one-third">
@@ -74,10 +74,13 @@
 		                        <p class="card-text">{{ segment['description'] }}</p>
 		                        {% endif %}
 				<form action="/productpage" method="POST">
-					<button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = {{segment['name']}}>View</button>
+					<button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
 				</form>
-				
-		                        <button id="adsf" type="button" class="add btn btn-primary" name="add">Buy</button>
+
+
+				<!-- nvm this doesn't work	<input type="button"  onclick="addToCart("{{segment['name']}}")" value="Add to cart" /> -->
+
+				<!--<button input type="button" onclick="addToCart("{{segment['name']}}")" value="Add to cart" button id="{{segment['name']}}" class="add btn btn-primary" name="buy"> Add to Cart</button>		-->
 
 				    </div>
 		                </div>
@@ -89,3 +92,42 @@
 		{% endfor %}
 		</div>
 {% endblock %}
+{%block footer%}
+
+<script>
+function addToCart(id)
+{
+    var index = search(id);
+
+    if (index>-1)
+    {
+        var name = products[index].getName();
+        var quantity = products[index].getQuantity();
+        var addIt = false;
+
+        if (quantity==0)
+        {
+            alert("The following item was added to your cart: " + name)
+            addIt = true;
+        }
+        else
+        {
+            addIt = confirm("The item \"" + name + "\" is already in your cart. Would you like to add another?");
+        }
+    }
+    else
+    {
+        alert("Error: Invalid product ID");
+    }
+
+    if (addIt)
+    {
+        products[index].setQuantity(quantity + 1);
+        writeCart();
+    }
+
+    refresh();
+}
+</script>
+
+{%endblock%}

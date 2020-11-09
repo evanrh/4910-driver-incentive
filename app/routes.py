@@ -277,7 +277,10 @@ def driverProfile():
 def driverCart():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('driver/driverCart.html')
+"""    userna = session['userInfo']['properties']['user']
+    cartResults = getCart(userna)
+    return render_template('driver/driverCart.html', results = cartResults)
+"""   
 
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
@@ -727,7 +730,7 @@ def productsearch():
         results = product_search(search, sponsorId, mylist, order)
     
     count = 0; 
-    print(results)
+#    print(results)
     limitedresults = []
 
     for i in range(0, amount):
@@ -736,19 +739,55 @@ def productsearch():
         else:
             break
         count += 1
-    print(results)
-    print(limitedresults)
+#    print(results)
+#    print(limitedresults)
     numresults = len(results) 
     return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults)
 
+
+#Very much a building block, may scrap if need be
 @app.route("/productpage", methods=["GET","POST"])
 def productpage():
-    
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
     if request.method == 'POST':
         form = request.form
+        got = form['productname']
+        results = product_search(got, sponsorId, "None", "priceup" )
 
 
-    return render_template('driver/driverProduct.html')
+    print(results[0]['name'])
+    return render_template('driver/driverProduct.html', results = results[0])
+"""David: "Goodbye Children :'("
+@app.route("/buyme", methods=["GET","POST"])
+def buyme():
+    if request.method == 'POST':
+        form = request.form
+        buy = form['buy']
+    #add to cart
+        if buy:
+            userna = session['userInfo']['properties']['user']
+            addCart(buy, userna)
+    #get cart from db
+            cartResults = getCart(userna)
+            got = {}
+            for name in cartResults:
+                got = (product_search(name, "Any", "None", "priceup"))
+            print(got[0]['name'])    
+            return render_template('driver/driverCart.html', results = cartResults)
+           
+@app.route("/checkout", methods=["GET","POST"])
+def checkout():
+    userna = session['userInfo']['properties']['user']
+    cartResults = getCart(userna)      
+     
+
+"""
+
+#   return render_template('driver/driverCheckout.html')
+
+
 
 @app.route("/productAJAX", methods=["POST"])
 def productAJAX():

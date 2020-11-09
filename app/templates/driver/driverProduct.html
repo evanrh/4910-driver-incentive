@@ -1,19 +1,53 @@
 
 {% extends "driver/driverBase.html" %}
+
 {% block driverContent %}
+<!--
+<body>
+<span class="fa fa-star checked"></span>
+<span class="fa fa-star checked"></span>
+<span class="fa fa-star empty"></span>
+<span class="fa fa-star"></span>
+<span class="fa fa-star"></span>
+<body>
 
 
+<p>the rating is: {{results['rating']}} </p>
 
 
+	★
+<div class="rating">
+<span>☆</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span>
+
+</div>
+	{%if 'star' == '3' %}
+		<div class="rating">
+		<span>☆</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span>
+
+		</div>	
+		{%endif%}
+-->
+	<h1> {{results['name']}} </h1>
+
+	<div>
+	<img src="{{results['img_url']}}"> 
+	</div>
+	<p> {{results['description']}}</p>
+	<form action="/buyme" method="POST">
+		<div>
+			<button id='{{results['name']}}' type="submit" class="tfbutton" name='buy' value="{{results['name']}}">Add to Cart</button>
+		</div>
+	</form>
+
+<!--
+	<h1> {{results['name']}} </h1>
 
 
-
-
-
-
-
-
-
+	<div>
+	<img   class="img-fluid" alt="" src="{{results['img_url']}}"> 
+	</div>
+	<p> {{results['description']}}</p>
+-->	
 
 
 {% endblock %}

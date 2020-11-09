@@ -756,11 +756,38 @@ def productpage():
         got = form['productname']
         results = product_search(got, sponsorId, "None", "priceup" )
 
+#    print(results[0]['name'])
+        return render_template('driver/driverProduct.html', results = results[0])
 
-    print(results[0]['name'])
-    return render_template('driver/driverProduct.html', results = results[0])
+@app.route("/buynow", methods=["GET", "POST"])
+def buynow():
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
 
+    if request.method == 'POST':
+        form = request.form
+        got = form['buy']
+        results = product_search(got, sponsorId, "None", "priceup" )
+
+    return render_template('driver/driverBuyNow.html', results = results[0])
+     
+@app.route("/recipt", methods=["GET", "POST"])
+def recipt():
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
+
+    if request.method == 'POST':
+        form = request.form
+        got = form['buy']
+        results = product_search(got, sponsorId, "None", "priceup" )
+
+    userId = session['userInfo']['properties']['id']
+    Davidsubpoints(userId, results[0]['price'], sponsorId)   
+    print(userId, results[0]['price'], sponsorId)
+
+    return render_template('driver/driverRecipt.html', results = results[0])
 
 
 

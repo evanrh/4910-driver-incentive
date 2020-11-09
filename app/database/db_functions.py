@@ -1,6 +1,6 @@
 import mysql.connector
 import datetime
-#from .db_users import getConnection, getNewConnection
+from .db_users import getConnection, getNewConnection
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -438,6 +438,13 @@ def recommend(userna):
     print(returninfo)
     return(returninfo)
 #    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE ")
+
+def Davidsubpoints(userna, amount, spon_id):
+    cursor.execute("UPDATE driver_bridge SET points = points - "+str(amount)+" WHERE driver_id = '"+str(userna)+"' AND sponsor_id = '"+str(spon_id)+"'")
+    database.commit()
+
+    return ''
+
 
 def getprodinfo(pid):
     cursor.execute("SELECT name,price, img_url FROM product WHERE product_id = '"+str(pid)+"'")

@@ -77,11 +77,6 @@
 					<button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
 				</form>
 
-
-				<!-- nvm this doesn't work	<input type="button"  onclick="addToCart("{{segment['name']}}")" value="Add to cart" /> -->
-
-				<!--<button input type="button" onclick="addToCart("{{segment['name']}}")" value="Add to cart" button id="{{segment['name']}}" class="add btn btn-primary" name="buy"> Add to Cart</button>		-->
-
 				    </div>
 		                </div>
 	                </div>
@@ -92,8 +87,7 @@
 		{% endfor %}
 		</div>
 {% endblock %}
-{%block footer%}
-
+<!--
 <script>
 function addToCart(id)
 {
@@ -130,4 +124,4 @@ function addToCart(id)
 }
 </script>
 
-{%endblock%}
+

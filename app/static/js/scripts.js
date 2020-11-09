@@ -339,3 +339,35 @@ $("#update-password").click(function() {
         success: finished
     });
 });
+
+// Admin and sponsor sorting routines
+var sort_by_name = (a,b) => {
+        return $(a).attr('name').localeCompare($(b).attr('name'));
+};
+var sort_by_price = (a,b) => {
+    var ap = $(a).data('price');
+    var bp = $(b).data('price');
+    return (ap > bp) ? 1 : (ap == bp) ? 0 : -1;
+};
+
+// Sort items
+$("#sort").on('input',() => {
+    var type = $("#sort option:selected").text();
+    var list = $(".row .one-third .card");
+    if (type == 'Price') {
+        list.sort(sort_by_price);
+    }
+    else if (type == 'Name') {
+        list.sort(sort_by_name);
+    }
+    else {
+        
+    }
+    var results = $('#results');
+    var i = 0;
+    results.children().each((index, elem) => {
+        $(elem).children('.one-third').each((index, e) => {
+            $(e).append(list[i++]);
+        });
+    });
+});

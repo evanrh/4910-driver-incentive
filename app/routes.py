@@ -232,7 +232,6 @@ def signup():
         else:
            flash('Username taken!')
 
-    # TODO Add in password hash generation to sign up
     return render_template('landing/signup.html')
 
 @app.route("/about")

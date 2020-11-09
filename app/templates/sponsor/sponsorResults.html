@@ -25,10 +25,10 @@
         border-color: var(--main-theme-1);
     }
 
-    .back-btn {
+    #side-hover {
         position: fixed;
         z-index: 999;
-        transform: translateX(-200%);
+        transform: translateX(-150%);
     }
 
     #searchbar {
@@ -51,16 +51,26 @@
         {% endfor %}
         </select>
         <button type="submit" class="tfbutton" id="searchButton">Search</button>
-    </form>
+        </form>
         <hr>
         <div id="results">
-        <input class="tfbutton back-btn" type="button" value="Go Back" onclick="history.back(-1)">
+            <div id="side-hover">
+                <input class="tfbutton back-btn" type="button" value="Go Back" onclick="history.back(-1)">
+                <br>
+                <label for="sort">Sort on:</label>
+                <select name="sort" id="sort">
+                    <option class="opt" selected="selected">Choose</option>
+                    <option class="opt">Price</option>
+                    <option class="opt">Name</option>
+                </select>
+
+            </div>
         {% for result in results %}
         {% if loop.index0 % 3 == 0 %}
         <div class="row">
         {% endif %}
             <div class="one-third">
-                <div class="card">
+                <div class="card" name="{{ result['title'] }}" data-price="{{ result['price'] }}">
                     <img class="card-img-top" src="{{ result['Images'] }}">
                     <div class="card-body">
                         <h5><strong>{{ result['title'][0:trunc] }}</strong></h5>

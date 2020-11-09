@@ -43,7 +43,9 @@ def permissionCheck(allowedRole):
 
     try:
         userInfo.populate(session['userInfo']['properties']['user'])
-            
+        if not session['shoppingCart']:
+            session['shoppingCart'] = []
+
     except Exception as e:
         session['logged_in'] = False
         return redirect(url_for('home'))

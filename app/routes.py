@@ -43,7 +43,7 @@ def permissionCheck(allowedRole):
 
     try:
         userInfo.populate(session['userInfo']['properties']['user'])
-            
+
     except Exception as e:
         session['logged_in'] = False
         return redirect(url_for('home'))
@@ -155,12 +155,11 @@ def do_admin_login():
     if not username_exist(username):
         flash('Incorrect login credentials!')
     elif not isActive(username):
-        flash("This account has been disabled! Please contact us if you think this is a mistake")
+        flash("This account has been disabled! Please contact us if you think this is a mistake.")
     elif username in suspendedUsers:
         flash('Your account is currently suspended! Please contact us if you think this is a mistake.')
     else:
         current_hash = get_password(username)
-        print(current_hash, check_password_hash(current_hash, pwd))
         if check_password_hash(current_hash, pwd):
             session['logged_in'] = True
             
@@ -220,7 +219,6 @@ def signup():
            
             if not sponsor == "NULL":
                 try:
-                    print(sponsor)
                     newDriver.apply_to_sponsor(int(sponsor))
                 except:
                     flash("No sponsor found!")
@@ -277,10 +275,12 @@ def driverProfile():
 def driverCart():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-"""    userna = session['userInfo']['properties']['user']
-    cartResults = getCart(userna)
-    return render_template('driver/driverCart.html', results = cartResults)
-"""   
+
+    def getProductInfo(id):
+        itemInfo = Admin().getProductInfo(id)
+        return itemInfo
+    
+    return render_template('driver/driverCart.html', getProductInfo = getProductInfo)
 
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
@@ -344,7 +344,6 @@ def sponsorViewDriver():
 
     currSponsor.populate(sponsor)
     applications = currSponsor.view_applications()
-    print(applications)
 
     return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, applications = applications, suspendedUsers=suspendedUsers, sponsor=sponsor)
 
@@ -506,11 +505,9 @@ def settings():
                 oldPwd = request.form['old_pass']
                 currentHash = get_password(session['userInfo']['properties']['user'])
                 if not check_password_hash(currentHash, oldPwd):
-                    print(oldPwd)
                     flash("Wrong old password!")
                     return render_template(session['userInfo']['properties']['role'] + "/settings.html")
                 pwd = generate_password_hash(request.form['pass'], 'sha256')
-                print(pwd)
                 userInfo.update_info({'pwd': pwd})
                 return render_template(userInfo.getRole() + "/settings.html")
 
@@ -571,33 +568,25 @@ def server_error(e):
 
 @app.route("/acceptapp", methods=["GET","POST"])
 def acceptapp():
-    print("made it")
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     sponsorname = data[1].split("=")
 
     sponsor = Sponsor()
-    print(sponsorname[1])
     sponsor.populate(sponsorname[1])
-    print(sponsor.__dict__)
 
     sponsor.accept_application(user[1].strip('+'))
-    print(user[1].strip('+'))
     return ('', 204)
 
 @app.route("/rejectapp", methods=["GET","POST"])
 def rejectapp():
-    print("made it")
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     sponsorname = data[1].split("=")
 
     sponsor = Sponsor()
-    print(sponsorname[1])
     sponsor.populate(sponsorname[1])
-    print(sponsor.__dict__)
     sponsor.decline_application(user[1].strip('+'))
-    print(user[1].strip('+'))
     return ('', 204)
 
 @app.route("/suspend", methods=["GET","POST"])
@@ -685,6 +674,37 @@ def sendmessage():
         user.populate(username)
         user.send_message(reciever[1].strip('+'), message[1].replace('+', " "))
 
+    return ('', 204)
+
+@app.route("/addToCart", methods=["GET","POST"])
+def addToCart():
+    data = request.get_data().decode("utf-8").split("&")
+    id = data[0].split("=")[1]
+
+    if not 'shoppingCart' in session:
+        session['shoppingCart'] = dict()
+    
+    if id in session['shoppingCart']:
+        session['shoppingCart'][id] += 1
+    
+    else:
+        session['shoppingCart'][id] = 1
+
+    session.modified = True
+
+    return ('', 204)
+
+@app.route("/removeFromCart", methods=["GET","POST"])
+def removeFromCart():
+    data = request.get_data().decode("utf-8").split("&")
+    id = data[0].split("=")[1]
+    session['shoppingCart'].pop(id)
+    session.modified = True
+    return ('', 204)
+
+@app.route("/checkout", methods=["GET","POST"])
+def checkout():
+    #Todo
     return ('', 204)
 
 @app.route("/sendto", methods=["GET","POST"])

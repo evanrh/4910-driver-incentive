@@ -592,6 +592,18 @@ class Admin(AbsUser):
             #self.database.close()
         except Exception as e:
             raise Exception(e)
+    
+    def getProductInfo(self, id):
+        query = 'SELECT name,price, img_url FROM product WHERE product_id = %s'
+        val = (id)
+
+        try:
+            data = self.database.exec(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+        datalist = list(data[0])
+        return datalist
 
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:

@@ -22,4 +22,4 @@ $(function() {
         data: {'user': user, 'recipient': recipient, 'message': message}
       })
     });
-  });
+});

@@ -1,6 +1,6 @@
 import mysql.connector
 import datetime
-from .db_users import getConnection, getNewConnection
+#from .db_users import getConnection, getNewConnection
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -259,9 +259,9 @@ def product_search(search, spon_id, mylist, order):
 
     #for loop to add as many spon_ids to search
 #    print(spon_id[1])    
-    multigenrelong = "SELECT name,price,rating, description, img_url FROM product WHERE available = 1 AND ("
-
-    multigenrelong += "sponsor_id= '"+str(spon_id)+"')"
+    multigenrelong = "SELECT name,price,rating, description, img_url FROM product WHERE available = 1"
+    if(str(spon_id) != 'Any'):
+        multigenrelong += " AND (sponsor_id= '"+str(spon_id)+"')"
 
     if mylist != "None":
         multigenrelong += " AND Genre = '"+mylist+"'"
@@ -320,7 +320,31 @@ def product_search(search, spon_id, mylist, order):
 }
         products.append(prod)
 #    finalprod["product_info"] = products
+#    if(products[0]['rating'] == None):
+#        results[0]['rating'] = -1
+
+    for row in (0,len(products)-1):
+        if products[row]['rating'] == None:
+            products[row]['rating'] = -1
+        print(products[row])
+        products[row]['rating'] = round(products[row]['rating'])
+
     return products
+
+
+"""David: "Goodbye, my children :'("
+def addCart(product,userna):
+    cursor.execute("INSERT INTO cart (UserName, prod_name) VALUES ('"+userna+"', '"+product+"')")
+    database.commit()
+
+def getCart(userna):
+    cursor.execute("SELECT prod_name FROM cart WHERE UserName = '"+userna+"'")
+    got = cursor.fetchall();
+    returninfo = [''.join(i) for i in got]
+    print(returninfo)
+    return returninfo
+"""
+
 
 def getgenres():
     cursor.execute("SELECT DISTINCT Genre FROM product")
@@ -415,6 +439,22 @@ def recommend(userna):
     return(returninfo)
 #    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE ")
 
+def getprodinfo(pid):
+    cursor.execute("SELECT name,price, img_url FROM product WHERE product_id = '"+str(pid)+"'")
+    got = cursor.fetchall()
+    listt = [''.join(str(i)) for i in got] 
+    for i in range(0, len(listt)):
+        listt[i] = listt[i].replace("(","")
+        listt[i] = listt[i].replace(")","")
+        listt[i] = listt[i].replace("[","")
+        listt[i] = listt[i].replace("]","")
+        listt[i] = listt[i].replace(",","")
+    print(listt[0])
+    returninfo = listt[0].split()
+    print(returninfo[2])
+    return listt
+
+
 def getpopitems():
     cursor.execute("SELECT Product_ID FROM   Product_Orders GROUP BY Product_ID ORDER BY COUNT(*) DESC ")
     poptuple = cursor.fetchall()
@@ -485,9 +525,12 @@ if __name__ == "__main__":
     print("David recoo\n")
     recommend("testdrive")
     getpopitems()
-    """
     product_search(" ", "3", "None", "pricedown")
 
+
+    """
+#    addCart("socks")
+    getprodinfo(10)
     """
     print("David Search\n")
     search = "Bike Tool: car: Luxury: sponge priceup"

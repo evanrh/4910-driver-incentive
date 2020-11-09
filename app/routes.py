@@ -759,33 +759,8 @@ def productpage():
 
     print(results[0]['name'])
     return render_template('driver/driverProduct.html', results = results[0])
-"""David: "Goodbye Children :'("
-@app.route("/buyme", methods=["GET","POST"])
-def buyme():
-    if request.method == 'POST':
-        form = request.form
-        buy = form['buy']
-    #add to cart
-        if buy:
-            userna = session['userInfo']['properties']['user']
-            addCart(buy, userna)
-    #get cart from db
-            cartResults = getCart(userna)
-            got = {}
-            for name in cartResults:
-                got = (product_search(name, "Any", "None", "priceup"))
-            print(got[0]['name'])    
-            return render_template('driver/driverCart.html', results = cartResults)
-           
-@app.route("/checkout", methods=["GET","POST"])
-def checkout():
-    userna = session['userInfo']['properties']['user']
-    cartResults = getCart(userna)      
-     
 
-"""
 
-#   return render_template('driver/driverCheckout.html')
 
 
 

@@ -1,10 +1,13 @@
-from flask import url_for, redirect, request
+from flask import url_for, redirect, request, session
 from app.auth import AdminAuth
 from app import app
+from app.functions import *
 import json
 
 # TODO
 # Add JSON template for command updates
+
+CMDS = {'restart': restart}
 
 @app.route('/', methods=['POST'])
 def index():
@@ -30,7 +33,16 @@ def commands():
         cmd = data['command']
 
         with AdminAuth(user, pwd) as auth:
-            if auth.check_username() and auth.check_password():
+            token = auth.check_credentials()
+            if token:
+                session['token'] = token
+                # Perform command
+
+                if cmd in CMDS.keys():
+                    CMDS[cmd]()
+                    return json.dumps({'message': 'Command ran'})
+                else:
+                    return json.dumps({'message': 'Bad command'})
                 return json.dumps({'message': 'Doing good so far'})
             else:
                 return json.dumps({'message': 'Unauthorized'})

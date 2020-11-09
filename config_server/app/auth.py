@@ -1,5 +1,5 @@
-from mysql.connector import connect
 from werkzeug.security import check_password_hash
+import requests as r
 import os
 
 class AdminAuth():
@@ -8,28 +8,21 @@ class AdminAuth():
         self.pwd = pwd
 
     def __enter__(self):
-        self.database = connect(host = os.getenv('DB_HOST'),
-                                database = os.getenv('DB_NAME'),
-                                user = os.getenv('DB_USER'),
-                                password = os.getenv('DB_PASS')
-                                )
-        self.cursor = self.database.cursor()
+        self.url = os.getenv('API_URL')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.cursor.close()
-        self.database.close()
+        pass
         
-    def check_username(self):
-        sql = "SELECT * FROM users WHERE UserName = '{}'".format(self.user)
-        self.cursor.execute(sql)
-        row = self.cursor.fetchall()
-        return len(row) > 0
-    def check_password(self):
-        sql = "SELECT pwd FROM admin WHERE user = '{}'".format(self.user)
-        self.cursor.execute(sql)
-        row = self.cursor.fetchone()
-        
-        curHash = row[0]
-        return check_password_hash(curHash, self.pwd)
+    def check_credentials(self):
+        data = {'username': self.user, 'password': self.pwd}
+        response = r.post(self.url, json=data)
 
+        try:
+            ret = response.json()
+            if ret['message'] == 'success':
+                return ret['content']['token']
+            else:
+                return None
+        except ValueError:
+            print("Error loading JSON")

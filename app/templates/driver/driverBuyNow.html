@@ -1,8 +1,8 @@
 
 {% extends "driver/driverBase.html" %}
-
+<!--<head> <script src="https://www.google.com/recaptcha/api.js"></script> </head>-->
 {% block driverContent %}
-	<h1>Are you sure you want to buy: {{results['name']}}? </h1>
+	<h1>Are you sure you want to quick buy {{results['name']}}? </h1>
 
 
 	<div>
@@ -10,43 +10,26 @@
 	</div>
 	<p> {{results['description']}}</p>
 	<p> ${{results['price']}}</p>
-	<form action="/recipt" method="POST">
+	<form action="/buynowrecipt" method="POST">
 		<div>
 			<button id='{{results['name']}}' type="submit"  name='buy' value="{{results['name']}}">Yes, Buy Now!</button>
 		</div>
 	<div>
 	</form>
-	<!--CAPTCHA, LATER USE
-	<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSrBwCJZnsgsZIj9s2D6sdRBbRMzEeZfwYwzQ&usqp=CAU">
-	<div>
-	<form onsubmit="fakeCAP">
-	<input type="test" id="string">
-	<input type="submit" value="Submit">
-	</div>
-	</div>
-	<span id="CAPError"> </span>
-	</form>
-	-->
+	
+
+<!--<button class="g-recaptcha" 
+        data-sitekey="6LfSEOEZAAAAAPFSA6ZfYrGBUuRo8BqcYJ-JuYML" 
+        data-callback='onSubmit' 
+	data-action='submit'>Submit</button>-->
 {% endblock %}
+{%block footer%}
 <!--
-<script>
-	function fakeCAP(){
-		var x, text;
-		x = document.getElementbyId("string").value;
+ <script>
+   function onSubmit(token) {
+     document.getElementById("demo-form").submit();
+   }
+ </script>
+ -->
 
-		if(x === "qGphJ"){
-			alert("CAPTCHA passed")
-			text = "CAPTCHA passed";
-
-		}else{
-			alert("Enter the correct string")
-			text = "Enter the correct string";
-		}
-
-			
-
-
-	}
-
-
-</script>
+{%endblock%}

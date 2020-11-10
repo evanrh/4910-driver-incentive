@@ -259,7 +259,7 @@ def product_search(search, spon_id, mylist, order):
 
     #for loop to add as many spon_ids to search
 #    print(spon_id[1])    
-    multigenrelong = "SELECT name,price,rating, description, img_url FROM product WHERE available = 1"
+    multigenrelong = "SELECT name,price,rating, description, img_url, product_id FROM product WHERE available = 1"
     if(str(spon_id) != 'Any'):
         multigenrelong += " AND (sponsor_id= '"+str(spon_id)+"')"
 
@@ -316,8 +316,7 @@ def product_search(search, spon_id, mylist, order):
 
     products = []
     for row in got:
-        prod = {"name":row[0], "price":row[1], "rating":row[2], "description":row[3], "img_url":row[4]
-}
+        prod = {"name":row[0], "price":row[1], "rating":row[2], "description":row[3], "img_url":row[4], "id":row[5]}
         products.append(prod)
 #    finalprod["product_info"] = products
 #    if(products[0]['rating'] == None):
@@ -330,6 +329,12 @@ def product_search(search, spon_id, mylist, order):
         products[row]['rating'] = round(products[row]['rating'])
 
     return products
+
+
+def updateproductorder(uid, pid, rating):
+    cursor.execute("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
+    database.commit();
+
 
 
 """David: "Goodbye, my children :'("

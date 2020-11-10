@@ -792,8 +792,8 @@ def buynow():
 
     return render_template('driver/driverBuyNow.html', results = results[0])
      
-@app.route("/recipt", methods=["GET", "POST"])
-def recipt():
+@app.route("/buynowrecipt", methods=["GET", "POST"])
+def buynowrecipt():
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
@@ -806,8 +806,25 @@ def recipt():
     userId = session['userInfo']['properties']['id']
     Davidsubpoints(userId, results[0]['price'], sponsorId)   
     print(userId, results[0]['price'], sponsorId)
+     
+    return render_template('driver/driverBuyNowRecipt.html', results = results[0])
+@app.route("/thanks", methods=["GET","POST"])
+def thanks():
 
-    return render_template('driver/driverRecipt.html', results = results[0])
+
+
+    userId = session['userInfo']['properties']['id']
+    if request.method == "POST":
+        form = request.form
+        num = form['review']
+        pid = form['product']
+
+
+    print(num)
+    print(pid)
+    print(userId)
+    updateproductorder(userId, pid, num)
+    return render_template('driver/driverThanks.html')
 
 
 

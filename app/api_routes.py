@@ -1,10 +1,11 @@
 from flask_restx import Resource, fields
 from flask_restx import reqparse
 from flask import request
-from app import api
-from app import app
+from werkzeug.security import check_password_hash
+from app import api, app, admin_api
 from app.products.catalog import CatalogController, ItemInDB
 from app.database.db_users import *
+from app.database.db_functions import get_table_id, get_password
 from itsdangerous import (TimedJSONWebSignatureSerializer
                             as Serializer, BadSignature, SignatureExpired)
 from functools import wraps
@@ -15,12 +16,16 @@ def generate_auth_token(sponsor_username, expiration = 3600):
     s = Serializer(app.config['SECRET_KEY'], expires_in = expiration)
     db = getConnection()
     query = "SELECT sponsor_id FROM sponsor WHERE user=%s"
-    results = db.query(query, (sponsor_username, ))
+    results = db.exec(query, (sponsor_username, ))
+    del db
     if results:
         return s.dumps({'id': results[0][0]})
     else:
         return None
 
+def generate_admin_token(aid, expiration=3600):
+    s = Serializer(app.config['SECRET_KEY'], expires_in = expiration)
+    return s.dumps({'id': aid})
 # Check if token is valid
 def verify_auth_token(token):
     # Fetch token from database
@@ -87,6 +92,7 @@ class SponsorCatalog(Resource):
         cont = CatalogController()
         out = cont.fetch_catalog_items(id)
         print(out)
+        del cont
         return out
 
     @token_required
@@ -97,6 +103,7 @@ class SponsorCatalog(Resource):
         cont = CatalogController()
         try:
             added = cont.insert(item, id)
+            del cont
 
             if added:
                 return {'message': 'Item added'}, 200
@@ -106,6 +113,7 @@ class SponsorCatalog(Resource):
         except ItemInDB:
             return {'message': 'Item already in database'}, 400
             
+        del cont
         if added:
             return {'message': 'Item added'}, 200
         else:
@@ -118,6 +126,7 @@ class SponsorCatalog(Resource):
         listing = api.payload['listing_id']
         cont = CatalogController()
         val = cont.remove(id, listing)
+        del cont
         if val:
             return {'message': 'Item removed'}
         else:
@@ -131,3 +140,20 @@ class SponsorAPIAuth(Resource):
             return {'token': token.decode('ascii')}, 200
         else:
             return {'message': 'Sponsor name not found'}, 400
+
+@admin_api.route('/auth')
+class AdminAPIAuth(Resource):
+    @admin_api.expect(admin_api.model('Credentials', {'username': fields.String, 'password': fields.String}))
+    def post(self):
+        data = api.payload
+        uid, role = get_table_id(data['username'])
+        if role != 'admin':
+            return {'message': 'Unauthorized'}, 401
+
+        curHash = get_password(data['username'])
+
+        if check_password_hash(curHash, data['password']):
+            token = generate_admin_token(uid)
+            return {'message': 'success', 'content': {'username': data['username'], 'token': token.decode('ascii')}}
+        else:
+            return {'message': 'Incorrect credentials'}, 200

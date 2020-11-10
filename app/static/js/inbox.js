@@ -1,19 +1,14 @@
-var input = document.querySelector('#sendmessage');
-var textarea = document.querySelector('.send-message');
+$("#sendmessage").click(function(){
+  //location.reload();
+});
 
-input.addEventListener('click', function () {
-    location.reload();
-}, false);
+$("#showcompose").click(function(){
+  $("#hide").toggle();
+});
 
-function showCompose()
-{
-    element = document.getElementById('hide')
-    if (element.style.display == 'none'){
-        element.style.display = 'block';
-    } else {
-        element.style.display = 'none';
-    }
-}
+$("#report").click(function(){
+  $("#hide2").toggle();
+});
 
 $(function() {
     $(document).on('click', '#sendTomessage', function(e) {
@@ -27,4 +22,4 @@ $(function() {
         data: {'user': user, 'recipient': recipient, 'message': message}
       })
     });
-  });
+});

@@ -2,8 +2,8 @@
 .conversation-wrap{
     width:15%;
     padding:0;
-    max-height: 700px;
-    height:100%;
+    max-height: 600px;
+    height:60%;
     overflow: auto;
 }
 
@@ -28,6 +28,7 @@
  }
 
 .msg{
+    height: 83px;
     padding:10px;
     margin:0;
 }
@@ -106,3 +107,11 @@
 	border-bottom-left-radius: 5px 5px;
 	background-repeat: no-repeat;
 }
+
+.dot {
+    height: 15px;
+    width: 15px;
+    float: left;
+    background-color: var(--main-theme2);
+    border-radius: 50%;
+  }

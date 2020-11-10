@@ -3,10 +3,11 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database.db_functions import *
 from app.database.db_users import *
-from app.database.db_connection import DB_Connection
+from app.database.db_connection import *
 from flask.json import JSONEncoder
 from tempfile import TemporaryFile
 from app.products.etsy_driver import EtsyController
+from app.products.catalog import CatalogController
 import json
 import time
 
@@ -25,6 +26,9 @@ app.json_encoder = CustomJSONEncoder
 # Chooses a class to use for User
 userInfo = Driver()
 
+#Message for alerts
+Message = ""
+
 def permissionCheck(allowedRole):
     global userInfo
     suspendedUsers = Admin().get_suspended_users()
@@ -39,7 +43,7 @@ def permissionCheck(allowedRole):
 
     try:
         userInfo.populate(session['userInfo']['properties']['user'])
-            
+
     except Exception as e:
         session['logged_in'] = False
         return redirect(url_for('home'))
@@ -70,6 +74,7 @@ def upload_file(f):
 def home():
     # Using the global class to access data
     global userInfo
+    global Message
 
     if not session.get('logged_in') or not session.get('userInfo'):
         return render_template('landing/login.html')
@@ -88,27 +93,49 @@ def home():
                 genres = getgenres()
                 rec = recommend(userna)
                 pass
-            if(userna == "testdrive"):
-                Message = "You are on thin ice bud!"
+            
+
+            currSponsor = Sponsor()
+            if session['userInfo']['properties']['selectedSponsor'] == None:
+                sponsorId = None
+            else:
+                sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
+            inbox_list = userInfo.get_inbox_list()
+            if 'System Management' in inbox_list and len(inbox_list) == 1:
+                Message = "You have an important message from System Management"
+            elif 'System Management' in inbox_list and len(inbox_list > 1):
+                Message += ' and ' + str(len(inbox_list) - 1) + ' other unread message'
+            elif len(inbox_list) > 0:
+                Message = "You have " + str(len(inbox_list)) + ' unread messages'
             else:
                 Message = ""
 
-            spon_id_dic = session['userInfo']['properties']['sponsors']
-            spon_id_list = list(spon_id_dic.keys())
 
-            numproducts = []
             # Fix sponsorless driver issue
-            if spon_id_list:
-                numproducts = getnumproducts(spon_id_list)
+            if sponsorId:
+                numproducts = getnumproducts(sponsorId)
+            else:
+                numproducts = 0
             popitems = getpopitems()
-            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems)
+            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
-            return render_template('sponsor/sponsorHome.html')
+            inbox_list = userInfo.get_inbox_list()
+            if len(inbox_list) > 0:
+                Message = "You have " + str(len(inbox_list)) + ' unread messages'
+            else:
+                Message = ""
+            return render_template('sponsor/sponsorHome.html', head = Message)
 
         if userInfo.getRole() == "admin":
-            return render_template('admin/adminHome.html')
+            inbox_list = userInfo.get_inbox_list()
+            if len(inbox_list) > 0:
+                Message = "You have " + str(len(inbox_list)) + ' unread messages'
+            else:
+                Message = ""
+            return render_template('admin/adminHome.html', head = Message)
 
     return render_template('landing/login.html')
 
@@ -117,7 +144,8 @@ def home():
 def do_admin_login():
     # Using the global class to access data
     global userInfo
-    suspendedUsers = Admin().get_suspended_users()
+    admin = Admin()
+    suspendedUsers = admin.get_suspended_users()
 
     # Get user input from web page
     username = request.form['username']
@@ -126,6 +154,8 @@ def do_admin_login():
     # Do basic login verification
     if not username_exist(username):
         flash('Incorrect login credentials!')
+    elif not isActive(username):
+        flash("This account has been disabled! Please contact us if you think this is a mistake.")
     elif username in suspendedUsers:
         flash('Your account is currently suspended! Please contact us if you think this is a mistake.')
     else:
@@ -189,7 +219,6 @@ def signup():
            
             if not sponsor == "NULL":
                 try:
-                    print(sponsor)
                     newDriver.apply_to_sponsor(int(sponsor))
                 except:
                     flash("No sponsor found!")
@@ -199,7 +228,6 @@ def signup():
         else:
            flash('Username taken!')
 
-    # TODO Add in password hash generation to sign up
     return render_template('landing/signup.html')
 
 @app.route("/about")
@@ -247,7 +275,12 @@ def driverProfile():
 def driverCart():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('driver/driverCart.html')
+
+    def getProductInfo(id):
+        itemInfo = Admin().getProductInfo(id)
+        return itemInfo
+    
+    return render_template('driver/driverCart.html', getProductInfo = getProductInfo)
 
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
@@ -311,7 +344,6 @@ def sponsorViewDriver():
 
     currSponsor.populate(sponsor)
     applications = currSponsor.view_applications()
-    print(applications)
 
     return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, applications = applications, suspendedUsers=suspendedUsers, sponsor=sponsor)
 
@@ -362,14 +394,18 @@ def adminManageAcc():
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
     sponsorList = Sponsor().get_users()
-    sponsorlessDrivers = Admin().get_sponsorless_drivers()
-
+    sponsorlessDrivers = admin.get_sponsorless_drivers()
+    disabledDrivers = admin.get_disabled_drivers()
+    disabledSponsors = admin.get_disabled_sponsors()
+    disabledAdmins = admin.get_disabled_admins()
     def getDriverList(sponsorName):
         currSponsor = Sponsor()
         currSponsor.populate(sponsorName)
         return currSponsor.view_drivers()
     
-    return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, suspendedUsers = suspendedUsers, getDriverList = getDriverList, sponsorlessDrivers = sponsorlessDrivers)
+    return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
+                                                        suspendedUsers = suspendedUsers, getDriverList = getDriverList, 
+                                                        sponsorlessDrivers = sponsorlessDrivers, disabled = (disabledDrivers, disabledSponsors, disabledAdmins))
 
 @app.route("/adminNotifications")
 def adminNotifications():
@@ -413,22 +449,30 @@ def inbox(username):
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        inbox_list = currentDriver.get_inbox_list()
+        def mark_as_seen(username):
+            currentDriver.messages_are_seen(username)
 
-        return render_template('driver/driverInbox.html', messages = messages, selectedUser = username)
-    
+        return render_template('driver/driverInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
     if userInfo.getRole() == "sponsor":
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        inbox_list = currentDriver.get_inbox_list()
+        def mark_as_seen(username):
+            currentDriver.messages_are_seen(username)
 
-        return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username)
+        return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
     if userInfo.getRole() == "admin":
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        inbox_list = currentDriver.get_inbox_list()
+        def mark_as_seen(username):
+            currentDriver.messages_are_seen(username)
 
-        return render_template('admin/adminInbox.html', messages = messages, selectedUser = username)
+        return render_template('admin/adminInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
 
 # Settings page
@@ -455,6 +499,16 @@ def settings():
                     return render_template(userInfo.getRole() + "/settings.html")
                 
                 userInfo.update_info(data)
+                return render_template(userInfo.getRole() + "/settings.html")
+
+            elif 'pwd-submit' in request.form.keys():
+                oldPwd = request.form['old_pass']
+                currentHash = get_password(session['userInfo']['properties']['user'])
+                if not check_password_hash(currentHash, oldPwd):
+                    flash("Wrong old password!")
+                    return render_template(session['userInfo']['properties']['role'] + "/settings.html")
+                pwd = generate_password_hash(request.form['pass'], 'sha256')
+                userInfo.update_info({'pwd': pwd})
                 return render_template(userInfo.getRole() + "/settings.html")
 
         if userInfo.getRole() == "driver":
@@ -514,33 +568,25 @@ def server_error(e):
 
 @app.route("/acceptapp", methods=["GET","POST"])
 def acceptapp():
-    print("made it")
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     sponsorname = data[1].split("=")
 
     sponsor = Sponsor()
-    print(sponsorname[1])
     sponsor.populate(sponsorname[1])
-    print(sponsor.__dict__)
 
     sponsor.accept_application(user[1].strip('+'))
-    print(user[1].strip('+'))
     return ('', 204)
 
 @app.route("/rejectapp", methods=["GET","POST"])
 def rejectapp():
-    print("made it")
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     sponsorname = data[1].split("=")
 
     sponsor = Sponsor()
-    print(sponsorname[1])
     sponsor.populate(sponsorname[1])
-    print(sponsor.__dict__)
     sponsor.decline_application(user[1].strip('+'))
-    print(user[1].strip('+'))
     return ('', 204)
 
 @app.route("/suspend", methods=["GET","POST"])
@@ -562,6 +608,13 @@ def remove():
     user = request.get_data().decode("utf-8") 
     user = user.strip()
     Admin().remove_user(user)
+    return ('', 204)
+
+@app.route("/reactivate", methods=["GET","POST"])
+def reactivate():
+    user = request.get_data().decode("utf-8") 
+    user = user.strip()
+    Admin().reactivate_user(user)
     return ('', 204)
 
 @app.route("/removeFromSponsor", methods=["GET","POST"])
@@ -616,10 +669,42 @@ def sendmessage():
         user = Driver()
     
     username = sender[1].strip('+')
-    user.populate(username)
 
-    user.send_message(reciever[1].strip('+'), message[1].replace('+', " "))
+    if not message == "":
+        user.populate(username)
+        user.send_message(reciever[1].strip('+'), message[1].replace('+', " "))
 
+    return ('', 204)
+
+@app.route("/addToCart", methods=["GET","POST"])
+def addToCart():
+    data = request.get_data().decode("utf-8").split("&")
+    id = data[0].split("=")[1]
+
+    if not 'shoppingCart' in session:
+        session['shoppingCart'] = dict()
+    
+    if id in session['shoppingCart']:
+        session['shoppingCart'][id] += 1
+    
+    else:
+        session['shoppingCart'][id] = 1
+
+    session.modified = True
+
+    return ('', 204)
+
+@app.route("/removeFromCart", methods=["GET","POST"])
+def removeFromCart():
+    data = request.get_data().decode("utf-8").split("&")
+    id = data[0].split("=")[1]
+    session['shoppingCart'].pop(id)
+    session.modified = True
+    return ('', 204)
+
+@app.route("/checkout", methods=["GET","POST"])
+def checkout():
+    #Todo
     return ('', 204)
 
 @app.route("/sendto", methods=["GET","POST"])
@@ -639,10 +724,10 @@ def sendto():
         user = Driver()
     
     username = sender[1].strip('+')
-    user.populate(username)
-    print(username)
-    
-    user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
+
+    if Admin().username_exist(receiver) and not message == "":
+        user.populate(username)
+        user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
 
     return ('', 204)
 
@@ -651,8 +736,10 @@ def productsearch():
     search = "no input"
     results = "blah blah blah blah"  
     limitedresults = [" "] * 50
-    spon_id_dic = session['userInfo']['properties']['sponsors']
-    spon_id_list = list(spon_id_dic.keys())
+
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
 
     if request.method == 'POST':
         form = request.form
@@ -660,17 +747,85 @@ def productsearch():
         mylist = form['mylist']
         order = form['orderby']
         amount = int(form['amount'])
-        results = product_search(search, spon_id_list, mylist, order)
+        results = product_search(search, sponsorId, mylist, order)
     
     count = 0; 
-    for i in results:
-        if(count < amount):
-            limitedresults[count] = str(i)
+#    print(results)
+    limitedresults = []
+
+    for i in range(0, amount):
+        if(count < len(results)):
+            limitedresults.append(results[i])
         else:
             break
         count += 1
+#    print(results)
+#    print(limitedresults)
     numresults = len(results) 
-    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults, displaynum = amount)
+    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults)
+
+
+#Very much a building block, may scrap if need be
+@app.route("/productpage", methods=["GET","POST"])
+def productpage():
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
+    if request.method == 'POST':
+        form = request.form
+        got = form['productname']
+        results = product_search(got, sponsorId, "None", "priceup" )
+
+#    print(results[0]['name'])
+        return render_template('driver/driverProduct.html', results = results[0])
+
+@app.route("/buynow", methods=["GET", "POST"])
+def buynow():
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
+
+    if request.method == 'POST':
+        form = request.form
+        got = form['buy']
+        results = product_search(got, sponsorId, "None", "priceup" )
+
+    return render_template('driver/driverBuyNow.html', results = results[0])
+     
+@app.route("/buynowrecipt", methods=["GET", "POST"])
+def buynowrecipt():
+    currSponsor = Sponsor()
+    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+
+
+    if request.method == 'POST':
+        form = request.form
+        got = form['buy']
+        results = product_search(got, sponsorId, "None", "priceup" )
+
+    userId = session['userInfo']['properties']['id']
+    Davidsubpoints(userId, results[0]['price'], sponsorId)   
+    print(userId, results[0]['price'], sponsorId)
+     
+    return render_template('driver/driverBuyNowRecipt.html', results = results[0])
+@app.route("/thanks", methods=["GET","POST"])
+def thanks():
+
+
+
+    userId = session['userInfo']['properties']['id']
+    if request.method == "POST":
+        form = request.form
+        num = form['review']
+        pid = form['product']
+
+
+    print(num)
+    print(pid)
+    print(userId)
+    updateproductorder(userId, pid, num)
+    return render_template('driver/driverThanks.html')
+
 
 
 @app.route("/productAJAX", methods=["POST"])
@@ -679,6 +834,9 @@ def productAJAX():
     search = data['search']
     return json.dumps(get_products_by_name(search))
 
+# IMPORTANT: Route becoming deprecated
+# Evan: I changed the location of the edit button to use updateAccount so that it can be shared by
+# both the admins and the sponsors
 @app.route("/updateDriver/<username>", methods=["GET","POST"])
 def updateDriver(username):
     """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
@@ -699,7 +857,55 @@ def updateDriver(username):
         flash("Information updated!")
         return json.dumps({'status': 'OK', 'user': username})
 
-    return render_template("sponsor/sponsorEditDriver.html", driver=driverObj)
+    return render_template("sponsor/sponsorEditDriver.html", user=driverObj)
+
+@app.route('/updateAccount/<username>', methods=['GET','POST'])
+def updateAccount(username):
+    """ Route for an admin to update any user account. Figures out role from table and generates a template
+        accordingly
+    """
+    def posted(username, user):
+        if request.method == 'POST':
+            data = request.json
+            if 'pwd' in data.keys():
+                data['pwd'] = generate_password_hash(data['pwd'], 'sha256')
+            # Data should be formatted in the way update_info expects
+            user.update_info(data)
+            return json.dumps({'status': 'OK', 'user': username})
+
+    sessRole = session['userInfo']['properties']['role']
+    print(sessRole)
+    if sessRole == 'admin':
+        uid, role = get_table_id(username)
+        user = None
+        if role == 'driver':
+            user = Driver()
+        elif role == 'sponsor':
+            user = Sponsor()
+        else:
+            user = Admin()
+        user.populate(username)
+        posted(username, user)
+        return render_template('admin/adminUpdateAccount.html', user=user, role=role)
+
+    elif sessRole == 'sponsor':
+        allDrivers = userInfo.view_drivers()
+        driver = list(filter(lambda d: d[3] == username, allDrivers))
+
+        if driver:
+            user = Driver()
+            user.populate(username)
+            posted(username, user)
+
+            return render_template('sponsor/sponsorEditDriver.html', user=user, sponsor=session['userInfo']['properties']['user'], points=driver[0][4])
+        else:
+            flash('Driver not in your list!')
+            return redirect(url_for('sponsorViewDriver'))
+        
+    else:
+        flash('Please login before trying to edit accounts')
+        return redirect(url_for('home'))
+
 
 # Sponsor Catalog Additions Search
 @app.route('/sponsorSearch', methods=['GET', 'POST'])
@@ -713,3 +919,33 @@ def sponsorSearch():
         cont.limit = limit
         results = cont.get_products_keywords(search)
         return render_template('sponsor/sponsorResults.html', results=results) 
+
+# Admin view sponsor catalog
+@app.route('/catalog/<sponsor>', methods=['GET', 'POST'])
+def catalog(sponsor):
+    if session['userInfo']['properties']['role'] == 'admin':
+        sid, role = get_table_id(sponsor)
+        if role != 'sponsor':
+            return redirect(url_for('home'))
+        cont = CatalogController()
+
+        search = None
+
+        if request.method == 'POST':
+            if request.json:
+                data = request.json
+                listing = data['listing_id']
+                val = cont.remove(sid, listing)
+                message = {'message': 'Item removed' if val else 'Item not removed'}
+                return json.dumps(message)
+
+            else:
+                search = request.form['search']
+
+        items = cont.fetch_catalog_items(sid, search)
+        del cont
+        return render_template('admin/adminViewCatalog.html', results=items['items'], sponsor=sponsor)
+        
+    else:
+        flash('Access not allowed')
+        return redirect(url_for('home'))

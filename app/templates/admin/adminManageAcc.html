@@ -43,18 +43,28 @@
                 <th>User Name</th>
                 <th>First Name</th>
                 <th>Last Name</th>
+                <th></th>
+                <th></th>
+                <th>Send Message</th>
             </tr>
 
             {% for admin in adminList %}
             <tr>
-                <td></td>
+                
+                <td style="padding-left: 30px;"><button name="{{ admin[3] }}" id='edit'><a href="{{ url_for('updateAccount', username=admin[3]) }}">Edit</a></button></td>
                 <td><button name=" {{ admin[3] }} " id='remove' style='color:red;'>X</button></td>
                 <td> {{ admin[3] }} </td>
                 <td> {{ admin[0] }} </td>
                 <td> {{ admin[2] }} </td>
+                <td></td>
+                <td></td>
+                <td>
+                    <input name="{{ admin[3] }}" id="sendmessage{{ admin[3] }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ admin[3] }}' id='sendmessage'>Send</button>
+                </td>
             </tr>
             {% endfor %}
-
+            <tr><td><br></td></tr>
             {% for sponsor in sponsorList %}
                 {% set user = sponsor[1] %}
                 {% set title = sponsor[0] %}
@@ -68,10 +78,11 @@
                     <th>Sponsor ID</th>
                     <th>Suspend</th>
                     <th>Date Joined</th>
+                    <th>Send Message</th>
                 </tr>
 
                 <tr>
-                    <td></td>
+                    <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
                     <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
                     <td> {{ user }} </td>
                     <td> {{ title }} </td>
@@ -82,6 +93,10 @@
                     <td><button name=" {{ user }} " id='suspend'>X</button></td>
                     {% endif %}
                     <td> {{ datejoined }} </td>
+                    <td>
+                        <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                        <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+                    </td>
                 </tr>
 
                 {% if getDriverList(sponsor[1]) %}
@@ -105,7 +120,7 @@
                         {% set points = driver[4] %}
                         {% set datejoined = driver[5] %}
                         <tr>
-                            <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
+                            <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
                             <td><button class="{{ sponsor[1] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
                             <td> {{ user }} </td>
                             <td> {{ first  }} </td>
@@ -126,10 +141,12 @@
                             </td>
                             <td> {{ datejoined }} </td>
                         </tr>
-                    {% endfor %}
+                    {% endfor %}   
+                    <tr><td><br></td></tr>
                 {% endif %}
 
             {% endfor %}
+            <tr><td><br></td></tr>
 
             <tr>
                 <td class='driverRow' style="color:var(--main-theme3);padding-left:0;">Sponsorless Drivers</td>
@@ -148,7 +165,7 @@
             {% set last = driver[2] %}
             {% set datejoined = driver[4] %}
             <tr>
-                <td><button name="{{ user }}" id='edit'><a href="{{ url_for('updateDriver', username=user) }}">Edit</a></button></td>
+                <td><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
                 <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
                 <td> {{ user }} </td>
                 <td> {{ first  }} </td>
@@ -165,6 +182,67 @@
                 </td>
             </tr>
         {% endfor %}
+            <tr><td><br></td></tr>
+        {% if disabled[0] %}
+            <tr>
+                <td class='driverRow' style="color:var(--main-theme3);padding-left:0;">Disabled Drivers</td>
+                <td class='driverRow'>User Name</td>
+                <td class='driverRow'>First Name</td>
+                <td class='driverRow'>Last Name</td>
+                <td class='driverRow'>Date Joined</td>
+                <td class='driverRow'>Reactivate</td>
+            </tr>
+            {% for driver in disabled[0] %}
+            <tr>
+                <td></td>
+                <td> {{ driver[0] }} </td>
+                <td> {{ driver[1] }} </td>
+                <td> {{ driver[2] }} </td>
+                <td> {{ driver[4] }} </td>
+                <td><button name="{{ driver[0] }}" id='reactivate' style='color:green;'>&#10003</button></td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+
+        {% if disabled[1] %}
+            <tr>
+                <td class='driverRow' style="color:var(--main-theme3);padding-left:0;">Disabled Sponsors</td>
+                <td class='driverRow'>User Name</td>
+                <td class='driverRow'>Title</td>
+                <td class='driverRow'>Date Joined</td>
+                <td class='driverRow'>Reactivate</td>
+            </tr>
+            {% for sponsor in disabled[1] %}
+            <tr>
+                <td></td>
+                <td> {{ sponsor[0] }} </td>
+                <td> {{ sponsor[1] }} </td>
+                <td> {{ sponsor[3] }} </td>
+                <td><button name="{{ sponsor[0] }}" id='reactivate' style='color:green;'>&#10003</button></td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+
+        {% if disabled[2] %}
+            <tr>
+                <td class='driverRow' style="color:var(--main-theme3);padding-left:0;">Disabled Admins</td>
+                <td class='driverRow'>User Name</td>
+                <td class='driverRow'>First Name</td>
+                <td class='driverRow'>Last Name</td>
+                <td class='driverRow'>Date Joined</td>
+                <td class='driverRow'>Reactivate</td>
+            </tr>
+            {% for driver in disabled[2] %}
+            <tr>
+                <td></td>
+                <td> {{ driver[0] }} </td>
+                <td> {{ driver[1] }} </td>
+                <td> {{ driver[2] }} </td>
+                <td> {{ driver[4] }} </td>
+                <td><button name="{{ driver[0] }}" id='reactivate' style='color:green;'>&#10003</button></td>
+            </tr>
+            {% endfor %}
+        {% endif %}
     </table>
 </form>
 </div>

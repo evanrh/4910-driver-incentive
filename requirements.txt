@@ -15,6 +15,8 @@ MarkupSafe==1.1.1
 mysql-connector-python==8.0.21
 oauthlib==3.1.0
 protobuf==3.13.0
+PyMySQL==0.10.1
+pymysql-pool==0.3.4
 pyrsistent==0.17.3
 python-dotenv==0.14.0
 pytz==2020.1

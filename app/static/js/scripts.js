@@ -70,6 +70,19 @@ $(function() {
   });
 });
 
+// Reactivate user
+$(function() {
+  $(document).on('click', '#reactivate', function(e) {
+    var user =  $(this).attr("name")
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/reactivate', 
+      type: 'POST', 
+      data: user
+    })
+  });
+});
+
 // Remove user from sponsor
 $(function() {
   $(document).on('click', '#removeFromSponsor', function(e) {
@@ -233,4 +246,128 @@ $(document).ready(function(){
 
 
 
+// updateAccount JS
+var finished = function(response) {
+    console.log("Hot dog");
+    console.log(response);
+    window.location.reload();
+};
+var accUpdatePath = "/updateAccount/";
+$(function() {
+    $(document).on('click', '#update-email', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var email = document.getElementById("email").value;
+        var arr = {'email': email};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update user names
+$(function() {
+    $(document).on('click', '#update-names', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var first_name = document.getElementById("first_name").value;
+        var mid_name = document.getElementById("mid_name").value;
+        var last_name = document.getElementById("last_name").value;
+        var arr = {'first_name': first_name, 'mid_name': mid_name,
+                   'last_name': last_name};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update address
+$(function() {
+    $(document).on('click', '#update-address', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var address = document.getElementById("address").value;
+        var arr = {'address': address};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update phone number
+$(function() {
+    $(document).on('click', '#update-phone', function(e) {
+        var driver = document.getElementById("username").innerText;
+        var phone = document.getElementById("phone").value;
+        var arr = {'phone': phone};
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            url: accUpdatePath + driver,
+            type: 'POST',
+            data: JSON.stringify(arr),
+            success: finished
+        })
+    });
+});
+// Update user password
+$("#update-password").click(function() {
+    var driver = document.getElementById("username").innerText;
+    var pwd = document.getElementById("pwd").value;
+    var conf = document.getElementById("confirm").value;
+    var arr = {'pwd': pwd};
+    if( pwd !== conf ) {
+        console.log("Passwords do not match!");
+        return;
+    }
 
+    $.ajax({
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        url: accUpdatePath + driver,
+        type: 'POST',
+        data: JSON.stringify(arr),
+        success: finished
+    });
+});
+
+// Admin and sponsor sorting routines
+var sort_by_name = (a,b) => {
+        return $(a).attr('name').localeCompare($(b).attr('name'));
+};
+var sort_by_price = (a,b) => {
+    var ap = $(a).data('price');
+    var bp = $(b).data('price');
+    return (ap > bp) ? 1 : (ap == bp) ? 0 : -1;
+};
+
+// Sort items
+$("#sort").on('input',() => {
+    var type = $("#sort option:selected").text();
+    var list = $(".row .one-third .card");
+    if (type == 'Price') {
+        list.sort(sort_by_price);
+    }
+    else if (type == 'Name') {
+        list.sort(sort_by_name);
+    }
+    else {
+        
+    }
+    var results = $('#results');
+    var i = 0;
+    results.children().each((index, elem) => {
+        $(elem).children('.one-third').each((index, e) => {
+            $(e).append(list[i++]);
+        });
+    });
+});

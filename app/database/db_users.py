@@ -1,25 +1,45 @@
 try:
-    from .db_connection import DB_Connection
+    from .db_connection import *
+    from .db_functions import *
 except Exception:
-    from app.database.db_connection import DB_Connection
+    from app.database.db_connection import *
+    from app.database.db_functions import *
 
 import os
 from abc import ABC
 from abc import abstractmethod
 from werkzeug.security import check_password_hash
-from app.database.db_functions import *
 
-connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
+config = {'host': os.getenv('DB_HOST'), 'database': os.getenv('DB_NAME'), 'user': os.getenv('DB_USER'), 'password': os.getenv('DB_PASS'), 'autocommit': True}
+global pool1 
+pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
 
-def getConnection():
-    global connection
-    if not connection:
-        connection = DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
-    return connection
+def getConnection(ex=0):
+    if ex == 1:
+        connection.close()
+        connection = pool1.get_connection()
+        return connection
+        print(pool1.size())
+
+    return pool1.get_connection()
 
 def getNewConnection():
-    return DB_Connection(os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
+    return pool1.get_connection()
     
+def isActive(username):
+    conn = getConnection()
+    sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
+    id = conn.exec(sql)
+    if id[0][0] != None:
+        role =  'driver'
+    elif id[0][1] != None:
+        role =  'sponsor'
+    else:
+        role = 'admin'
+    query = "SELECT active FROM " + role + ' WHERE user = \'{}\''.format(username)
+    active = conn.exec(query)
+    conn.close()
+    return active[0][0] == 1
 
 class AbsUser(ABC):
     DB_HOST = os.getenv('DB_HOST')
@@ -113,7 +133,8 @@ class Admin(AbsUser):
 
     def get_next_id(self):
         query = 'SELECT MAX(admin_id) FROM admin'
-        rows = self.database.query(query)
+        rows = self.database.exec(query)
+        #self.database.close()
         
         if rows[0][0] == None:
             return 1
@@ -123,27 +144,30 @@ class Admin(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         self.properties['END'] = 'NULL'
-        query = 'INSERT INTO admin VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\')'.format(**self.properties)
+        self.properties['active'] = 1
+        query = 'INSERT INTO admin VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{active}\')'.format(**self.properties)
         
         
         try:
-            self.database.insert(query)
+            self.database.exec(query)
             self.add_to_users()
-            self.database.commit()
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def check_password(self, pwd_hash):
         query = "SELECT pwd FROM admin WHERE user=%s"
-        db_pwd = self.database.query(query, self.properties['user'])
+        db_pwd = self.database.exec(query, self.properties['user'])
+        #self.database.close()
 
         return check_password_hash(pwd_hash, db_pwd)
 
     def check_username_available(self):
         query = "SELECT COUNT(*) FROM users WHERE UserName=\"{}\"".format(self.properties['user'])
 
-        out = self.database.query(query) 
+        out = self.database.exec(query)
+        #self.database.close()
         print(out)
         return out[0][0] == 0 or out == None
 
@@ -158,20 +182,24 @@ class Admin(AbsUser):
         query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
 
         try:
-            self.database.insert(query, params=tuple(data.values()))
-            self.database.commit()
+            self.database.exec(query, args=tuple(data.values()))
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT * FROM admin"
+        query = "SELECT * FROM admin WHERE active = 1"
 
         try:
-            out = self.database.query(query)
-            return out
+            out = self.database.exec(query)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
+        if out:
+            return out
+        else:
+            return []
 
     # returns user data as a 2D array in the following format
     # [0][0] = first name
@@ -189,7 +217,8 @@ class Admin(AbsUser):
 
 
         try:
-            data = self.database.query(query, val)
+            data = self.database.exec(query, val)
+            #self.database.close()
             return data
 
         except Exception as e:
@@ -199,7 +228,7 @@ class Admin(AbsUser):
 
         query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
         query = query.format('Admin_ID', self.properties['user'], self.properties['id'])
-        self.database.insert(query)
+        self.database.exec(query)
         self.database.commit()
 
     def setSandbox(self, sandbox):
@@ -218,11 +247,13 @@ class Admin(AbsUser):
         return self.properties['points']
 
     def populate(self, username: str):
+        #self.database = getNewConnection()
         query = 'SELECT first_name, mid_name, last_name, user, admin_id, phone, email, date_join FROM admin WHERE user = %s'
         vals = (username, )
 
         try:
-            data = self.database.query(query, vals)
+            data = self.database.exec(query, vals)
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
@@ -247,9 +278,9 @@ class Admin(AbsUser):
         
         #this will remove suspended driver's whos suspensions are over
         try:
-            self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
-            suspended_user = self.database.query(sql, val)
-            self.database.commit()
+            self.database.exec('DELETE from suspend WHERE date_return <= NOW()')
+            suspended_user = self.database.exec(sql, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
         
@@ -261,7 +292,7 @@ class Admin(AbsUser):
     #this function adds a driver to a suspension list and their length of suspension
     def suspend_user(self, username, year, month, day):
 
-        self.database = getNewConnection()
+        #self.database = getNewConnection()
         if month < 10:
             month = '0' + str(month)
         else:
@@ -275,8 +306,8 @@ class Admin(AbsUser):
         query = 'INSERT INTO suspend VALUES (%s, %s)'
         vals = (username, str_date)
         try:
-            self.database.insert(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -293,39 +324,43 @@ class Admin(AbsUser):
         query = 'UPDATE suspend SET date_return = %s WHERE user = %s'
         vals = (str_date, username)
         try:
-            self.database.insert(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def get_suspended_users(self):
-        self.database = getNewConnection()
-        sus = self.database.query('SELECT user FROM suspend')
+        try:
+            sus = self.database.exec('SELECT user FROM suspend')
+            #self.database.close()
+        except Exception as e:
+            raise Exception(e)
         sus_list = []
-        
-        for s in sus:
-            sus_list.append(s[0])
+    
+        if sus:
+            for s in sus:
+                sus_list.append(s[0])
         return sus_list
 
     def cancel_suspension(self, username):
 
-        self.database = getNewConnection()
+        #self.database = getNewConnection()
         query = 'DELETE FROM suspend WHERE user = %s'
         vals = (username, )
         try:
-            self.database.delete(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
         
 
     def remove_user(self, username):
 
-        self.database = getNewConnection()
+        #self.database = getNewConnection()
         username = str(username).strip()
         sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = \'{}\''.format(username)
         print(sql)
-        id = self.database.query(sql)
+        id = self.database.exec(sql)
         if id[0][0] != None:
             role = 'driver'
         elif id[0][1] != None:
@@ -335,18 +370,9 @@ class Admin(AbsUser):
 
 
         try:
-            self.database.delete('DELETE FROM suspend WHERE user = %s', (username, ))
-            self.database.delete('DELETE FROM users WHERE UserName = \'{}\''.format(username))
-            self.database.delete('DELETE FROM ' + role + ' WHERE user = %s', (username, ))
-            if role == 'driver':
-                id = id[0][0]
-                self.database.delete('DELETE FROM driver_bridge WHERE driver_id = %s', (id, ))
-                self.database.delete('DELETE FROM points_leaderboard WHERE driver_id = %s', (id, ))
-            if role == 'sponsor':
-                id = id[0][1]
-                self.database.delete('DELETE FROM driver_bridge WHERE sponsor_id = {}'.format(id))
-                self.database.delete('DELETE FROM points_leaderboard WHERE sponsor_id = {}'.format(id))
-            self.database.commit()
+            self.database.exec('DELETE FROM suspend WHERE user = %s', (username, ))
+            self.database.exec('UPDATE ' + role + ' SET active = 0 WHERE user = %s', (username, ))
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -357,26 +383,88 @@ class Admin(AbsUser):
         vals = (driver_id, sponsor_id)
     
         try:
-            self.database.insert(bridge_query, vals)
-            self.database.insert(points_query, vals)
+            self.database.exec(bridge_query, vals)
+            self.database.exec(points_query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def get_sponsorless_drivers(self):
-        sql = 'select driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join from driver where driver.driver_id not in (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id)'
+        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id) AND active = 1'
         
         try:
-            data = self.database.query(sql)
+            data = self.database.exec(sql)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
-        return data
+        if data:
+            return data
+        else:
+            return []
+
+    def get_disabled_drivers(self):
+        sql = 'select user, first_name, last_name, driver_id, date_join FROM driver WHERE active = 0'
+        
+        try:
+            data = self.database.exec(sql)
+            #self.database.close()
+        except Exception as e:
+            raise Exception(e)
+        if data:
+            return data
+        else:
+            return []
+    
+    def get_disabled_sponsors(self):
+        sql = 'select user, title, sponsor_id, date_join FROM sponsor WHERE active = 0'
+        
+        try:
+            data = self.database.exec(sql)
+            #self.database.close()
+        except Exception as e:
+            raise Exception(e)
+        if data:
+            return data
+        else:
+            return []
+
+    def get_disabled_admins(self):
+        sql = 'select user, first_name, last_name, admin_id, date_join FROM admin WHERE active = 0'
+        
+        try:
+            data = self.database.exec(sql)
+            #self.database.close()
+        except Exception as e:
+            raise Exception(e)
+        if data:
+            return data
+        else:
+            return []
+
+    def reactivate_user(self, username):
+        sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
+        id = self.database.exec(sql)
+        if id[0][0] != None:
+            role =  'driver'
+        elif id[0][1] != None:
+            role =  'sponsor'
+        else:
+            role = 'admin'
+        
+        query = 'UPDATE ' + role + ' SET active = 1 WHERE user = \'{}\''.format(username)
+        try:
+            data = self.database.exec(query)
+            #self.database.close()
+        except Exception as e:
+            raise Exception(e)
 
     def get_inbox_list(self):
-        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
-            data = self.database.query(message_query, vals)
+            data = self.database.exec(message_query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -392,21 +480,33 @@ class Admin(AbsUser):
 
     def messages_are_seen(self, user):
         if user == "MARK_ALL":
-            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
+            query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
             val = (self.properties['user'], )
+            try:
+                self.database.exec(query, val)
+                self.database.exec(query2, val)
+                #self.database.close()
+            except Exception as e:
+                raise Exception(e)
         else:
-            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
-            val = (self.properties['user'], user, user, self.properties['user'])
+            query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
+            query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
+            val1 = (self.properties['user'], user)
+            val2 = (user, self.properties['user'])
+            try:
+                self.database.exec(query, val1)
+                self.database.exec(query2, val2)
+                #self.database.close()
+            except Exception as e:
+                raise Exception(e)
 
-        try:
-            self.database.insert(query, val)
-        except Exception as e:
-            raise Exception(e)
+
 
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
         val = (user, )
-        id = self.database.query(sql, val)
+        id = self.database.exec(sql, val)
         if id[0][0] != None:
             role =  'driver'
         elif id[0][1] != None:
@@ -415,19 +515,20 @@ class Admin(AbsUser):
             role = 'admin'
         
         if role == 'driver' or role == 'admin':
-            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+            query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title FROM sponsor WHERE user = %s'
+            query = 'SELECT title, active FROM sponsor WHERE user = %s'
         val = (user, )
         
         try:
-            data = self.database.query(query, val)
+            data = self.database.exec(query, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         data_list = list(data[0])
         data_list.insert(0, role)
-        return tuple(data_list)
+        return data_list
 
 
     def view_messages(self):
@@ -435,23 +536,41 @@ class Admin(AbsUser):
         vals = (self.properties['user'], self.properties['user'])
 
         try:
-            data = self.database.query(message_query, vals)
+            data = self.database.exec(message_query, vals)
         except Exception as e:
             raise Exception(e)
 
         message_dict = {}
 
         if data:
-            for d in reversed(data):
+            for d in data:
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
-                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    #get info about user from database
+                    info = self.get_msg_info(d[0])
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
                     user = 0
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
                     message_dict[d[1]] = []
-                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    info = self.get_msg_info(d[1])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[1]].append(info)
                     user = 1
+                elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
+                    message_dict[d[0]] = []
+                    info = self.get_msg_info(d[0])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
+                    user = 0
                 else:
                     if d[0] != self.properties['user']:
                         user = 0
@@ -464,14 +583,27 @@ class Admin(AbsUser):
 
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
-        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
         vals = (target, self.properties['user'], message)
 
         try:
-            self.database.insert(time)
-            self.database.insert(query, vals)
+            self.database.exec(time)
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
+    
+    def getProductInfo(self, id):
+        query = 'SELECT name,price, img_url FROM product WHERE product_id = %s'
+        val = (id)
+
+        try:
+            data = self.database.exec(query, val)
+        except Exception as e:
+            raise Exception(e)
+
+        datalist = list(data[0])
+        return datalist
 
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:
@@ -481,9 +613,9 @@ class Admin(AbsUser):
         vals = (image, self.properties['user'])
 
         try:
-            self.database.insert(sql, vals)
-            self.database.commit()
+            self.database.exec(sql, vals)
             self.properties['image'] = image
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -499,24 +631,28 @@ class Admin(AbsUser):
         vals = (new_pwd, self.properties['user'])
 
         try:
-            self.database.insert(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def delete(self):
-        """ Deletes an admin from the users table and from the admin table """
-        user_query = "DELETE FROM users WHERE Admin_ID=%s"
-        user_vals = (self.properties['id'], )
+        """ Disables an admin """
+        
 
-        query = "DELETE FROM admin WHERE admin_id=%s"
+        query = "UPDATE admin SET active = 0 WHERE admin_id=%s"
         vals = (self.properties['id'], )
         try:
-            self.database.query(user_query, user_vals)
-            self.database.query(query, vals)
-            self.database.commit()
+            self.database.exec(user_query, user_vals)
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
+
+    def __del__(self):
+        global pool1
+        self.database.close()
+        
 
 class Sponsor(AbsUser):
     def __init__(self, title='NULL', user='NULL', address='NULL', phone='NULL', 
@@ -544,7 +680,8 @@ class Sponsor(AbsUser):
 
     def get_next_id(self):
         query = 'SELECT MAX(sponsor_id) FROM sponsor'
-        rows = self.database.query(query)
+        rows = self.database.exec(query)
+        #self.database.close()
         
         if rows[0][0] == None:
             return 1
@@ -553,22 +690,24 @@ class Sponsor(AbsUser):
     
     def add_user(self):
         self.properties['id'] = self.get_next_id()
-        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s, 0.01)'
+        self.properties['active'] = 1
+        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s, 0.01, %(active)s)'
         self.properties['END'] = 'NULL'
 
         # Filter properties to be all except selectedSponsor because list issue
         params = dict(filter(lambda x: x[0] != 'selectedSponsor', self.properties.items()))
         try:
-            self.database.insert(query, params=params)
+            self.database.exec(query, params=params)
             self.add_to_users()
-            self.database.commit()
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def check_password(self, pwd_hash):
         query = "SELECT pwd FROM sponsor WHERE user=%s"
-        db_pwd = self.database.query(query, self.properties['user'])
+        db_pwd = self.database.exec(query, self.properties['user'])
+        #self.database.close()
 
         return check_password_hash(pwd_hash, db_pwd)
 
@@ -576,7 +715,8 @@ class Sponsor(AbsUser):
     def check_username_available(self):
         query = "SELECT COUNT(*) FROM users WHERE UserName=\"{}\"".format(self.properties['user'])
 
-        out = self.database.query(query) 
+        out = self.database.exec(query) 
+        #self.database.close()
         print(out)
         return out[0][0] == 0 or out == None
 
@@ -591,20 +731,24 @@ class Sponsor(AbsUser):
         query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
 
         try:
-            self.database.query(query, params=tuple(data.values()))
-            self.database.commit()
+            self.database.exec(query, args=tuple(data.values()))
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor"
+        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor where active = 1"
 
         try:
-            out = self.database.query(query)
-            return out
+            out = self.database.exec(query)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
+        if out:
+            return out
+        else:
+            return []
 
     # returns user data as a 2D array in the following formart
     # [0][0] = title
@@ -621,7 +765,8 @@ class Sponsor(AbsUser):
 
 
         try:
-            data = self.database.query(query, val)
+            data = self.database.exec(query, val)
+            #self.database.close()
             return data
 
         except Exception as e:
@@ -630,8 +775,8 @@ class Sponsor(AbsUser):
     def add_to_users(self):
         query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
         query = query.format('Sponsor_ID', self.properties['user'], self.properties['id'])
-        self.database.insert(query)
-        self.database.commit()
+        self.database.exec(query)
+        #self.database.close()
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
@@ -653,18 +798,21 @@ class Sponsor(AbsUser):
         val = (id, )
 
         try:
-            data = self.database.query(sql, val)
+            data = self.database.exec(sql, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
         
         return data[0][0]
 
     def populate(self, username: str):
+        #self.database = getNewConnection()
         query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor WHERE user = %s'
         vals = (username, )
 
         try:
-            data = self.database.query(query, vals)
+            data = self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -688,9 +836,9 @@ class Sponsor(AbsUser):
 
         try:
             #this will remove suspended driver's whos suspensions are over
-            self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
-            suspended_user = self.database.query(sql, val)
-            self.database.commit()
+            self.database.exec('DELETE from suspend WHERE date_return <= NOW()')
+            suspended_user = self.database.exec(sql, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
         
@@ -712,14 +860,14 @@ class Sponsor(AbsUser):
         query = 'UPDATE suspend SET date_return = %s WHERE user = %s'
         vals = (str_date, username)
         try:
-            self.database.insert(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def get_suspended_users(self):
-        self.database = getNewConnection()
-        sus = self.database.query('SELECT user FROM suspend')
+        #self.database = getNewConnection()
+        sus = self.database.exec('SELECT user FROM suspend')
         sus_list = []
         
         for s in sus:
@@ -730,17 +878,18 @@ class Sponsor(AbsUser):
         query = 'DELETE FROM suspend WHERE user = %s'
         vals = (username, )
         try:
-            self.database.delete(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def view_applications(self):
-        query = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1'
+        query = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 1 AND active = 1'
         vals = (self.properties['id'], )
 
         try: 
-            apps = self.database.query(query, vals)
+            apps = self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -748,11 +897,12 @@ class Sponsor(AbsUser):
 
 
     def view_drivers(self):
-        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, driver_bridge.points, driver.date_join FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 ORDER BY driver_bridge.points DESC'
+        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, driver_bridge.points, driver.date_join FROM driver INNER JOIN driver_bridge ON driver.driver_id = driver_bridge.driver_id WHERE driver_bridge.sponsor_id = %s AND apply = 0 AND active = 1 ORDER BY driver_bridge.points DESC'
         vals = (self.properties['id'], )
 
         try: 
-            drivers = self.database.query(query, vals)
+            drivers = self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -765,9 +915,9 @@ class Sponsor(AbsUser):
         vals = (driver_id, self.properties['id'])
 
         try: 
-            self.database.insert(bridge, vals)
-            self.database.insert(leader, vals)
-            self.database.commit()
+            self.database.exec(bridge, vals)
+            self.database.exec(leader, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
     
@@ -776,15 +926,16 @@ class Sponsor(AbsUser):
         vals = (driver_id, self.properties['id'])
 
         try: 
-            self.database.delete(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def add_points(self, driver_id, add_points):
-        self.database = getNewConnection()
+        #self.database = getNewConnection()
 
-        data = self.database.query('SELECT points FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s AND apply = 0', (driver_id, self.properties['id']))
+        data = self.database.exec('SELECT points FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s AND apply = 0', (driver_id, self.properties['id']))
+        #self.database.close()
         current_points = data[0][0]
 
         current_points += add_points
@@ -792,12 +943,12 @@ class Sponsor(AbsUser):
         query = 'UPDATE driver_bridge SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
         vals = (current_points, driver_id, self.properties['id'])
         try: 
-            self.database.insert(query, vals)
+            self.database.exec(query, vals)
             self.database.commit()
         except Exception as e:
             raise Exception(e)
 
-        data = self.database.query('SELECT points FROM points_leaderboard WHERE driver_id = %s AND sponsor_id = %s', (driver_id, self.properties['id']))
+        data = self.database.exec('SELECT points FROM points_leaderboard WHERE driver_id = %s AND sponsor_id = %s', (driver_id, self.properties['id']))
         current_points = data[0][0]
 
         current_points += add_points
@@ -805,17 +956,18 @@ class Sponsor(AbsUser):
         
         leader = 'UPDATE points_leaderboard SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
         try: 
-            self.database.insert(leader, vals)
-            self.database.commit()
+            self.database.exec(leader, vals)
+            self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def view_leaderboard(self):
-        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s ORDER BY points_leaderboard.points DESC'
+        query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s  AND active = 1 ORDER BY points_leaderboard.points DESC'
         val = (self.properties['id'], )
 
         try: 
-            leaders = self.database.query(query, val)
+            leaders = self.database.exec(query, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -828,18 +980,19 @@ class Sponsor(AbsUser):
         vals = (driver_id, self.properties['id'])
 
         try: 
-            self.database.delete(query, vals)
-            self.database.delete(remove_leader, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            self.database.exec(remove_leader, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def get_inbox_list(self):
-        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
-            data = self.database.query(message_query, vals)
+            data = self.database.exec(message_query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -855,21 +1008,33 @@ class Sponsor(AbsUser):
 
     def messages_are_seen(self, user):
         if user == "MARK_ALL":
-            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
+            query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
             val = (self.properties['user'], )
+            try:
+                self.database.exec(query, val)
+                self.database.exec(query2, val)
+                #self.database.close()
+            except Exception as e:
+                raise Exception(e)
         else:
-            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
-            val = (self.properties['user'], user, user, self.properties['user'])
+            query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
+            query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
+            val1 = (self.properties['user'], user)
+            val2 = (user, self.properties['user'])
+            try:
+                self.database.exec(query, val1)
+                self.database.exec(query2, val2)
+                #self.database.close()
+            except Exception as e:
+                raise Exception(e)
 
-        try:
-            self.database.insert(query, val)
-        except Exception as e:
-            raise Exception(e)
+
 
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
         val = (user, )
-        id = self.database.query(sql, val)
+        id = self.database.exec(sql, val)
         if id[0][0] != None:
             role =  'driver'
         elif id[0][1] != None:
@@ -878,19 +1043,20 @@ class Sponsor(AbsUser):
             role = 'admin'
         
         if role == 'driver' or role == 'admin':
-            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+            query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title FROM sponsor WHERE user = %s'
+            query = 'SELECT title, active FROM sponsor WHERE user = %s'
         val = (user, )
         
         try:
-            data = self.database.query(query, val)
+            data = self.database.exec(query, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         data_list = list(data[0])
         data_list.insert(0, role)
-        return tuple(data_list)
+        return data_list
 
 
     def view_messages(self):
@@ -898,41 +1064,61 @@ class Sponsor(AbsUser):
         vals = (self.properties['user'], self.properties['user'])
 
         try:
-            data = self.database.query(message_query, vals)
+            data = self.database.exec(message_query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
-        
+
         message_dict = {}
 
         if data:
-            for d in reversed(data):
+            for d in data:
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
-                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    #get info about user from database
+                    info = self.get_msg_info(d[0])
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
                     user = 0
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
                     message_dict[d[1]] = []
-                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    info = self.get_msg_info(d[1])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[1]].append(info)
                     user = 1
+                elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
+                    message_dict[d[0]] = []
+                    info = self.get_msg_info(d[0])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
+                    user = 0
                 else:
                     if d[0] != self.properties['user']:
                         user = 0
                     else:
                         user = 1
-
+                    
                 message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
-        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
         vals = (target, self.properties['user'], message)
 
         try:
-            self.database.insert(time)
-            self.database.insert(query, vals)
+            self.database.exec(time)
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -946,8 +1132,8 @@ class Sponsor(AbsUser):
         vals = (image, self.properties['user'])
 
         try:
-            self.database.insert(sql, vals)
-            self.database.commit()
+            self.database.exec(sql, vals)
+            #self.database.close()
             self.properties['image'] = image
         except Exception as e:
             raise Exception(e)
@@ -974,8 +1160,8 @@ class Sponsor(AbsUser):
         query = 'INSERT INTO suspend VALUES (%s, %s)'
         vals = (username, str_date)
         try:
-            self.database.insert(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -984,26 +1170,28 @@ class Sponsor(AbsUser):
         vals = (new_pwd, self.properties['user'])
 
         try:
-            self.database.insert(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
 
     def delete(self):
         """ Deletes a sponsor from the users table and from the sponsor table """
-        user_query = "DELETE FROM users WHERE Sponsor_ID=%s"
-        user_vals = (self.properties['id'], )
 
-        query = "DELETE FROM sponsor WHERE sponsor_id=%s"
+        query = "UPDATE sponsor SET active = 0 WHERE sponsor_id=%s"
         vals = (self.properties['id'], )
         try:
-            self.database.query(user_query, user_vals)
-            self.database.query(query, vals)
-            self.database.commit()
+            self.database.exec(user_query, user_vals)
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
+    def __del__(self):
+        global pool1
+        self.database.close()
+        
 
 
 class Driver(AbsUser):
@@ -1035,7 +1223,7 @@ class Driver(AbsUser):
         
     def get_next_id(self):
         query = 'SELECT MAX(driver_id) FROM driver'
-        rows = self.database.query(query)
+        rows = self.database.exec(query)
         
         if rows[0][0] == None:
             return 1
@@ -1045,27 +1233,29 @@ class Driver(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         self.properties['END'] = 'NULL'
-        query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\')'.format(**self.properties)
+        self.properties['active'] = 1
+        query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\', \'{active}\')'.format(**self.properties)
         print(query)
 
         try:
-            self.database.insert(query)
+            self.database.exec(query)
             self.add_to_users()
-            self.database.commit()
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def check_password(self, pwd_hash):
         query = "SELECT pwd FROM driver WHERE user=%s"
-        db_pwd = self.database.query(query, self.properties['user'])
-
+        db_pwd = self.database.exec(query, self.properties['user'])
+        #self.database.close()
         return check_password_hash(pwd_hash, db_pwd)
 
     def check_username_available(self):
         query = "SELECT COUNT(*) FROM users WHERE UserName=\"{}\"".format(self.properties['user'])
 
-        out = self.database.query(query) 
+        out = self.database.exec(query) 
+        #self.database.close()
         print(out)
         return out[0][0] == 0 or out == None
 
@@ -1074,7 +1264,8 @@ class Driver(AbsUser):
         query = query.format(self.properties['email'], self.properties['user'])
 
         try:
-            d_id = self.database.query(query)
+            d_id = self.database.exec(query)
+            #self.database.close()
             if not d_id:
                 return None
 
@@ -1100,16 +1291,17 @@ class Driver(AbsUser):
         query += ", ".join(q_list) + " WHERE user=\"{}\"".format(username)
 
         try:
-            self.database.query(query, params=tuple(data.values()))
-            self.database.commit()
+            self.database.exec(query, args=tuple(data.values()))
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def get_users(self):
-        main_query = "SELECT first_name, mid_name, last_name, user, date_join, driver_id FROM driver"
+        main_query = "SELECT first_name, mid_name, last_name, user, date_join, driver_id FROM driver where active = 1"
         try:
-            out = self.database.query(main_query)
+            out = self.database.exec(main_query)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -1119,7 +1311,8 @@ class Driver(AbsUser):
             sponsors = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s and apply = 0'
             val = (driver[5], )
             try:
-                sponsor = self.database.query(sponsors, val)
+                sponsor = self.database.exec(sponsors, val)
+                #self.database.close()
             except Exception as e:
                 raise Exception(e)
             
@@ -1139,7 +1332,8 @@ class Driver(AbsUser):
         query = 'SELECT sponsor_id, points FROM driver_bridge WHERE driver_id = %s AND apply = 0'
         val = (self.properties['id'], )
         try:
-            username = self.database.query(query, val)
+            username = self.database.exec(query, val)
+            #self.database.close()
         except Exception as e:
                 raise Exception(e)
 
@@ -1167,7 +1361,8 @@ class Driver(AbsUser):
         val = (self.properties['user'], )
 
         try:
-            data = self.database.query(query, val)
+            data = self.database.exec(query, val)
+            #self.database.close()
             return data
 
         except Exception as e:
@@ -1176,8 +1371,8 @@ class Driver(AbsUser):
     def add_to_users(self):
         query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
         query = query.format("Driver_ID", self.properties['user'], self.properties['id'])
-        self.database.insert(query)
-        self.database.commit()
+        self.database.exec(query)
+        #self.database.close()
 
     def getSponsorView(self):
         return self.properties['selectedSponsor']
@@ -1203,6 +1398,9 @@ class Driver(AbsUser):
     def getSandbox(self):
         return self.properties['sandbox']
 
+    #def isActive(self):
+
+
     def is_suspended(self):
         
         sql = 'SELECT user FROM suspend WHERE user = %s'
@@ -1210,9 +1408,9 @@ class Driver(AbsUser):
 
         try:
             #this will remove suspended driver's whos suspensions are over
-            self.database.delete('DELETE from suspend WHERE date_return <= NOW()')
-            suspended_user = self.database.query(sql, val)
-            self.database.commit()
+            self.database.exec('DELETE from suspend WHERE date_return <= NOW()')
+            suspended_user = self.database.exec(sql, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -1223,11 +1421,13 @@ class Driver(AbsUser):
 
 
     def populate(self, username: str):
+        #Connection()
         query = 'SELECT first_name, mid_name, last_name, user, driver_id, address, phone, email, image, date_join FROM driver WHERE user = %s'
         vals = (username, )
 
         try:
-            data = self.database.query(query, vals)
+            data = self.database.exec(query, vals)
+            #self.database.close()
 
         except Exception as e:
             raise Exception(e)
@@ -1261,7 +1461,8 @@ class Driver(AbsUser):
             vals = (self.properties['id'], )
 
             try:
-                data = self.database.query(query, vals)
+                data = self.database.exec(query, vals)
+                #self.database.close()
             except Exception as e:
                 raise Exception(e)
 
@@ -1281,16 +1482,18 @@ class Driver(AbsUser):
         vals = (self.properties['id'], sponsor_id, 0, 1)
 
         try:
-            self.database.insert(query, vals)
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def get_inbox_list(self):
-        message_query = 'SELECT * FROM messages WHERE (target = %s OR sender = %s) AND seen = 0'
+        message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
-            data = self.database.query(message_query, vals)
+            data = self.database.exec(message_query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
@@ -1306,21 +1509,33 @@ class Driver(AbsUser):
 
     def messages_are_seen(self, user):
         if user == "MARK_ALL":
-            query = 'UPDATE messages SET seen = 1 WHERE target = %s OR sender = %s'
+            query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
+            query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
             val = (self.properties['user'], )
+            try:
+                self.database.exec(query, val)
+                self.database.exec(query2, val)
+                #self.database.close()
+            except Exception as e:
+                raise Exception(e)
         else:
-            query = 'UPDATE messages SET seen = 1 WHERE (target = %s AND sender = %s) OR (target = %s AND sender = %s)'
-            val = (self.properties['user'], user, user, self.properties['user'])
+            query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
+            query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
+            val1 = (self.properties['user'], user)
+            val2 = (user, self.properties['user'])
+            try:
+                self.database.exec(query, val1)
+                self.database.exec(query2, val2)
+                #self.database.close()
+            except Exception as e:
+                raise Exception(e)
 
-        try:
-            self.database.insert(query, val)
-        except Exception as e:
-            raise Exception(e)
 
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
         val = (user, )
-        id = self.database.query(sql, val)
+        id = self.database.exec(sql, val)
+
         if id[0][0] != None:
             role =  'driver'
         elif id[0][1] != None:
@@ -1329,19 +1544,20 @@ class Driver(AbsUser):
             role = 'admin'
         
         if role == 'driver' or role == 'admin':
-            query = 'SELECT first_name, last_name FROM ' + role + ' WHERE user = %s'
+            query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title FROM sponsor WHERE user = %s'
+            query = 'SELECT title, active FROM sponsor WHERE user = %s'
         val = (user, )
         
         try:
-            data = self.database.query(query, val)
+            data = self.database.exec(query, val)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         data_list = list(data[0])
         data_list.insert(0, role)
-        return tuple(data_list)
+        return data_list
 
 
     def view_messages(self):
@@ -1349,41 +1565,61 @@ class Driver(AbsUser):
         vals = (self.properties['user'], self.properties['user'])
 
         try:
-            data = self.database.query(message_query, vals)
+            data = self.database.exec(message_query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
-        
+
         message_dict = {}
 
         if data:
-            for d in reversed(data):
+            for d in data:
                 user_list = list(message_dict.keys())
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     message_dict[d[0]] = []
-                    message_dict[d[0]].append(self.get_msg_info(d[0]))
+                    #get info about user from database
+                    info = self.get_msg_info(d[0])
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
                     user = 0
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
                     message_dict[d[1]] = []
-                    message_dict[d[1]].append(self.get_msg_info(d[1]))
+                    info = self.get_msg_info(d[1])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[1]].append(info)
                     user = 1
+                elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
+                    message_dict[d[0]] = []
+                    info = self.get_msg_info(d[0])
+                    if info[len(info) - 1] == 0:
+                        info[len(info) - 2] += '(Disabled)'
+                    info.pop(len(info) - 1)
+                    message_dict[d[0]].append(info)
+                    user = 0
                 else:
                     if d[0] != self.properties['user']:
                         user = 0
                     else:
                         user = 1
-
+                    
                 message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
-        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0)'
+        query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
         vals = (target, self.properties['user'], message)
 
         try:
-            self.database.insert(time)
-            self.database.insert(query, vals)
+            self.database.exec(time)
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
     
@@ -1395,8 +1631,8 @@ class Driver(AbsUser):
         vals = (image, self.properties['user'])
 
         try:
-            self.database.insert(sql, vals)
-            self.database.commit()
+            self.database.exec(sql, vals)
+            #self.database.close()
             self.properties['image'] = image
         except Exception as e:
             raise Exception(e)
@@ -1412,23 +1648,26 @@ class Driver(AbsUser):
         vals = (new_pwd, self.properties['user'])
 
         try:
-            self.database.insert(query, vals)
-            self.database.commit()
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
     def delete(self):
         """ Deletes a driver from the users table and from the driver table """
-        user_query = "DELETE FROM users WHERE Driver_ID=%s"
-        user_vals = (self.properties['id'], )
 
-        query = "DELETE FROM driver WHERE driver_id=%s"
+        query = "UPDATE driver SET active = 0 WHERE driver_id=%s"
         vals = (self.properties['id'], )
         try:
-            self.database.query(user_query, user_vals)
-            self.database.query(query, vals)
-            self.database.commit()
+            self.database.exec(user_query, user_vals)
+            self.database.exec(query, vals)
+            #self.database.close()
         except Exception as e:
             raise Exception(e)
+
+    def __del__(self):
+        global pool1
+        self.database.close()
+        
 
 

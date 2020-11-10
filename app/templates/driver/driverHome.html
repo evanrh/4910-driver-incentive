@@ -10,13 +10,12 @@
 	<p style="margin:0">Enter your search below. You can search from among {{numprod}} products.</p>
 
 </div>
-
 <form action="/productsearch" method="POST">
   <div class="row">
   <!-- Button for filtering items -->
-  <a href='javascript:showCompose();' style="font-size:25px;vertical-align: middle;"><span class="fa fa-filter" aria-hidden="true" style="font-size:25px;vertical-align: middle;"></span></a>
+  <a id="showcompose" style="font-size:25px;vertical-align: middle;"><span class="fa fa-filter" aria-hidden="true" style="font-size:25px;vertical-align: middle;"></span></a>
 
-      <div id="hide" style="display: none;border:1px solid black;">
+  <div id="hide" style="display: none;border:1px solid black;">
         <div class="row" style="vertical-align: middle;">
           <p>Number of Products: </p>
           <select style="height: 30%;" id = "amount" name="amount">
@@ -24,7 +23,7 @@
             <option value= "{{limit}}">{{limit}}</option>
             {%endfor%}
           </select>
-        </div>
+	  </div>
         
         <div class="row" style="vertical-align: middle;">
           <p>Genre:</p>
@@ -50,6 +49,8 @@
       <button id="signupbutton" type="submit" class="tfbutton">Search</button>
   </div>
 </form>
+
+<button id="addToCart" name="16">Add To Cart</button>
 
 {% if resultrec %}
   <p style="margin:0">You may love {{resultrec}}!</p>

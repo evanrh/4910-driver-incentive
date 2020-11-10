@@ -1,6 +1,6 @@
 import mysql.connector
 import datetime
-from .db_users import getConnection
+from .db_users import getConnection, getNewConnection
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -9,6 +9,11 @@ database = mysql.connector.connect(
     database = 'website'
 )
 
+config = {'host': 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
+    'user': 'admin',
+    'password':'cpsc4910',
+    'database': 'website', 
+    'autocommit': True}
 #cursor for the database
 cursor = database.cursor(buffered=True)
 
@@ -186,7 +191,9 @@ def get_password(user='NULL'):
     
     sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
     val = (user, )
-    current_password = getConnection().query(sql, val)
+    conn = getConnection()
+    current_password = conn.exec(sql, val)
+    conn.close()
 
     return current_password[0][0]
 
@@ -199,14 +206,19 @@ def username_exist(user = 'NULL'):
 
     sql = "SELECT * FROM users WHERE UserName = %s"
     val = (user, )
-    row = getConnection().query(sql, val)
+    conn = getConnection()
+    row = conn.exec(sql, val)
+    conn.close()
+    
     return row
 
 #returns id and table that the user is in
 def get_table_id(user):
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
     val = (user, )
-    id = getConnection().query(sql, val)
+    conn = getConnection()
+    id = conn.exec(sql, val)
+    conn.close()
     if id[0][0] != None:
         return id[0][0], 'driver'
     elif id[0][1] != None:
@@ -239,7 +251,7 @@ def getSponsorName(ident):
 
 #Clean search and translate into sql search
 def product_search(search, spon_id, mylist, order):
-    print(mylist)
+#    print(mylist)
 
     dirty_search = search
     numwords = len(dirty_search.split())
@@ -247,16 +259,16 @@ def product_search(search, spon_id, mylist, order):
 
     #for loop to add as many spon_ids to search
 #    print(spon_id[1])    
-    multigenrelong = "SELECT name,price,rating, description FROM product WHERE available = 1 AND ("
-    
-    for i in spon_id[:-1]:
-        multigenrelong += "sponsor_id = '"+ str(i)+"' OR "
-    else:
-        multigenrelong += "sponsor_id = '"+ str(spon_id[-1])+"' "
-    multigenrelong += ")"
-    if mylist != "None":
-        multigenrelong += " AND ("
+    multigenrelong = "SELECT name,price,rating, description, img_url, product_id FROM product WHERE available = 1"
+    if(str(spon_id) != 'Any'):
+        multigenrelong += " AND (sponsor_id= '"+str(spon_id)+"')"
 
+    if mylist != "None":
+        multigenrelong += " AND Genre = '"+mylist+"'"
+        print(multigenrelong)
+    else:
+        
+        print(multigenrelong)
     
 
     #This searches by multiple genres
@@ -273,9 +285,10 @@ def product_search(search, spon_id, mylist, order):
     ratingdown = 0
 
     dirty_search.lower()
-    if(dirty_search != " "):
-        multigenrelong += "name= '"+dirty_search +"' AND "
+#    print(dirty_search)
 
+    if(dirty_search != " "):
+        multigenrelong += " AND name= '"+dirty_search +"' "
 
     print(multigenrelong)
     if order == "priceup":
@@ -286,8 +299,7 @@ def product_search(search, spon_id, mylist, order):
          pricedown = 1
     elif order == "ratingdown":
          ratingdown = 1
-    if mylist != "None":
-        multigenrelong += "Genre = '" +mylist+"')"
+
     multigenrelong = multigenrelong.replace(":","")
 
     if priceup == 1:
@@ -301,19 +313,43 @@ def product_search(search, spon_id, mylist, order):
     print(multigenrelong)
     cursor.execute(multigenrelong) 
     got = cursor.fetchall()
-#    print(got)
-    returninfo = '\n'.join(str(v) for v in got)
-#    print(returninfo)
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-#    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-#    print(returninfo)
-    listt = returninfo.splitlines()
-#    print(listt[1])
-    return listt
+
+    products = []
+    for row in got:
+        prod = {"name":row[0], "price":row[1], "rating":row[2], "description":row[3], "img_url":row[4], "id":row[5]}
+        products.append(prod)
+#    finalprod["product_info"] = products
+#    if(products[0]['rating'] == None):
+#        results[0]['rating'] = -1
+
+    for row in (0,len(products)-1):
+        if products[row]['rating'] == None:
+            products[row]['rating'] = -1
+        print(products[row])
+        products[row]['rating'] = round(products[row]['rating'])
+
+    return products
+
+
+def updateproductorder(uid, pid, rating):
+    cursor.execute("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
+    database.commit();
+
+
+
+"""David: "Goodbye, my children :'("
+def addCart(product,userna):
+    cursor.execute("INSERT INTO cart (UserName, prod_name) VALUES ('"+userna+"', '"+product+"')")
+    database.commit()
+
+def getCart(userna):
+    cursor.execute("SELECT prod_name FROM cart WHERE UserName = '"+userna+"'")
+    got = cursor.fetchall();
+    returninfo = [''.join(i) for i in got]
+    print(returninfo)
+    return returninfo
+"""
+
 
 def getgenres():
     cursor.execute("SELECT DISTINCT Genre FROM product")
@@ -324,12 +360,8 @@ def getgenres():
 
 def getnumproducts(spon_id):
 
-    sql = "SELECT COUNT(sponsor_id) FROM product WHERE "
-    for i in spon_id[:-1]:
-        sql += "sponsor_id = '"+ str(i)+"' OR "
-    else:
-        sql += "sponsor_id = '"+ str(spon_id[-1])+"' "
-
+    sql = "SELECT COUNT(sponsor_id) FROM product WHERE available = 1 AND "
+    sql += "sponsor_id = '"+spon_id+"'"
     cursor.execute(sql)
     returnnum = cursor.fetchall()
     
@@ -412,6 +444,29 @@ def recommend(userna):
     return(returninfo)
 #    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE ")
 
+def Davidsubpoints(userna, amount, spon_id):
+    cursor.execute("UPDATE driver_bridge SET points = points - "+str(amount)+" WHERE driver_id = '"+str(userna)+"' AND sponsor_id = '"+str(spon_id)+"'")
+    database.commit()
+
+    return ''
+
+
+def getprodinfo(pid):
+    cursor.execute("SELECT name,price, img_url FROM product WHERE product_id = '"+str(pid)+"'")
+    got = cursor.fetchall()
+    listt = [''.join(str(i)) for i in got] 
+    for i in range(0, len(listt)):
+        listt[i] = listt[i].replace("(","")
+        listt[i] = listt[i].replace(")","")
+        listt[i] = listt[i].replace("[","")
+        listt[i] = listt[i].replace("]","")
+        listt[i] = listt[i].replace(",","")
+    print(listt[0])
+    returninfo = listt[0].split()
+    print(returninfo[2])
+    return listt
+
+
 def getpopitems():
     cursor.execute("SELECT Product_ID FROM   Product_Orders GROUP BY Product_ID ORDER BY COUNT(*) DESC ")
     poptuple = cursor.fetchall()
@@ -478,13 +533,16 @@ if __name__ == "__main__":
      print(admin_view_users())
     spons = [1,2,3]
  #   getnumproducts(3)    
-    product_search("bike", spons, "None", "pricedown")
 
-
-    """
     print("David recoo\n")
     recommend("testdrive")
     getpopitems()
+    product_search(" ", "3", "None", "pricedown")
+
+
+    """
+#    addCart("socks")
+    getprodinfo(10)
     """
     print("David Search\n")
     search = "Bike Tool: car: Luxury: sponge priceup"

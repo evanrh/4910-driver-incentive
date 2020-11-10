@@ -5,14 +5,20 @@
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 <div class="container bootstrap snippets bootdey">
     <div class="row">
-        <a href="#" class="btn btn-info  send-message-btn" role="button" onclick="showCompose()"><i class="fa fa-plus"></i> Compose</a>
-        <a href="#" class="btn btn-info  send-message-btn" role="button"><i class="fa fa-gears"></i> Settings</a>
+        <a href="#" class="btn btn-info  send-message-btn" role="button" id="showcompose"><i class="fa fa-plus"></i> Compose</a>
+        <a href="#" class="btn btn-info  send-message-btn" role="button" id="report"><i class="fa fa-gears"></i> Report Issues</a>
     </div>
     <div class="row" id="hide" style="display: none;">
         <form>
             <input class="tftextinput" id="recipient" placeholder='Username' required>
             <input class="tftextinput" id="composeMessage" placeholder='Message' required>
             <button class="tfbutton" name="{{ session['userInfo']['properties']['user'] }}" id='sendTomessage'>Send</button>
+        </form>
+    </div>
+    <div class="row" id="hide2" style="display: none;">
+        <form>
+            <input name="{{ System }}" id="sendmessageSystem{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+            <button class="{{ session['userInfo']['properties']['user'] }}" name='System' id='sendmessage'>Send</button>
         </form>
     </div>
     <div class="row">
@@ -42,10 +48,13 @@
             <a href='{{ url_for("inbox", username=user) }}'>
                 <div class="media conversation" style="cursor: pointer; {% if user == selectedUser %}background-color:#e2e2e2; {% endif %} ">
                     <span class="pull-left">
+                        {% if user in inbox_list %} 
+                        <span style="margin-top: 34px;" class="dot"></span>
+                        {% endif %}
                         <img class="pfp" style="width: 50px; margin:15px;" src="{{url_for('static', filename='img/userpic2.png')}}">
                     </span>
                     <div class="media-body">
-                        <h5 {% if user == selectedUser %} style="color:var(--main-theme2);" {% endif %} class="media-heading"> {{ name }} </h5>
+                        <h5 {% if user == selectedUser %} style="color:var(--main-theme2);" {{ seen(user) }} {% endif %} class="media-heading"> {{ name }} </h5>
                         <small class="text-muted"> {{ msgprvw }} </small>
                     </div>
                 </div>
@@ -100,10 +109,11 @@
             <div class="row">
                 <div class="send-wrap">
                     <textarea class="form-control send-message" rows="3" name="{{ selectedUser }}" id="sendmessage{{ selectedUser }}{{ session['userInfo']['properties']['user'] }}" 
-                            placeholder="Write a reply..."></textarea>
+                            placeholder="Write a reply..." required></textarea>
                 </div>
                 <div class="btn-panel">
-                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ selectedUser }}' id='sendmessage' onclick="javascript:eraseText();">
+                    {% set loc = url_for("inbox", username=selectedUser) %}
+                    <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ selectedUser }}' id='sendmessage' onclick="window.location.href='{{ loc }}'">
                         <i class="fa fa-share"></i> Send
                     </button>
                 </div>

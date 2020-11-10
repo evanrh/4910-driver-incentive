@@ -1,0 +1,21 @@
+
+{% extends "driver/driverBase.html" %}
+
+{% block driverContent %}
+
+	<h1> {{results['name']}} </h1>
+
+	<div>
+	<img src="{{results['img_url']}}"> 
+	</div>
+	<p> {{results['description']}}</p>
+	<p> ${{results['price']}}</p>
+	<form action="/buynow" method="POST">
+		<div>
+			<button id='{{results['name']}}' type="submit" class="tfbutton" name='buy' value="{{results['name']}}">Buy Now!</button>
+		</div>
+	</form>
+
+
+{% endblock %}
+

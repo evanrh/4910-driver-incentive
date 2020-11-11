@@ -90,8 +90,8 @@ def home():
             userna = session['userInfo']['properties']['user']
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
-                genres = getgenres()
-                rec = recommend(userna)
+                #genres = getgenres()
+                #rec = recommend(userna)
                 pass
             
 
@@ -102,9 +102,9 @@ def home():
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
             inbox_list = userInfo.get_inbox_list()
-            if 'System Management' in inbox_list and len(inbox_list) == 1:
-                Message = "You have an important message from System Management"
-            elif 'System Management' in inbox_list and len(inbox_list > 1):
+            if 'System' in inbox_list and len(inbox_list) == 1:
+                Message = "You have an important message from our System Management"
+            elif 'System' in inbox_list and len(inbox_list > 1):
                 Message += ' and ' + str(len(inbox_list) - 1) + ' other unread message'
             elif len(inbox_list) > 0:
                 Message = "You have " + str(len(inbox_list)) + ' unread messages'
@@ -511,8 +511,24 @@ def settings():
                 userInfo.update_info({'pwd': pwd})
                 return render_template(userInfo.getRole() + "/settings.html")
 
+            elif 'change-notis' in request.form.keys():
+                print(request.form)
+                points = 1 if 'points' in request.form.keys() else 0
+                orders = 1 if 'orders' in request.form.keys() else 0
+                issue = 1 if 'issue' in request.form.keys() else 0
+                notis = {}
+                notis['points'] = points
+                notis['orders'] = orders
+                notis['issue'] = issue
+                driver = Driver()
+                driver.populate(session['userInfo']['properties']['user'])
+                driver.update_noti(notis)
+                
         if userInfo.getRole() == "driver":
-            return render_template('driver/settings.html')
+            driver = Driver()
+            driver.populate(session['userInfo']['properties']['user'])
+            notis = driver.get_notifications()
+            return render_template('driver/settings.html', notis = notis)
         if userInfo.getRole() == "sponsor":
             return render_template('sponsor/settings.html')
         if userInfo.getRole() == "admin":
@@ -557,10 +573,6 @@ def driverView():
 def returnView():
     userInfo.setSandbox("NULL")
     return redirect(url_for('home'))
-
-@app.errorhandler(404)
-def not_found(e):
-    return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def server_error(e):

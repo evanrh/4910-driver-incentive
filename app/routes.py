@@ -512,7 +512,6 @@ def settings():
                 return render_template(userInfo.getRole() + "/settings.html")
 
             elif 'change-notis' in request.form.keys():
-                print(request.form)
                 points = 1 if 'points' in request.form.keys() else 0
                 orders = 1 if 'orders' in request.form.keys() else 0
                 issue = 1 if 'issue' in request.form.keys() else 0

@@ -87,11 +87,11 @@ def home():
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
             rec = []
             genres = []
-            userna = session['userInfo']['properties']['user']
+            userid = session['userInfo']['properties']['id']
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
                 genres = getgenres()
-                rec = recommend(userna)
+                rec = recommend(userid)
                 pass
             
 
@@ -802,7 +802,9 @@ def buynowrecipt():
         form = request.form
         got = form['buy']
         results = product_search(got, sponsorId, "None", "priceup" )
-
+    
+    currSponsor = Sponsor()
+    pointconverstion
     userId = session['userInfo']['properties']['id']
     Davidsubpoints(userId, results[0]['price'], sponsorId)   
     print(userId, results[0]['price'], sponsorId)

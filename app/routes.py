@@ -519,6 +519,7 @@ def settings():
                 driver = Driver()
                 driver.populate(session['userInfo']['properties']['user'])
                 driver.update_noti(notis)
+                return render_template('driver/settings.html', notis = notis)
                 
         if userInfo.getRole() == "driver":
             driver = Driver()

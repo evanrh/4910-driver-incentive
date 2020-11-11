@@ -1050,9 +1050,9 @@ class Sponsor(AbsUser):
                 system = Admin()
                 system.populate('System')
                 if add_points > 0:
-                    msg = 'You have gained {} points for sponsor {}'.format(add_points, self.properties['user'])
+                    msg = 'You have gained {} points for sponsor {}. Your total is now: {}'.format(add_points, self.properties['user'], new_point_value)
                 else:
-                    msg = 'You have lost {} points for sponsor {}'.format(add_points, self.properties['user'])
+                    msg = 'You have lost {} points for sponsor {}. Your total is now {}'.format(add_points, self.properties['user'], new_point_value)
                 system.send_message(username, msg)
             
 

@@ -104,8 +104,8 @@ def home():
             inbox_list = userInfo.get_inbox_list()
             if 'System' in inbox_list and len(inbox_list) == 1:
                 Message = "You have an important message from our System Management"
-            elif 'System' in inbox_list and len(inbox_list > 1):
-                Message += ' and ' + str(len(inbox_list) - 1) + ' other unread message'
+            elif 'System' in inbox_list and len(inbox_list) > 1:
+                Message = 'You have an important message from our System Management and ' + str(len(inbox_list) - 1) + ' other unread messages'
             elif len(inbox_list) > 0:
                 Message = "You have " + str(len(inbox_list)) + ' unread messages'
             else:

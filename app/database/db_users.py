@@ -1811,6 +1811,17 @@ class Driver(AbsUser):
             system.populate('System')
             system.send_message(self.populate['user'], msg)
 
+    #send issue of the order if their notis are on
+    def send_issue_info(self, msg):
+        query = 'select notification.user, notification.issue from notification inner join driver on notification.user = driver.user where driver.driver_id = {}'.format(self.properties['driver_id'])
+        data = self.database.exec(query)
+        username = data[0][0]
+        issue_noti = data[0][1]
+        if issue_noti == 1:
+            system = Admin()
+            system.populate('System')
+            system.send_message(self.populate['user'], msg)
+
     #update the drivers notification settings
     #pass in dictionary where keys are 'points', 'orders', 'issue' and value is 1 if they want noti or 0 if not
     def update_noti(self, notis: dict):

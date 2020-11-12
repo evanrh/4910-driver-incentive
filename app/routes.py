@@ -117,8 +117,11 @@ def home():
                 numproducts = getnumproducts(sponsorId)
             else:
                 numproducts = 0
-            popitems = getpopitems()
-            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
+            popitems = getpopitems(sponsorId)
+            if popitems:
+                return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
+            else:
+                return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, curspon= sponsorId)
 
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
@@ -804,7 +807,7 @@ def buynowrecipt():
         results = product_search(got, sponsorId, "None", "priceup" )
     
     currSponsor = Sponsor()
-    pointconverstion
+
     userId = session['userInfo']['properties']['id']
     Davidsubpoints(userId, results[0]['price'], sponsorId)   
     print(userId, results[0]['price'], sponsorId)

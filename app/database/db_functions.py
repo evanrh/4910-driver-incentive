@@ -337,20 +337,6 @@ def updateproductorder(uid, pid, rating):
 
 
 
-"""David: "Goodbye, my children :'("
-def addCart(product,userna):
-    cursor.execute("INSERT INTO cart (UserName, prod_name) VALUES ('"+userna+"', '"+product+"')")
-    database.commit()
-
-def getCart(userna):
-    cursor.execute("SELECT prod_name FROM cart WHERE UserName = '"+userna+"'")
-    got = cursor.fetchall();
-    returninfo = [''.join(i) for i in got]
-    print(returninfo)
-    return returninfo
-"""
-
-
 def getgenres():
     cursor.execute("SELECT DISTINCT Genre FROM product")
     returngenre = cursor.fetchall()
@@ -373,76 +359,42 @@ def getnumproducts(spon_id):
     print('numProducts = {}'.format(num))
     return num
 
-def recommend(userna):
 
-    #Get ID from username
-    cursor.execute("SELECT driver_id FROM driver WHERE user='"+userna+"'")
-    ID = cursor.fetchall()
-    print(ID) 
-    List = list(ID)
-    print(List)
-    returninfo = str(List[0])
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-    print(returninfo)
-    #Get Latest product bought
-    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Driver_ID = '"+returninfo+"' ORDER BY TimeStamp ASC")
-    ID = cursor.fetchall()
-    List2 = list(ID)
-    got = str(List2[0])
-    got = got.replace("[", "")
-    got = got.replace("]", "")
-    got = got.replace("(", "") 
-    got = got.replace(")", "")
-    got = got.replace(",", "")
-    got = got.replace("'", "")
-    print(got)
-    #Get a similarity with another user ordered by time
-    cursor.execute("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID != '"+returninfo+"' AND Product_ID= '"+got+"' ORDER BY TimeStamp ASC" )
-    result = cursor.fetchall()
-    print(result)
-    List = list(result)
-    print(List)
-    returninfo = str(List[0])
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-    print(returninfo)
-    #Select the Product_ID history from the other user
-    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Product_ID !=  '"+got+"' AND Driver_ID = '"+returninfo+"' ORDER BY TimeStamp ASC")
-    gotcha = cursor.fetchall()
-    print(gotcha)
-    List = list(gotcha)
-    print(List)
-    returninfo = str(List[0])
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-    print(returninfo)
-    cursor.execute("SELECT name FROM product WHERE product_id = '"+returninfo+"'")
-    final = cursor.fetchall()
-    List = list(final)
-    print(List)
-    returninfo = str(List[0])
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-    print(returninfo)
-    return(returninfo)
-#    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE ")
+#Just totally restarting cause jesus that was a mess
+"""
+IDEA: 
+Grab latest product from current user
+    If no products have been bought, return a ' ' value
+Grab the user who bought that same product most recently
+Return the product that the second user bought most recently, excluding the current product
+
+"""
+def recommend(userid):
+    #Select a tuple list of all the products ordered by most recent
+    cursor.execute("SELECT product_id FROM Product_Orders WHERE Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
+    OGproducttup = cursor.fetchall()
+    #Return nothing if the user hasn't bought anything
+    if(len(OGproducttup) < 1 ):
+        return ' '
+#   We only need the first element
+    OGproductstr = ''.join(map(str, OGproducttup[0]))
+#    print(OGproductstr)
+#   Now select the most recent driver who has also bought the same item most recently AND has bought more than 1 time
+#God that took awhile
+    cursor.execute("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID !='"+str(userid)+"' AND product_id = '"+OGproductstr+"' AND Driver_ID IN (SELECT Driver_ID FROM Product_Orders GROUP BY Driver_ID HAVING COUNT(*) >1) ORDER BY TimeStamp Desc")
+    otherdriveridtup = cursor.fetchall()
+#    print(otherdriveridtup)
+    otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
+#    print(otherdriveridstr)
+    #Grap the most recent purchase from the other driver that isn't the OG product
+    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
+    otherproducttup = cursor.fetchall()
+    otherproductstr = ''.join(map(str, otherproducttup[0]))
+#    print(otherproductstr)
+    #return the productID
+    return otherproductstr
+    
+
 
 def Davidsubpoints(userna, amount, spon_id):
     cursor.execute("UPDATE driver_bridge SET points = points - "+str(amount)+" WHERE driver_id = '"+str(userna)+"' AND sponsor_id = '"+str(spon_id)+"'")
@@ -542,7 +494,8 @@ if __name__ == "__main__":
 
     """
 #    addCart("socks")
-    getprodinfo(10)
+#    getprodinfo(10)
+    recommend(17)
     """
     print("David Search\n")
     search = "Bike Tool: car: Luxury: sponge priceup"

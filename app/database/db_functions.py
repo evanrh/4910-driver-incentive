@@ -1,6 +1,6 @@
 import mysql.connector
 import datetime
-from .db_users import getConnection, getNewConnection
+#from .db_users import getConnection, getNewConnection
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -321,15 +321,16 @@ def product_search(search, spon_id, mylist, order):
 #    finalprod["product_info"] = products
 #    if(products[0]['rating'] == None):
 #        results[0]['rating'] = -1
+    return products
 
+
+"""
     for row in (0,len(products)-1):
         if products[row]['rating'] == None:
             products[row]['rating'] = -1
         print(products[row])
         products[row]['rating'] = round(products[row]['rating'])
-
-    return products
-
+"""
 
 def updateproductorder(uid, pid, rating):
     cursor.execute("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
@@ -384,15 +385,23 @@ def recommend(userid):
     cursor.execute("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID !='"+str(userid)+"' AND product_id = '"+OGproductstr+"' AND Driver_ID IN (SELECT Driver_ID FROM Product_Orders GROUP BY Driver_ID HAVING COUNT(*) >1) ORDER BY TimeStamp Desc")
     otherdriveridtup = cursor.fetchall()
 #    print(otherdriveridtup)
+    if(len(otherdriveridtup) < 1):
+        return ' '
     otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
 #    print(otherdriveridstr)
     #Grap the most recent purchase from the other driver that isn't the OG product
     cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
     otherproducttup = cursor.fetchall()
+    if(len(otherproducttup) <1 ):
+        return ' '
     otherproductstr = ''.join(map(str, otherproducttup[0]))
 #    print(otherproductstr)
     #return the productID
-    return otherproductstr
+    cursor.execute("SELECT name FROM product WHERE product_id = '"+otherproductstr+"'")
+    finalproductnametup = cursor.fetchall()
+    finalproductnamestr = ''.join(map(str, finalproductnametup[0]))
+    print(product_search(finalproductnamestr, "Any", "None", "priceup"))
+    return product_search(finalproductnamestr, "Any", "None", "priceup")
     
 
 
@@ -418,28 +427,37 @@ def getprodinfo(pid):
     print(returninfo[2])
     return listt
 
-
-def getpopitems():
-    cursor.execute("SELECT Product_ID FROM   Product_Orders GROUP BY Product_ID ORDER BY COUNT(*) DESC ")
-    poptuple = cursor.fetchall()
-    popstr = "\n".join(str(v) for v in poptuple)
-    popstr = popstr.replace("(","")
-    popstr = popstr.replace(")","")
-    popstr = popstr.replace(",","")
-    poplist = popstr.split()
-    print(poplist)
-    popname = poplist[:3]
+#Trashed this and redoing based on sponsor catalogues only
+def getpopitems(sponid):
+#Grab a list of the most popular items in DESC order for the current sponsor
+    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sponid)+"' GROUP BY Product_ID ORDER BY COUNT(*) DESC")
+    TopThreeTup = cursor.fetchall()
+    print(TopThreeTup)
+#    otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
+    TopThreeStr = []
     for i in range(0, 3):
-        cursor.execute("SELECT name FROM product WHERE product_id = '" +poplist[i]+"'")
-        poptuple = cursor.fetchall()
-        popstr = "\n".join(str(v) for v in poptuple)
-        popstr = popstr.replace("(","")
-        popstr = popstr.replace(")","")
-        popstr = popstr.replace(",","")
-        popstr = popstr.replace("'","")
-        popname[i] = popstr
-    print(popname)
-    return popname
+        if(i >= len(TopThreeTup)):
+            break
+        TopThreeStr.append(''.join(map(str, TopThreeTup[i])))
+#    print(TopThreeStr)
+    for i in range(0, 3):
+        if i >= len(TopThreeStr):
+            break
+        cursor.execute("SELECT name FROM product WHERE product_id = '"+TopThreeStr[i]+"'")
+        nametup = cursor.fetchall()
+        TopThreeStr[i] = ''.join(map(str, nametup[0]))
+#Got the names of the top three
+    print(TopThreeStr)
+    finallist = [None] * 3
+    for i in range(0,3):
+        if(i >= len(TopThreeStr)):
+            break
+        temp = (product_search(TopThreeStr[i], sponid, "None", "priceup"))
+        finallist[i] = temp[0]
+
+
+    return finallist
+
 
 def get_products_by_name(search):
     query = "SELECT name FROM product WHERE name REGEXP(%s)"
@@ -495,6 +513,7 @@ if __name__ == "__main__":
     """
 #    addCart("socks")
 #    getprodinfo(10)
+#    getpopitems(3)
     recommend(17)
     """
     print("David Search\n")

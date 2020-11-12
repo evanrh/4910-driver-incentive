@@ -90,9 +90,9 @@ def home():
             userid = session['userInfo']['properties']['id']
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
-                genres = getgenres()
-                rec = recommend(userid)
-
+                #genres = getgenres()
+                #rec = recommend(userid)
+                pass
             if session['userInfo']['properties']['selectedSponsor'] == None:
                 sponsorId = None
             else:
@@ -700,9 +700,12 @@ def removeFromCart():
 
 @app.route("/checkout", methods=["GET","POST"])
 def checkout():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     cartTotal = 0
     success = True
-
+    now = datetime.now()
     for item in session['shoppingCart']:
         cartTotal += getprodinfo(item)[1]
     
@@ -715,7 +718,7 @@ def checkout():
         sponsor.add_points(session['userInfo']['properties']['id'], -cartTotal)
         # Add to the database
         
-    return ('', 204)
+    return render_template('driver/driverReciept.html', success = success, total = cartTotal, date = now)
 
 @app.route("/sendto", methods=["GET","POST"])
 def sendto():
@@ -743,6 +746,8 @@ def sendto():
 
 @app.route("/productsearch", methods=["GET","POST"])
 def productsearch():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
     search = "no input"
     results = "blah blah blah blah"  
     limitedresults = [" "] * 50
@@ -778,6 +783,9 @@ def productsearch():
 #Very much a building block, may scrap if need be
 @app.route("/productpage", methods=["GET","POST"])
 def productpage():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
@@ -791,6 +799,9 @@ def productpage():
 
 @app.route("/buynow", methods=["GET", "POST"])
 def buynow():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
@@ -804,6 +815,9 @@ def buynow():
      
 @app.route("/buynowrecipt", methods=["GET", "POST"])
 def buynowrecipt():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
@@ -820,10 +834,11 @@ def buynowrecipt():
     print(userId, results[0]['price'], sponsorId)
      
     return render_template('driver/driverBuyNowRecipt.html', results = results[0])
+
 @app.route("/thanks", methods=["GET","POST"])
 def thanks():
-
-
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
 
     userId = session['userInfo']['properties']['id']
     if request.method == "POST":
@@ -837,8 +852,6 @@ def thanks():
     print(userId)
     updateproductorder(userId, pid, num)
     return render_template('driver/driverThanks.html')
-
-
 
 @app.route("/productAJAX", methods=["POST"])
 def productAJAX():

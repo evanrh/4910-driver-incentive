@@ -1,0 +1,19 @@
+{% extends "driver/driverBase.html" %}
+
+{% block driverContent %}
+
+    {% if success %}
+    <h1>Checkout Complete</h1>
+        <p> Order Number: </p> {{ orderNumber }}
+        <p> Total: </p> {{ total }}
+        <p> Date: </p> {{ date }}
+        <br>
+		<p> Would you like to leave a review?</p>
+	    <input type="text" placeholder="Enter 1-5" id="search" name="review" class="tftextinput" required>
+		<input type="hidden" name="product" value="{{results['id']}}">
+		<button id="signupbutton" type="submit"class="tfbutton">Submit</button>
+    {% else %}
+    <h1>Checkout Failed</h1>
+        <p>You do not have enough points to make this purchase!</p>
+    {% endif %}
+{% endblock %}

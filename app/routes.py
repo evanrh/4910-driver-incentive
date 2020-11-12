@@ -92,10 +92,7 @@ def home():
             if not session['userInfo']['properties']['selectedSponsor'] == None:
                 genres = getgenres()
                 rec = recommend(userna)
-                pass
-            
 
-            currSponsor = Sponsor()
             if session['userInfo']['properties']['selectedSponsor'] == None:
                 sponsorId = None
             else:
@@ -110,7 +107,6 @@ def home():
                 Message = "You have " + str(len(inbox_list)) + ' unread messages'
             else:
                 Message = ""
-
 
             # Fix sponsorless driver issue
             if sponsorId:
@@ -704,7 +700,21 @@ def removeFromCart():
 
 @app.route("/checkout", methods=["GET","POST"])
 def checkout():
-    #Todo
+    cartTotal = 0
+    success = True
+
+    for item in session['shoppingCart']:
+        cartTotal += getprodinfo(item)[1]
+    
+    if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
+        success = False
+    else:
+        sponsor = Sponsor()
+        sponsor.populate()
+        # Subtract the points
+        sponsor.add_points(session['userInfo']['properties']['id'], -cartTotal)
+        # Add to the database
+        
     return ('', 204)
 
 @app.route("/sendto", methods=["GET","POST"])

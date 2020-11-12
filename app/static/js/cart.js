@@ -8,6 +8,9 @@ $(function() {
         data: {'id': id}
       })
     });
+    $( document ).ajaxStop(function() {
+      location.reload();
+    });
 });
 
 $(function() {

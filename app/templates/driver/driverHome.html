@@ -49,46 +49,45 @@
 <div class="row">
 	<p style="margin:0">Enter your search below. You can search from among {{numprod}} products.</p>
 </div>
-
-<div class="row">
-  <form action="/productsearch" method="POST">
-  <!-- Button for filtering items -->
-  <a id="showcompose" style="font-size:25px;vertical-align: middle;"><span class="fa fa-filter" aria-hidden="true" style="font-size:25px;vertical-align: middle;"></span></a>
-
-  <div id="hide" style="display: none;border:1px solid black;">
-        <div class="row" style="vertical-align: middle;">
-          <p>Number of Products: </p>
-          <select style="height: 30%;" id = "amount" name="amount">
-            {%for limit in limits%}
-            <option value= "{{limit}}">{{limit}}</option>
-            {%endfor%}
-          </select>
-	  </div>
-        
-        <div class="row" style="vertical-align: middle;">
-          <p>Genre:</p>
-          <select style="height: 30%;" id = "mylist" name="mylist">
-            {%for genre in genres%}
-            <option value= "{{genre}}">{{genre}}</option>
-            {%endfor%}
-          </select>
+<form action="/productsearch" method="POST">
+    <div class="row">
+    <!-- Button for filtering items -->
+    <a id="showcompose" style="font-size:25px;vertical-align: middle;"><span class="fa fa-filter" aria-hidden="true" style="font-size:25px;vertical-align: middle;"></span></a>
+  
+    <div id="hide" style="display: none;border:1px solid black;width:30%;">
+          <div class="row" style="vertical-align: middle;">
+            <p>Number of Products: </p>
+            <select style="height: 30%;" id = "amount" name="amount">
+              {%for limit in limits%}
+              <option value= "{{limit}}">{{limit}}</option>
+              {%endfor%}
+            </select>
         </div>
-
-        <div class="row" style="vertical-align: middle;">
-          <p>Order:</p> 
-          <select style="height: 30%;" id = "orderby" name="orderby">
-            <option value= "pricedown">Ascending on Price</option>
-            <option value= "priceup">Descending on Price</option>
-            <option value= "ratingdown">Ascending on Rating</option>
-            <option value= "ratingup">Descending on Rating</option>
-          </select>
+          
+          <div class="row" style="vertical-align: middle;">
+            <p>Genre:</p>
+            <select style="height: 30%;" id = "mylist" name="mylist">
+              {%for genre in genres%}
+              <option value= "{{genre}}">{{genre}}</option>
+              {%endfor%}
+            </select>
+          </div>
+  
+          <div class="row" style="vertical-align: middle;">
+            <p>Order:</p> 
+            <select style="height: 30%;" id = "orderby" name="orderby">
+              <option value= "pricedown">Ascending on Price</option>
+              <option value= "priceup">Descending on Price</option>
+              <option value= "ratingdown">Ascending on Rating</option>
+              <option value= "ratingup">Descending on Rating</option>
+            </select>
+          </div>
         </div>
-      </div>
-
-      <input type="text" placeholder="Search for products" id="search" name="search" class="tftextinput" required>
-      <button id="signupbutton" type="submit" class="tfbutton">Search</button>
-  </div>
-</form>
+  
+        <input type="text" placeholder="Search for products" id="search" name="search" class="tftextinput" required>
+        <button id="signupbutton" type="submit" class="tfbutton">Search</button>
+    </div>
+  </form>
 
 {% set trunc = 40 %}
 {% if resultrec %}

@@ -70,7 +70,8 @@ def upload_file(f):
     # Send tempf to driver
     tempf.close()
 
-@app.route('/')
+@app.route('/home')
+@app.route('/', methods=['GET', 'POST'])
 def home():
     # Using the global class to access data
     global userInfo
@@ -110,12 +111,11 @@ def home():
 
             # Fix sponsorless driver issue
             if sponsorId:
-                print(sponsorId)
                 numproducts = getnumproducts(sponsorId)
             else:
                 numproducts = 0
             
-            popitems = getpopitems(sponsorId)
+            popitems = 0 #getpopitems(sponsorId) function broken
             if popitems:
                 return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
             else:

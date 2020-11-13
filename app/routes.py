@@ -76,7 +76,7 @@ def home():
     global userInfo
     global Message
 
-    if not session.get('logged_in') or not session.get('userInfo'):
+    if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -90,9 +90,9 @@ def home():
             userid = session['userInfo']['properties']['id']
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
-                #genres = getgenres()
-                #rec = recommend(userid)
-                pass
+                genres = getgenres()
+                rec = recommend(userid)
+            
             if session['userInfo']['properties']['selectedSponsor'] == None:
                 sponsorId = None
             else:
@@ -110,9 +110,11 @@ def home():
 
             # Fix sponsorless driver issue
             if sponsorId:
+                print(sponsorId)
                 numproducts = getnumproducts(sponsorId)
             else:
                 numproducts = 0
+            
             popitems = getpopitems(sponsorId)
             if popitems:
                 return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)

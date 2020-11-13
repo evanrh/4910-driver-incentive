@@ -42,19 +42,16 @@
 </style>
 {% endblock %}
 
-
-
-
-<div class = "header-banner">{{head}} </div>
+<div class = "header-banner"> {{head}} </div>
 
 <h1>Product Catalog</h1>
 
 <div class="row">
 	<p style="margin:0">Enter your search below. You can search from among {{numprod}} products.</p>
-
 </div>
-<form action="/productsearch" method="POST">
-  <div class="row">
+
+<div class="row">
+  <form action="/productsearch" method="POST">
   <!-- Button for filtering items -->
   <a id="showcompose" style="font-size:25px;vertical-align: middle;"><span class="fa fa-filter" aria-hidden="true" style="font-size:25px;vertical-align: middle;"></span></a>
 
@@ -93,72 +90,69 @@
   </div>
 </form>
 
-<button id="addToCart" name="16">Add To Cart</button>
-
 {% set trunc = 40 %}
 {% if resultrec %}
-  <p>This item was a recommended just for you!</p>
+    <h2> Recommended </h2>
+    <p>This item was a recommended just for you!</p>
+
+            <div class="row">
                 {% for segment in resultrec %}
-
-                        <div class="one-third">
-                                <div class="card">
-                                    <img class="card-img-top" src="{{ segment['img_url'] }}">
-                                    <div class="card-body">
-                                        <h5><strong>{{ segment['name'] }}</strong></h5>
-                                        <h4>${{ segment['price'] }}</h4>
-                                        {% if segment['description'] | length > trunc %}
-                                        <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
-                                        {% else %}
-                                        <p class="card-text">{{ segment['description'] }}</p>
-                                        {% endif %}
-                                <form action="/productpage" method="POST">
-                                        <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
-                                </form>
-                                <button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
-                                    </div>
+                    <div class="one-third">
+                            <div class="card">
+                                <img class="card-img-top" src="{{ segment['img_url'] }}">
+                                <div class="card-body">
+                                    <h5><strong>{{ segment['name'] }}</strong></h5>
+                                    <h4>${{ segment['price'] }}</h4>
+                                    {% if segment['description'] | length > trunc %}
+                                    <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
+                                    {% else %}
+                                    <p class="card-text">{{ segment['description'] }}</p>
+                                    {% endif %}
+                                    <form action="/productpage" method="POST">
+                                    <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
+                                    </form>
+                                    <button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
                                 </div>
-                        </div>
-
-
-
-
+                            </div>
+                    </div>
+                    {% if loop.index % 3 == 0 %}
+                    <div class="row">
+                    {% endif %}
                 {% endfor %}
+            </div>
 
 
 
 {% endif %}
 
 {% if popular %}
-  <p>These are the most popular items in your catalogue!</p>
-
+    <h2>Featured</h2>
+    <p>These are the most popular items in your catalog!</p>
+        <div class="row">
   		{% for segment in popular %}
-
-                        <div class="one-third">
-                                <div class="card">
-                                    <img class="card-img-top" src="{{ segment['img_url'] }}">
-                                    <div class="card-body">
-                                        <h5><strong>{{ segment['name'] }}</strong></h5>
-                                        <h4>${{ segment['price'] }}</h4>
-                                        {% if segment['description'] | length > trunc %}
-                                        <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
-                                        {% else %}
-                                        <p class="card-text">{{ segment['description'] }}</p>
-                                        {% endif %}
-                                <form action="/productpage" method="POST">
-                                        <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
-                                </form>
-                                <button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
-                                    </div>
-                                </div>
+                <div class="one-third">
+                    <div class="card">
+                        <img class="card-img-top" src="{{ segment['img_url'] }}">
+                        <div class="card-body">
+                            <h5><strong>{{ segment['name'] }}</strong></h5>
+                            <h4>${{ segment['price'] }}</h4>
+                            {% if segment['description'] | length > trunc %}
+                            <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
+                            {% else %}
+                            <p class="card-text">{{ segment['description'] }}</p>
+                            {% endif %}
+                            <form action="/productpage" method="POST">
+                                <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
+                            </form>
+                            <button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
                         </div>
-
-
-
-
-                {% endfor %}
-		
-
-
+                    </div>
+                </div>
+            {% if loop.index % 3 == 0 %}
+            <div class="row">
+            {% endif %}
+        {% endfor %}
+        </div>
 {% endif %}
 
 {% endblock %}

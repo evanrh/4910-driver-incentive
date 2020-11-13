@@ -1,6 +1,7 @@
 import mysql.connector
 import datetime
-#from .db_users import getConnection, getNewConnection
+from .db_users import getConnection, getNewConnection
+
 #establish connection
 database = mysql.connector.connect(
     host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
@@ -334,9 +335,7 @@ def product_search(search, spon_id, mylist, order):
 
 def updateproductorder(uid, pid, rating):
     cursor.execute("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
-    database.commit();
-
-
+    database.commit()
 
 def getgenres():
     cursor.execute("SELECT DISTINCT Genre FROM product")
@@ -346,11 +345,15 @@ def getgenres():
     return list(map(lambda x: x[0], returngenre))
 
 def getnumproducts(spon_id):
+    query = "SELECT COUNT(sponsor_id) FROM product WHERE available = 1 AND sponsor_id = %s"
+    val = (spon_id,)
 
-    sql = "SELECT COUNT(sponsor_id) FROM product WHERE available = 1 AND "
-    sql += "sponsor_id = '"+spon_id+"'"
-    cursor.execute(sql)
-    returnnum = cursor.fetchall()
+    try:
+        cursor.execute(query, val)
+        returnnum = cursor.fetchall()
+
+    except Exception as e:
+        raise Exception(e)
     
     # Removed shady string manipulation
     num = 0

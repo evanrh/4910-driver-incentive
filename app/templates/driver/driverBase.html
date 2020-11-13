@@ -50,7 +50,7 @@
                     {% if session['shoppingCart'] | length > 0 %}
                     <span class="fa-stack fa-3x" data-count=" {{ session['shoppingCart'] | length }} ">
                         <a href="/driverCart" style="height: 90px;">
-                            <img src="{{url_for('static', filename='img/cart.png')}}" style="width:50px;">
+                            <img src="{{url_for('static', filename='img/cart.png')}}" style="width:50px;vertical-align:baseline;">
                         </a>
                     </span>
                     {% else %}

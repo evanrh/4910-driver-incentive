@@ -46,3 +46,5 @@ class ReportController():
             print(e)
             return None
 
+    def __del__(self):
+        self.conn.close()

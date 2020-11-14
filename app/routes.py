@@ -1036,13 +1036,16 @@ def reports():
             w.writerow((numDrivers, numSponsors, numAdmins))
             w.writerow(())
             w.writerow(sponsorHeaders)
+
             for sponsor in sponsors:
                 id = get_table_id(sponsor)[0]
                 out = cont.sponsor_stats(id, (startDate, endDate))
-                print(out)
-                row = (sponsor, out['drivers'], round(float(out['spent']), 2), round(float(out['spent']) * .01, 2))
+
+                # Added in if else in case an exception returns None
+                row = (sponsor, out['drivers'], round(float(out['spent']), 2), round(float(out['spent']) * .01, 2)) if out else ()
                 w.writerow(row)
 
+            del cont
             mem = BytesIO()
             mem.write(proxy.getvalue().encode('utf-8'))
             mem.seek(0)

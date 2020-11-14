@@ -987,3 +987,9 @@ def catalog(sponsor):
     else:
         flash('Access not allowed')
         return redirect(url_for('home'))
+
+@app.context_processor
+def sponsorTitle():
+    def getSponsorTit(id):
+        return getSponsorTitle(id)
+    return dict(getSponsorTitle=getSponsorTit)

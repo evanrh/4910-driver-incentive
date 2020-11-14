@@ -172,7 +172,7 @@ header p{
 	background-color: var(--main-theme1);
 	color: white;
 	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-	right: 0;
+    right: 0;
 }
 
 .dropdown-content select {

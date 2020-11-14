@@ -1,3 +1,4 @@
+from app.database.db_functions import getSponsorName, getSponsorTitle
 from flask import Flask, Blueprint
 from flask_restx import Api
 from config import Config
@@ -21,5 +22,6 @@ admin_api = Api(admin_bp, authorizations=auths)
 
 app.register_blueprint(bp)
 app.register_blueprint(admin_bp)
+app.jinja_env.globals.update(getSponsorTitle=getSponsorTitle)
 from app import routes
 from app import api_routes

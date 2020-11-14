@@ -42,7 +42,7 @@
 {% block driverContent %}
 
 {% set trunc = 40 %}
-{% set limits = [1,5, 10,50] %}
+{% set limits = [1, 5, 10, 50] %}
 
 
 <h1>Search Results</h1>
@@ -50,78 +50,44 @@
 		<div class ="row">		
 	            <button id="return" type="submit">Back to Home</button>
 		</div>
-	</form>
+    </form>
+    
 	<div class="row">
 		<p> Query: {{query}} </p>
 	</div>
 
 	<div class="row">
 		<p> Found {{numresults}}  Results: </p>
-
-
+    </div>
 
 		{% for segment in results %}
+            {% if loop.index0 % 3 == 0 %}
+            <div class="row">
+            {% endif %}
+            <div class="one-third">
+                <div class="card">
+                    <img class="card-img-top" src="{{ segment['img_url'] }}">
+                    <div class="card-body">
+                        <h5><strong>{{ segment['name'] }}</strong></h5>
+                        <h4>${{ segment['price'] }}</h4>
+                        {% if segment['description'] | length > trunc %}
+                        <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
+                        {% else %}
+                        <p class="card-text">{{ segment['description'] }}</p>
+                        {% endif %}
+                        <form action="/productpage" method="POST">
+                            <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
+                        </form>
+                        <button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
+                    </div>
+                </div>
+            </div>
 
-			<div class="one-third">
-		                <div class="card">
-		                    <img class="card-img-top" src="{{ segment['img_url'] }}">
-		                    <div class="card-body">
-		                        <h5><strong>{{ segment['name'] }}</strong></h5>
-		                        <h4>${{ segment['price'] }}</h4>
-		                        {% if segment['description'] | length > trunc %}
-		                        <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
-		                        {% else %}
-		                        <p class="card-text">{{ segment['description'] }}</p>
-		                        {% endif %}
-				<form action="/productpage" method="POST">
-					<button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
-				</form>
-				<button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
-				    </div>
-		                </div>
-	                </div>
+            {% if loop.index0 % 3 == 2 or loop.index0 == (results | length) - 1 %}
+            </div>
+            {% endif %}
+        {% endfor %}
 
-
-
-
-		{% endfor %}
-		</div>
 {% endblock %}
-<!--
-<script>
-function addToCart(id)
-{
-    var index = search(id);
-
-    if (index>-1)
-    {
-        var name = products[index].getName();
-        var quantity = products[index].getQuantity();
-        var addIt = false;
-
-        if (quantity==0)
-        {
-            alert("The following item was added to your cart: " + name)
-            addIt = true;
-        }
-        else
-        {
-            addIt = confirm("The item \"" + name + "\" is already in your cart. Would you like to add another?");
-        }
-    }
-    else
-    {
-        alert("Error: Invalid product ID");
-    }
-
-    if (addIt)
-    {
-        products[index].setQuantity(quantity + 1);
-        writeCart();
-    }
-
-    refresh();
-}
-</script>
 
 

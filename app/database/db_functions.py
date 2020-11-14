@@ -1,26 +1,8 @@
-import mysql.connector
 import datetime
 from .db_users import getConnection, getNewConnection
 
-#establish connection
-database = mysql.connector.connect(
-    host = 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
-    user = 'admin',
-    password = 'cpsc4910',
-    database = 'website'
-)
-
-config = {'host': 'cpsc4910.crxd6v3fbudk.us-east-1.rds.amazonaws.com',
-    'user': 'admin',
-    'password':'cpsc4910',
-    'database': 'website', 
-    'autocommit': True}
 #cursor for the database
-cursor = database.cursor(buffered=True)
-
-#having database.commit() commented still allows you to see what 
-# it would be like if you 
-#modified the database however without commiting you will not change anything in the database
+cursor = getConnection()
 
 #adds a driver to the database. Parameters are:
 #First Name, Middle Name, Last Name, Username, Address, Phone number, email, password and image url
@@ -30,9 +12,9 @@ def add_driver(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL', ad
         sql = "INSERT INTO driver VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s)"
         driver_id = get_next_driver_id()
         val = (fname, mname, lname, user, driver_id, 0, 0, address, phone, email, pwd, "NULL", image)
-        cursor.execute(sql, val)
+        cursor.exec(sql, val)
         add_to_users(user, 'driver', driver_id)
-        #database.commit()
+        
     except Exception as e:
         raise Exception(e)
 
@@ -44,10 +26,9 @@ def add_sponsor(title = 'NULL', user = 'NULL', address = 'NULL',
     sql = "INSERT INTO sponsor VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
     sponsor_id = get_next_sponsor_id()
     val = (title, user, sponsor_id, address, phone, email, pwd, image, "NULL")
-    cursor.execute(sql, val)
+    cursor.exec(sql, val)
     add_to_users(user, 'sponsor', sponsor_id)
-    #database.commit()
-
+    
 #adds an admin to the database. Parameters are:
 #First Name, Middle Name, Last Name, Username, Phone number, email, password and image url
 def add_admin(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL',  
@@ -56,14 +37,12 @@ def add_admin(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL',
     sql = "INSERT INTO admin VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
     admin_id = get_next_admin_id()
     val = (fname, mname, lname, user, admin_id, phone, email, pwd, "NULL")
-    cursor.execute(sql, val)
+    cursor.exec(sql, val)
     add_to_users(user, 'admin', admin_id)
-    #database.commit()
-
+    
 #gets the next available driver id, returns 1 if no drivers exist
 def get_next_driver_id():
-    cursor.execute("SELECT MAX(driver_id) FROM driver")
-    num = cursor.fetchone()
+    num = cursor.exec("SELECT MAX(driver_id) FROM driver")
 
     if( num[0] == None ):
         return 1
@@ -72,8 +51,7 @@ def get_next_driver_id():
 
 #gets the next available sponsor id, returns 1 if no sponsor exist
 def get_next_sponsor_id():
-    cursor.execute("SELECT MAX(sponsor_id) FROM sponsor")
-    num = cursor.fetchone()
+    num = cursor.exec("SELECT MAX(sponsor_id) FROM sponsor")
 
     if( num[0] == None ):
         return 1
@@ -82,8 +60,7 @@ def get_next_sponsor_id():
 
 #gets the next available admin id, returns 1 if no admin exist
 def get_next_admin_id():
-    cursor.execute("SELECT MAX(admin_id) FROM admin")
-    num = cursor.fetchone()
+    num = cursor.exec("SELECT MAX(admin_id) FROM admin")
 
     if( num[0] == None ):
         return 1
@@ -103,11 +80,7 @@ def add_to_users(user = 'NULL', role = 'driver', id = 0):
 
     query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, NOW())'
     query = query.format(role, user, id)
-    cursor.execute(query)
-
-
-
-
+    cursor.exec(query)
 
 #checks to see if the password entered by the user matches password with that username
 #searches through user table for username and role
@@ -121,8 +94,7 @@ def pwd_check(user = 'NULL', pwd = 'NULL'):
     
     sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
     val = (user, )
-    cursor.execute(sql, val)
-    current_password = cursor.fetchone()
+    current_password = cursor.exec(sql, val)
 
     if pwd == current_password[0]:
         return True
@@ -136,54 +108,47 @@ def change_password(user, pwd):
 
     sql = 'UPDATE ' + table + ' SET pwd = %s WHERE user = %s'
     val = (pwd, user)
-    cursor.execute(sql, val)
+    cursor.exec(sql, val)
 
 #prints out all of the drivers
 def get_drivers():
-    cursor.execute("SELECT * FROM driver")
-    driver_list = cursor.fetchall()
+    driver_list = cursor.exec("SELECT * FROM driver")
     for driver in driver_list:
         print(driver)
 
 #prints out all of the sponsors
 def get_sponsors():
-    cursor.execute("SELECT * FROM sponsor")
-    sponsor_list = cursor.fetchall()
+    sponsor_list = cursor.exec("SELECT * FROM sponsor")
     for sponsor in sponsor_list:
         print(sponsor)
 
 #prints out all of the admins
 def get_admins():
-    cursor.execute("SELECT * FROM admin")
-    admin_list = cursor.fetchall()
+    admin_list = cursor.exec("SELECT * FROM admin")
     for admin in admin_list:
         print(admin)
 
 #prints out all of the users 
 def get_users():
     print("---ADMINS---")
-    cursor.execute('SELECT UserName, Admin_ID, last_in FROM users WHERE Admin_ID > 0 ORDER BY Admin_ID DESC')
-    user_list = cursor.fetchall()
+    user_list = cursor.exec('SELECT UserName, Admin_ID, last_in FROM users WHERE Admin_ID > 0 ORDER BY Admin_ID DESC')
     for user in user_list:
         print(user)
     print("\n---SPONSORS---")
-    cursor.execute('SELECT UserName, Sponsor_ID, last_in FROM users WHERE Sponsor_ID > 0 ORDER BY Sponsor_ID DESC')
-    user_list = cursor.fetchall()
+    user_list = cursor.exec('SELECT UserName, Sponsor_ID, last_in FROM users WHERE Sponsor_ID > 0 ORDER BY Sponsor_ID DESC')
     for user in user_list:
         print(user)
     print("\n---DRIVERS---")
-    cursor.execute('SELECT user, driver_id FROM driver WHERE driver_id > 0 ORDER BY driver_id DESC')
-    user_list = cursor.fetchall()
+    user_list = cursor.exec('SELECT user, driver_id FROM driver WHERE driver_id > 0 ORDER BY driver_id DESC')
     for user in user_list:
         print(user)
     print("\n---USERS---")
-    cursor.execute('SELECT * FROM users ORDER BY Admin_ID DESC, Sponsor_ID DESC, Driver_ID ASC')
-    user_list = cursor.fetchall()
+    user_list = cursor.exec('SELECT * FROM users ORDER BY Admin_ID DESC, Sponsor_ID DESC, Driver_ID ASC')
+
     for user in user_list:
         print(user)
 
-
-           
+# Returns password hash for a user
 def get_password(user='NULL'):
     if( user == 'NULL'):
         return ''
@@ -198,9 +163,9 @@ def get_password(user='NULL'):
 
     return current_password[0][0]
 
-#detirmines if username is in the table
-#returns true if username is in user table
-#false if it isn't
+# Determines if username is in the table
+# returns true if username is in user table
+# false if it isn't
 def username_exist(user = 'NULL'):
     if( user == 'NULL' ):
         return False
@@ -227,31 +192,72 @@ def get_table_id(user):
     else:
         return id[0][2], 'admin'
 
-
+# Cancels a users suspension
 def cancel_suspension(username):
     query = 'DELETE FROM suspend WHERE user = %s'
     vals = (username, )
     try:
-        cursor.execute(query, vals)
+        cursor.exec(query, vals)
     except Exception as e:
         raise Exception(e)
-    
+
+# Takes in a sponsor id and gets their username
 def getSponsorName(ident):
-    ID = str(ident)
-    cursor.execute("SELECT user FROM sponsor WHERE sponsor_id = '" +ID+"'")
-    got = cursor.fetchall()
-    returninfo = ''.join(str(v) for v in got)
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-    print(returninfo)
-    return returninfo
+    try:
+        return cursor.exec("SELECT user FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
+    except Exception as e:
+            raise Exception(e)
+
+# Takes in a sponsor id and gets their title
+def getSponsorTitle(ident):
+    try:
+        return cursor.exec("SELECT title FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
+    except Exception as e:
+            raise Exception(e)
 
 #Clean search and translate into sql search
 def product_search(search, spon_id, mylist, order):
+
+    # Query to get matching products
+    multigenrelong = "SELECT name, price, rating, description, img_url, product_id FROM product WHERE available = 1 AND name REGEXP(%s)"
+    # Checking for selected genre
+    if mylist != "None":
+        multigenrelong += " AND Genre = %s" % mylist
+    # Checking for selected sponsor
+    if(str(spon_id) != 'Any'):
+        multigenrelong += " AND sponsor_id= %s" % spon_id
+
+    # Sorting by order
+    if order == "priceup":
+         multigenrelong += " ORDER BY price ASC"
+    elif order == "ratingup":
+         multigenrelong += " ORDER BY rating ASC"
+    elif order == "pricedown":
+         multigenrelong += " ORDER BY price DESC"
+    elif order == "ratingdown":
+         multigenrelong += " ORDER BY rating DESC"
+
+    vals = (search,)
+
+    try:
+        data = cursor.exec(multigenrelong, vals)
+    except Exception as e:
+        raise Exception(e)
+
+    # Getting all products and storing them as a list of dictionaries 
+    # [item1 dict, item2 dict]
+    # each dict item contains name, price, rating, description, img_url, and id
+    products = []
+    for item in data:
+        prod = {"name":item[0], "price":item[1], "rating":item[2], "description":item[3], "img_url":item[4], "id":item[5]}
+        products.append(prod)
+
+    return products
+
+    ''' 
+    I cleaned up the search function to use a regex in order to make searching easier,
+    in case I missed something I left the original function below.
+
 #    print(mylist)
 
     dirty_search = search
@@ -312,8 +318,7 @@ def product_search(search, spon_id, mylist, order):
     elif ratingdown == 1:
         multigenrelong = multigenrelong + " ORDER BY rating ASC"    
     print(multigenrelong)
-    cursor.execute(multigenrelong) 
-    got = cursor.fetchall()
+    got = cursor.exec(multigenrelong) 
 
     products = []
     for row in got:
@@ -322,35 +327,38 @@ def product_search(search, spon_id, mylist, order):
 #    finalprod["product_info"] = products
 #    if(products[0]['rating'] == None):
 #        results[0]['rating'] = -1
+    print(products)
     return products
 
-
-"""
     for row in (0,len(products)-1):
         if products[row]['rating'] == None:
             products[row]['rating'] = -1
         print(products[row])
         products[row]['rating'] = round(products[row]['rating'])
-"""
+'''
 
 def updateproductorder(uid, pid, rating):
-    cursor.execute("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
-    database.commit()
+    try:
+        cursor.exec("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
+    except Exception as e:
+            raise Exception(e)
 
+# Return a list of all genres
 def getgenres():
-    cursor.execute("SELECT DISTINCT Genre FROM product")
-    returngenre = cursor.fetchall()
-    print(returngenre)
-    # Return a list of all genres
+    try:
+        returngenre = cursor.exec("SELECT DISTINCT Genre FROM product")
+    except Exception as e:
+            raise Exception(e)
+
     return list(map(lambda x: x[0], returngenre))
 
+# Get how many products a sponsor has
 def getnumproducts(spon_id):
     query = "SELECT COUNT(sponsor_id) FROM product WHERE available = 1 AND sponsor_id = %s"
     val = (spon_id,)
 
     try:
-        cursor.execute(query, val)
-        returnnum = cursor.fetchall()
+        returnnum = cursor.exec(query, val)
 
     except Exception as e:
         raise Exception(e)
@@ -360,7 +368,6 @@ def getnumproducts(spon_id):
     if returnnum:
         num = returnnum[0][0]
 
-    print('numProducts = {}'.format(num))
     return num
 
 
@@ -375,8 +382,7 @@ Return the product that the second user bought most recently, excluding the curr
 """
 def recommend(userid):
     #Select a tuple list of all the products ordered by most recent
-    cursor.execute("SELECT product_id FROM Product_Orders WHERE Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
-    OGproducttup = cursor.fetchall()
+    OGproducttup = cursor.exec("SELECT product_id FROM Product_Orders WHERE Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
     #Return nothing if the user hasn't bought anything
     if(len(OGproducttup) < 1 ):
         return ' '
@@ -385,23 +391,20 @@ def recommend(userid):
 #    print(OGproductstr)
 #   Now select the most recent driver who has also bought the same item most recently AND has bought more than 1 time
 #God that took awhile
-    cursor.execute("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID !='"+str(userid)+"' AND product_id = '"+OGproductstr+"' AND Driver_ID IN (SELECT Driver_ID FROM Product_Orders GROUP BY Driver_ID HAVING COUNT(*) >1) ORDER BY TimeStamp Desc")
-    otherdriveridtup = cursor.fetchall()
+    otherdriveridtup = cursor.exec("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID !='"+str(userid)+"' AND product_id = '"+OGproductstr+"' AND Driver_ID IN (SELECT Driver_ID FROM Product_Orders GROUP BY Driver_ID HAVING COUNT(*) >1) ORDER BY TimeStamp Desc")
 #    print(otherdriveridtup)
     if(len(otherdriveridtup) < 1):
         return ' '
     otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
 #    print(otherdriveridstr)
     #Grap the most recent purchase from the other driver that isn't the OG product
-    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
-    otherproducttup = cursor.fetchall()
+    otherproducttup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
     if(len(otherproducttup) <1 ):
         return ' '
     otherproductstr = ''.join(map(str, otherproducttup[0]))
 #    print(otherproductstr)
     #return the productID
-    cursor.execute("SELECT name FROM product WHERE product_id = '"+otherproductstr+"'")
-    finalproductnametup = cursor.fetchall()
+    finalproductnametup = cursor.exec("SELECT name FROM product WHERE product_id = '"+otherproductstr+"'")
     finalproductnamestr = ''.join(map(str, finalproductnametup[0]))
     print(product_search(finalproductnamestr, "Any", "None", "priceup"))
     return product_search(finalproductnamestr, "Any", "None", "priceup")
@@ -409,32 +412,20 @@ def recommend(userid):
 
 
 def Davidsubpoints(userna, amount, spon_id):
-    cursor.execute("UPDATE driver_bridge SET points = points - "+str(amount)+" WHERE driver_id = '"+str(userna)+"' AND sponsor_id = '"+str(spon_id)+"'")
-    database.commit()
-
+    cursor.exec("UPDATE driver_bridge SET points = points - "+str(amount)+" WHERE driver_id = '"+str(userna)+"' AND sponsor_id = '"+str(spon_id)+"'")
     return ''
 
 
 def getprodinfo(pid):
-    cursor.execute("SELECT name,price, img_url FROM product WHERE product_id = '"+str(pid)+"'")
-    got = cursor.fetchall()
-    listt = [''.join(str(i)) for i in got] 
-    for i in range(0, len(listt)):
-        listt[i] = listt[i].replace("(","")
-        listt[i] = listt[i].replace(")","")
-        listt[i] = listt[i].replace("[","")
-        listt[i] = listt[i].replace("]","")
-        listt[i] = listt[i].replace(",","")
-    print(listt[0])
-    returninfo = listt[0].split()
-    print(returninfo[2])
-    return listt
+    try:
+        return cursor.exec("SELECT name, price, img_url FROM product WHERE product_id = %s" % pid)[0]
+    except Exception as e:
+        raise Exception(e)
 
 #Trashed this and redoing based on sponsor catalogues only
 def getpopitems(sponid):
 #Grab a list of the most popular items in DESC order for the current sponsor
-    cursor.execute("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sponid)+"' GROUP BY Product_ID ORDER BY COUNT(*) DESC")
-    TopThreeTup = cursor.fetchall()
+    TopThreeTup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sponid)+"' GROUP BY Product_ID ORDER BY COUNT(*) DESC")
     print(TopThreeTup)
 #    otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
     TopThreeStr = []
@@ -446,8 +437,7 @@ def getpopitems(sponid):
     for i in range(0, 3):
         if i >= len(TopThreeStr):
             break
-        cursor.execute("SELECT name FROM product WHERE product_id = '"+TopThreeStr[i]+"'")
-        nametup = cursor.fetchall()
+        nametup = cursor.exec("SELECT name FROM product WHERE product_id = '"+TopThreeStr[i]+"'")
         TopThreeStr[i] = ''.join(map(str, nametup[0]))
 #Got the names of the top three
     print(TopThreeStr)
@@ -458,37 +448,19 @@ def getpopitems(sponid):
         temp = (product_search(TopThreeStr[i], sponid, "None", "priceup"))
         finallist[i] = temp[0]
 
-
     return finallist
 
-
+# Gets a list of products from all sponsors based on search
 def get_products_by_name(search):
     query = "SELECT name FROM product WHERE name REGEXP(%s)"
-    cursor.execute(query, (search, ))
-    matches = list(map(lambda x: x[0], cursor.fetchall()))
-    print(matches)
+    val = cursor.exec(query, (search, ))
+    matches = list(map(lambda x: x[0], val))
     return matches
 
-def getSponsorName(ident):
-    ID = str(ident)
-    cursor.execute("SELECT title FROM sponsor WHERE sponsor_id = '" +ID+"'")
-    got = cursor.fetchall()
-    returninfo = ''.join(str(v) for v in got)
-#    print(returninfo)
-    returninfo = returninfo.replace("[", "")
-    returninfo = returninfo.replace("]", "")
-    returninfo = returninfo.replace("(", "") 
-    returninfo = returninfo.replace(")", "")
-    returninfo = returninfo.replace(",", "")
-    returninfo = returninfo.replace("'", "")
-    print(returninfo)
-    return returninfo
-
+# Updates the point conversion rate for a sponsor
 def update_sponsor_rate(sponsor_id, rate):
     sql = "UPDATE sponsor SET point_value=%s WHERE sponsor_id=%s"
-    cursor.execute(sql, (rate, sponsor_id))
-    database.commit()
-    print(cursor.rowcount)
+    cursor.exec(sql, (rate, sponsor_id))
 
 #main used to test functions
 if __name__ == "__main__":
@@ -563,6 +535,5 @@ if __name__ == "__main__":
     print(if_username_exist('remove'))
     """
     cursor.close()
-    database.close()
     
 

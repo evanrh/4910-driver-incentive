@@ -1,7 +1,7 @@
 
 {% extends "driver/driverBase.html" %}
 {% block driverContent %}
-{% set limits = [1,5, 10,50] %}
+{% set limits = [1, 5, 10, 50] %}
 {% block header %}
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <style>
@@ -58,18 +58,24 @@
           <div class="row" style="vertical-align: middle;">
             <p>Number of Products: </p>
             <select style="height: 30%;" id = "amount" name="amount">
-              {%for limit in limits%}
-              <option value= "{{limit}}">{{limit}}</option>
-              {%endfor%}
+            <option value= "10" selected>10</option>
+                {% for limit in limits %}
+                    {% if limit != 10 %}
+                    <option value= "{{limit}}"> {{limit}} </option>
+                    {% endif %}
+                {% endfor %}
             </select>
         </div>
           
           <div class="row" style="vertical-align: middle;">
             <p>Genre:</p>
             <select style="height: 30%;" id = "mylist" name="mylist">
-              {%for genre in genres%}
-              <option value= "{{genre}}">{{genre}}</option>
-              {%endfor%}
+                <option value= "None" selected> None </option>
+                {%for genre in genres%}
+                    {% if genre != None %}
+                    <option value= "{{genre}}">{{genre.capitalize()}}</option>
+                    {% endif %}
+                {%endfor%}
             </select>
           </div>
   
@@ -119,9 +125,6 @@
                     {% endif %}
                 {% endfor %}
             </div>
-
-
-
 {% endif %}
 
 {% if popular %}

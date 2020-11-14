@@ -466,6 +466,16 @@ def update_sponsor_rate(sponsor_id, rate):
     sql = "UPDATE sponsor SET point_value=%s WHERE sponsor_id=%s"
     cursor.exec(sql, (rate, sponsor_id))
 
+def get_point_value(sponsor_id):
+    sql = "SELECT point_value FROM sponsor WHERE sponsor_id=%"
+    result = cursor.exec(sql, (sponsor_id, ))
+
+    # Return conversion rate if sponsor exists, otherwise, None
+    if result:
+        return result[0][0]
+    else:
+        return None
+
 #main used to test functions
 if __name__ == "__main__":
     """

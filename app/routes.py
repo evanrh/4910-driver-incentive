@@ -101,22 +101,18 @@ def home():
             # Product page information
             recommended = []
             genres = []
+            popitems = []
+            numproducts = 0
             userid = session['userInfo']['properties']['id']
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
                 genres = getgenres()
                 recommended = recommend(userid)
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+                numproducts = getnumproducts(sponsorId)
+                popitems = getpopitems(sponsorId) # Causing missing endpoint issue
             else:
                 sponsorId = None
-
-            # Fix sponsorless driver issue
-            if sponsorId:
-                numproducts = getnumproducts(sponsorId)
-            else:
-                numproducts = 0
-            
-            popitems = getpopitems(sponsorId)
 
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 

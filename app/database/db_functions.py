@@ -441,13 +441,17 @@ def getpopitems(sponid):
         TopThreeStr[i] = ''.join(map(str, nametup[0]))
 #Got the names of the top three
     print(TopThreeStr)
-    finallist = [None] * 3
+    finallist = [' '] * 3
     for i in range(0,3):
         if(i >= len(TopThreeStr)):
             break
         temp = (product_search(TopThreeStr[i], sponid, "None", "priceup"))
         finallist[i] = temp[0]
 
+    print("Printing final list")
+    print(finallist)
+    if(finallist[0] == ' '):
+        return ' '
     return finallist
 
 # Gets a list of products from all sponsors based on search

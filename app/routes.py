@@ -187,6 +187,10 @@ def do_admin_login():
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
+    global userInfo
+    del userInfo
+    userInfo = Driver()
+    del session['userInfo']
     return redirect(url_for('home'))
 
 

@@ -1,5 +1,6 @@
 import pymysql
 from pymysql import Error
+from functools import wraps
 import pymysqlpool
 
 #gonna leave commented out and not deleted for now just in case
@@ -157,6 +158,10 @@ class Connection(pymysql.connections.Connection):
         exec_many: whether use pymysql's executemany() method
         """
         cur = self.cursor() if not dictcursor else self.cursor(pymysql.cursors.DictCursor)
+        try:
+            self.ping()
+        except Exception as e:
+            self = self._recreate(*self.args, **self.kwargs)
         try:
             if exec_many:
                 cur.executemany(sql, args)

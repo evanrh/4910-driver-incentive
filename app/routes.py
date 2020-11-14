@@ -1,6 +1,9 @@
 from app import app
-from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
+from flask import Flask, flash, redirect, render_template, request, session, abort, url_for, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.wrappers import Response
+from datetime import date
+from io import StringIO, BytesIO
 from app.database.db_functions import *
 from app.database.db_users import *
 from app.database.db_connection import *
@@ -8,8 +11,11 @@ from flask.json import JSONEncoder
 from tempfile import TemporaryFile
 from app.products.etsy_driver import EtsyController
 from app.products.catalog import CatalogController
+from app.reports.reporting import ReportController
+import datetime
 import json
 import time
+import csv
 
 # Using this to encode our class to store user data
 class CustomJSONEncoder(JSONEncoder):
@@ -988,6 +994,68 @@ def catalog(sponsor):
         flash('Access not allowed')
         return redirect(url_for('home'))
 
+# Download report view
+@app.route('/reports', methods=['GET','POST'])
+def reports():
+    role = session['userInfo']['properties']['role']
+    templateName = '{}/{}Reports.html'.format(role, role)
+
+    if not session['logged_in']: 
+        return redirect(url_for('home'))
+
+    if role == 'admin':
+        sponsorList = Sponsor().get_users()
+
+        # Get list of all sponsor names from sponsor tuples
+        sponsorNames = list(map(lambda elem: elem[1], sponsorList))
+
+        if request.method == 'POST':
+            # Elements are all named sponsor, so this grabs the whole list of them
+            sponsors = request.form.getlist('sponsor')
+
+            startDate = request.form['startdate'].split('-')
+            startDate = list(map(lambda e: int(e), startDate))
+            startDate = datetime.datetime(startDate[0], startDate[1], startDate[2])
+
+            endDate = request.form['enddate'].split('-')
+            endDate = list(map(lambda e: int(e), endDate))
+            endDate = datetime.datetime(endDate[0], endDate[1], endDate[2])
+
+            cont = ReportController()
+
+            # Get number of each user type
+            numDrivers = cont.number_users('driver')
+            numSponsors = cont.number_users('sponsor')
+            numAdmins = cont.number_users('admin')
+
+            metaHeaders = ('# of Drivers', '# of Sponsors', '# of Admins')
+            sponsorHeaders = ('Sponsor', 'Number of drivers', 'Purchases Total', 'Expenses')
+            proxy = StringIO()
+            w = csv.writer(proxy)
+            w.writerow(metaHeaders)
+            w.writerow((numDrivers, numSponsors, numAdmins))
+            w.writerow(())
+            w.writerow(sponsorHeaders)
+            for sponsor in sponsors:
+                id = get_table_id(sponsor)[0]
+                out = cont.sponsor_stats(id, (startDate, endDate))
+                print(out)
+                row = (sponsor, out['drivers'], round(float(out['spent']), 2), round(float(out['spent']) * .01, 2))
+                w.writerow(row)
+
+            mem = BytesIO()
+            mem.write(proxy.getvalue().encode('utf-8'))
+            mem.seek(0)
+            proxy.close()
+
+            now = date.today()
+            fname = "{}-admin-report.csv".format(now.strftime('%m-%d-%Y'))
+            return send_file(mem, as_attachment=True, attachment_filename=fname, mimetype='text/csv')
+        return render_template(templateName, sponsors=sponsorNames)
+    elif role == 'sponsor':
+        return render_template(templateName)
+    else:
+        return redirect(url_for('home'))
 @app.context_processor
 def sponsorTitle():
     def getSponsorTit(id):

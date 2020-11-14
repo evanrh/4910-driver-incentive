@@ -326,10 +326,11 @@ def sponsorSystemSettings():
     if request.method == 'POST':
         rate = request.form['rate']
         sid = session['userInfo']['properties']['id']
-        userInfo.properties['point_value'] = rate
+        userInfo.properties['point_value'] = float(rate)
         update_sponsor_rate(sid, rate)
         flash('Conversion rate updated!')
 
+    print(userInfo.properties['point_value'])
     return render_template('sponsor/sponsorSystemSettings.html', rate=userInfo.properties['point_value'])
 
 @app.route("/sponsorViewDriver")

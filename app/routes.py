@@ -70,13 +70,14 @@ def upload_file(f):
     # Send tempf to driver
     tempf.close()
 
-@app.route('/')
+@app.route('/home')
+@app.route('/', methods=['GET', 'POST'])
 def home():
     # Using the global class to access data
     global userInfo
     global Message
 
-    if not session.get('logged_in') or not session.get('userInfo'):
+    if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -85,22 +86,8 @@ def home():
         session.pop('_flashes', None)
 
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
-            rec = []
-            genres = []
-            userna = session['userInfo']['properties']['user']
 
-            if not session['userInfo']['properties']['selectedSponsor'] == None:
-                genres = getgenres()
-                rec = recommend(userna)
-                pass
-            
-
-            currSponsor = Sponsor()
-            if session['userInfo']['properties']['selectedSponsor'] == None:
-                sponsorId = None
-            else:
-                sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
-
+            # Messages to be displayed in banner
             inbox_list = userInfo.get_inbox_list()
             if 'System Management' in inbox_list and len(inbox_list) == 1:
                 Message = "You have an important message from System Management"
@@ -111,15 +98,23 @@ def home():
             else:
                 Message = ""
 
+            # Product page information
+            recommended = []
+            genres = []
+            popitems = []
+            numproducts = 0
+            userid = session['userInfo']['properties']['id']
 
-            # Fix sponsorless driver issue
-            if sponsorId:
+            if not session['userInfo']['properties']['selectedSponsor'] == None:
+                genres = getgenres()
+                recommended = recommend(userid)
+                sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
                 numproducts = getnumproducts(sponsorId)
+                popitems = getpopitems(sponsorId) # Causing missing endpoint issue
             else:
-                numproducts = 0
-            popitems = getpopitems()
-            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
+                sponsorId = None
 
+            return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
             inbox_list = userInfo.get_inbox_list()
@@ -254,7 +249,6 @@ def driverPointsLeader():
 
     drivers = currSponsor.view_leaderboard()
 
-
     return render_template('driver/driverPointsLeader.html', drivers=drivers)
 
 @app.route("/driverNotification")
@@ -267,7 +261,9 @@ def driverNotification():
 def driverManagePurchase():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('driver/driverManagePurchase.html')
+    purchaseList = []
+    # get purchase list
+    return render_template('driver/driverManagePurchase.html', purchaseList = purchaseList)
 
 @app.route("/driverProfile")
 def driverProfile():
@@ -281,8 +277,7 @@ def driverCart():
         return redirect(url_for('home'))
 
     def getProductInfo(id):
-        itemInfo = Admin().getProductInfo(id)
-        return itemInfo
+        return Admin().getProductInfo(id)
     
     return render_template('driver/driverCart.html', getProductInfo = getProductInfo)
 
@@ -708,8 +703,41 @@ def removeFromCart():
 
 @app.route("/checkout", methods=["GET","POST"])
 def checkout():
-    #Todo
-    return ('', 204)
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
+    cartTotal = 0
+    success = True
+    purchase = session['shoppingCart'].copy()
+    now = datetime.datetime.now()
+
+    for item in session['shoppingCart']:
+        print(getprodinfo(item))
+        cartTotal += getprodinfo(item)[1]
+    
+    if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
+        success = False
+    
+    else:
+        sponsor = Sponsor()
+        name = getSponsorName(session['userInfo']['properties']['selectedSponsor'][0])
+        sponsor.populate(name)
+
+        # Subtract the points
+        sponsor.add_points(session['userInfo']['properties']['id'], -cartTotal)
+        session['userInfo']['properties']['selectedSponsor'][1] -= cartTotal
+        session.modified = True
+
+        # Add to the database
+
+        # Clear the cart
+        session['shoppingCart'].clear()
+        session.modified = True
+    
+    def getProductInfo(id):
+        return Admin().getProductInfo(id)
+
+    return render_template('driver/driverReciept.html', purchase = purchase, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/sendto", methods=["GET","POST"])
 def sendto():
@@ -737,14 +765,16 @@ def sendto():
 
 @app.route("/productsearch", methods=["GET","POST"])
 def productsearch():
-    search = "no input"
-    results = "blah blah blah blah"  
-    limitedresults = [" "] * 50
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
 
-    currSponsor = Sponsor()
+    # Setting up default variables
+    search = ""
+    results = "" 
+    amount = 0
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
-
+    # On post, get information from filter form
     if request.method == 'POST':
         form = request.form
         search = form['search']
@@ -752,26 +782,23 @@ def productsearch():
         order = form['orderby']
         amount = int(form['amount'])
         results = product_search(search, sponsorId, mylist, order)
-    
-    count = 0; 
-#    print(results)
+
+    # Store limited amount of results and send to page
     limitedresults = []
 
-    for i in range(0, amount):
-        if(count < len(results)):
-            limitedresults.append(results[i])
-        else:
-            break
-        count += 1
-#    print(results)
-#    print(limitedresults)
-    numresults = len(results) 
-    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults)
+    # Loop to the minimum of the amount of results and the amount of products to show
+    for i in range(0, min(amount, len(results))):
+        limitedresults.append(results[i])
+
+    return render_template('driver/driverResults.html', numresults = len(results), query = search, results = limitedresults)
 
 
 #Very much a building block, may scrap if need be
 @app.route("/productpage", methods=["GET","POST"])
 def productpage():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
@@ -785,6 +812,9 @@ def productpage():
 
 @app.route("/buynow", methods=["GET", "POST"])
 def buynow():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
@@ -798,6 +828,9 @@ def buynow():
      
 @app.route("/buynowrecipt", methods=["GET", "POST"])
 def buynowrecipt():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
@@ -806,16 +839,19 @@ def buynowrecipt():
         form = request.form
         got = form['buy']
         results = product_search(got, sponsorId, "None", "priceup" )
+    
+    currSponsor = Sponsor()
 
     userId = session['userInfo']['properties']['id']
     Davidsubpoints(userId, results[0]['price'], sponsorId)   
     print(userId, results[0]['price'], sponsorId)
      
     return render_template('driver/driverBuyNowRecipt.html', results = results[0])
+
 @app.route("/thanks", methods=["GET","POST"])
 def thanks():
-
-
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
 
     userId = session['userInfo']['properties']['id']
     if request.method == "POST":
@@ -829,8 +865,6 @@ def thanks():
     print(userId)
     updateproductorder(userId, pid, num)
     return render_template('driver/driverThanks.html')
-
-
 
 @app.route("/productAJAX", methods=["POST"])
 def productAJAX():
@@ -953,3 +987,9 @@ def catalog(sponsor):
     else:
         flash('Access not allowed')
         return redirect(url_for('home'))
+
+@app.context_processor
+def sponsorTitle():
+    def getSponsorTit(id):
+        return getSponsorTitle(id)
+    return dict(getSponsorTitle=getSponsorTit)

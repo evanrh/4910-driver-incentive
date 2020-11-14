@@ -1,4 +1,9 @@
 {% extends "driver/driverBase.html" %}
 {% block driverContent %}
 <h1>Manage Purchases</h1>
+{% if purchaseList %}
+
+{% else %}
+<p>You currently don't have any purchases!</p>
+{%endif%}
 {% endblock %}

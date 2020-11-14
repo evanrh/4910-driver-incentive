@@ -5,7 +5,10 @@ $(function() {
         contentType: "charset=utf-8",
         url: '/addToCart', 
         type: 'POST', 
-        data: {'id': id}
+        data: {'id': id},
+        success: function() {
+          location.reload();
+        }
       })
     });
 });
@@ -17,7 +20,10 @@ $(function() {
         contentType: "charset=utf-8",
         url: '/removeFromCart', 
         type: 'POST', 
-        data: {'id': id}
+        data: {'id': id},
+        success: function() {
+          location.reload();
+        }
       })
     });
 });

@@ -19,7 +19,10 @@ $(function() {
         contentType: "charset=utf-8",
         url: '/sendto', 
         type: 'POST', 
-        data: {'user': user, 'recipient': recipient, 'message': message}
+        data: {'user': user, 'recipient': recipient, 'message': message},
+        success: function(json) {
+          if(!json.error) location.reload();
+        }
       })
     });
 });

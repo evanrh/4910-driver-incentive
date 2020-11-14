@@ -21,5 +21,6 @@ admin_api = Api(admin_bp, authorizations=auths)
 
 app.register_blueprint(bp)
 app.register_blueprint(admin_bp)
+
 from app import routes
 from app import api_routes

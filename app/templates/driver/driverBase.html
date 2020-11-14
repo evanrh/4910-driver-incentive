@@ -13,7 +13,7 @@
             <div id="top-navbar-right">
 
                 <a style="padding-left:0;">
-                    <span>Current Sponsor: {{ session['userInfo']['properties']['selectedSponsor'][0] }}</span>
+                    <span>Current Sponsor: {{ getSponsorTitle(session['userInfo']['properties']['selectedSponsor'][0]) }}</span>
                 </a>
 
                 <div class="dropdown">
@@ -23,14 +23,14 @@
                         <form id = "sponsorform" action="{{ url_for('switchSponsor') }}" method="post">
                         </form>
 
-                        <select class="dropdown-content" id="sponsorSelect" name="sponsorSelect" form="sponsorform" size="{{session['userInfo']['properties']['sponsors']|length}}" style="width:50px;">
+                        <select class="dropdown-content" id="sponsorSelect" name="sponsorSelect" form="sponsorform" size="{{session['userInfo']['properties']['sponsors']|length}}">
                             {% if not session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
-                            <option hidden disabled selected value> Select </option>
+                            <option hidden disabled selected value> Select</option>
                             {% for sponsor in session['userInfo']['properties']['sponsors'] %}
                                 {% if not sponsor[0] == session['userInfo']['properties']['selectedSponsor'][0] %}
-                                <option value="{{ sponsor [0] }}">{{ sponsor[0] }}</option>
+                                <option value="{{ sponsor [0] }}">{{ getSponsorTitle(sponsor[0]) }}</option>
                                 {% else %}
-                                <option value="{{ sponsor [0] }}" selected>{{ sponsor[0] }}</option>
+                                <option value="{{ sponsor [0] }}" selected>{{ getSponsorTitle(sponsor[0]) }}</option>
                                 {% endif %}
                             {% endfor %}         
                             {% endif %}                                     
@@ -47,9 +47,17 @@
                 </div>
                 {% endif %}
 
-                <a href="/driverCart">
-                    <img src="{{url_for('static', filename='img/cart.png')}}" style="width:50px;padding-top:10px;">
-                </a>
+                    {% if session['shoppingCart'] | length > 0 %}
+                    <span class="fa-stack fa-3x" data-count=" {{ session['shoppingCart'] | length }} ">
+                        <a href="/driverCart" style="height: 90px;">
+                            <img src="{{url_for('static', filename='img/cart.png')}}" style="width:50px;vertical-align:baseline;">
+                        </a>
+                    </span>
+                    {% else %}
+                        <a href="/driverCart">
+                            <img src="{{url_for('static', filename='img/cart.png')}}" style="width:50px;padding-top:10px;">
+                        </a>
+                    {% endif %}
 
                 <a style="padding-left:0;">
                     {% if session['userInfo']['properties']['selectedSponsor'][1] is not none %}

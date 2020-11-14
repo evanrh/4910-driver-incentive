@@ -6,7 +6,9 @@
 
 
 	<div>
+	{%if results['img_url'] != None%}
 	<img src="{{results['img_url']}}"> 
+	{%endif%}
 	</div>
 	<p> {{results['description']}}</p>
 	<p> ${{results['price']}}</p>

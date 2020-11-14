@@ -66,7 +66,9 @@
             {% endif %}
             <div class="one-third">
                 <div class="card">
+		    {%if segment['img_url'] != None%}
                     <img class="card-img-top" src="{{ segment['img_url'] }}">
+		    {%endif%}
                     <div class="card-body">
                         <h5><strong>{{ segment['name'] }}</strong></h5>
                         <h4>${{ segment['price'] }}</h4>

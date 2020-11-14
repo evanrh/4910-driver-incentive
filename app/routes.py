@@ -116,7 +116,7 @@ def home():
                 recommended = recommend(userid)
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
                 numproducts = getnumproducts(sponsorId)
-                popitems = getpopitems(sponsorId) # Causing missing endpoint issue
+                popitems = getpopitems(sponsorId) # Causing missing endpoint issue FIXED, IT WAS REQUESTING IMGS ON TEST VALUES
             else:
                 sponsorId = None
 

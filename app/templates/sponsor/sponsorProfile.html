@@ -4,11 +4,11 @@
 
 <div class="row">
     {% if session['userInfo']['properties']['image'] %}
-        <a href="/driverProfile">
+        <a href="/sponsorProfile">
             <img src="{{url_for('static', filename='img/userpic2.png')}}" class="pfp" style="width:100px;">
         </a>
     {% else %}
-        <a href="/driverProfile">
+        <a href="/sponsorProfile">
             <img src="{{url_for('static', filename='img/userpic2.png')}}" class="pfp" style="width:100px;">
         </a>
     {% endif %}

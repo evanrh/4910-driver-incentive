@@ -326,10 +326,11 @@ def sponsorSystemSettings():
     if request.method == 'POST':
         rate = request.form['rate']
         sid = session['userInfo']['properties']['id']
-        userInfo.properties['point_value'] = rate
+        userInfo.properties['point_value'] = float(rate)
         update_sponsor_rate(sid, rate)
         flash('Conversion rate updated!')
 
+    print(userInfo.properties['point_value'])
     return render_template('sponsor/sponsorSystemSettings.html', rate=userInfo.properties['point_value'])
 
 @app.route("/sponsorViewDriver")
@@ -1018,41 +1019,91 @@ def reports():
         sponsorNames = list(map(lambda elem: elem[1], sponsorList))
 
         if request.method == 'POST':
-            # Elements are all named sponsor, so this grabs the whole list of them
-            sponsors = request.form.getlist('sponsor')
 
-            startDate = request.form['startdate'].split('-')
-            startDate = list(map(lambda e: int(e), startDate))
-            startDate = datetime.datetime(startDate[0], startDate[1], startDate[2])
-
-            endDate = request.form['enddate'].split('-')
-            endDate = list(map(lambda e: int(e), endDate))
-            endDate = datetime.datetime(endDate[0], endDate[1], endDate[2])
-
+            import calendar
             cont = ReportController()
-
-            # Get number of each user type
-            numDrivers = cont.number_users('driver')
-            numSponsors = cont.number_users('sponsor')
-            numAdmins = cont.number_users('admin')
-
-            metaHeaders = ('# of Drivers', '# of Sponsors', '# of Admins')
-            sponsorHeaders = ('Sponsor', 'Number of drivers', 'Purchases Total', 'Expenses')
             proxy = StringIO()
             w = csv.writer(proxy)
-            w.writerow(metaHeaders)
-            w.writerow((numDrivers, numSponsors, numAdmins))
-            w.writerow(())
-            w.writerow(sponsorHeaders)
 
-            for sponsor in sponsors:
-                id = get_table_id(sponsor)[0]
-                out = cont.sponsor_stats(id, (startDate, endDate))
+            startDate = request.form['startdate'].split('-')
+            startDate = datetime.datetime(int(startDate[0]), int(startDate[1]), 1)
 
-                # Added in if else in case an exception returns None
-                row = (sponsor, out['drivers'], round(float(out['spent']), 2), round(float(out['spent']) * .01, 2)) if out else ()
-                w.writerow(row)
+            endDate = request.form['enddate'].split('-')
+            endDate = datetime.datetime(int(endDate[0]), int(endDate[1]), calendar.monthrange(int(endDate[0]), int(endDate[1]))[1])
 
+
+            fname = ""
+            if request.form['reporttype'] == 'Sales over time':
+                # Report of sales over time
+
+                # Get number of each user type
+                numDrivers = cont.number_users('driver')
+                numSponsors = cont.number_users('sponsor')
+                numAdmins = cont.number_users('admin')
+                metaHeaders = ('# of Drivers', '# of Sponsors', '# of Admins')
+
+                w.writerow(metaHeaders)
+                w.writerow((numDrivers, numSponsors, numAdmins))
+                w.writerow(())
+                sales = cont.total_sales((startDate, endDate))
+
+                w.writerow(('Month','Sales'))
+
+                # Function to write each month into report over sales
+                def func(month):
+                    w.writerow( (datetime.datetime(startDate.year, month[0], 1).strftime("%m"), round(float(month[1]), 2)) )
+                    return month
+
+                sales = dict(map(func, sales.items()))
+                fname = "{}-total-sales-report.csv".format(2020)
+
+            else: 
+
+                # Elements are all named sponsor, so this grabs the whole list of them
+                sponsors = request.form.getlist('sponsor')
+
+                if request.form['reporttype'] == 'Sales by sponsor':
+                # Report of sales by sponsor, summarized by month
+                    sponsorHeaders = ('Month','Sponsor', 'Purchases Total', 'Expenses')
+                    w.writerow(sponsorHeaders)
+
+                    def sponsTot(s):
+                        id = get_table_id(s)[0]
+                        return (s, cont.sponsor_stats(id, (startDate, endDate)))
+
+                    sponsorTotals = dict(map(sponsTot, sponsors)) 
+                    print(sponsorTotals)
+
+
+                    for i in range(startDate.month, endDate.month+1):
+                        w.writerow( (datetime.datetime(startDate.year, i, 1).strftime("%B"), ) )
+                        for j in sponsorTotals:
+                            purchase = round(float(sponsorTotals[j][i]), 2)
+                            w.writerow( ('', j, purchase, purchase * .01) )
+
+                    fname = "{}-sponsor-sales-report.csv".format('-'.join([startDate.strftime("%m-%d"), endDate.strftime("%m-%d")]))
+                else:
+                    # Report of purchases by driver, summarized by sponsor
+                    sponsorHeaders = ('Sponsor','Driver','Purchases')
+                    w.writerow(sponsorHeaders)
+
+                    def driverAgg(s):
+                        id = get_table_id(s)[0]
+                        return (s, cont.driver_purchases(id))
+
+                    sponsorSumms = dict(map(driverAgg, sponsors))
+
+                    for sp in sponsorSumms.keys():
+                        w.writerow((sp, ''))
+                        print(sponsorSumms[sp])
+                        for dr in sponsorSumms[sp]:
+                            w.writerow(('', dr)) 
+                            for purchase in sponsorSumms[sp][dr]:
+                                w.writerow(('', '', purchase))
+                    fname = "{}-driver-summary-report.csv".format(date.today().strftime('%m-%d'))
+
+
+            # Serve report file
             del cont
             mem = BytesIO()
             mem.write(proxy.getvalue().encode('utf-8'))
@@ -1060,7 +1111,6 @@ def reports():
             proxy.close()
 
             now = date.today()
-            fname = "{}-admin-report.csv".format(now.strftime('%m-%d-%Y'))
             return send_file(mem, as_attachment=True, attachment_filename=fname, mimetype='text/csv')
         return render_template(templateName, sponsors=sponsorNames)
     elif role == 'sponsor':

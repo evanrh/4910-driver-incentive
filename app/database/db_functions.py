@@ -290,7 +290,6 @@ def get_orders_by_driver(uid):
         else:
             orderDict[order[0]] = [orderlist]
 
-    print(orderDict)
     return orderDict
 
 def updateproductorder(uid, pid, rating):

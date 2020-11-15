@@ -76,7 +76,6 @@ def upload_file(f):
     # Send tempf to driver
     tempf.close()
 
-@app.route('/home')
 @app.route('/', methods=['GET', 'POST'])
 def home():
     # Using the global class to access data
@@ -116,7 +115,7 @@ def home():
                 recommended = recommend(userid)
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
                 numproducts = getnumproducts(sponsorId)
-                popitems = getpopitems(sponsorId) # Causing missing endpoint issue FIXED, IT WAS REQUESTING IMGS ON TEST VALUES
+                popitems = getpopitems(sponsorId)
             else:
                 sponsorId = None
 

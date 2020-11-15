@@ -116,8 +116,13 @@ def home():
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
+                convert = get_point_value(sponsorId)
+                recommended[0]['price'] = int(recommended[0]['price']/convert)
+                for row in popitems:
+                    row['price'] = int(row['price']/convert)
             else:
                 sponsorId = None
+
 
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
@@ -803,10 +808,12 @@ def productsearch():
 
     # Store limited amount of results and send to page
     limitedresults = []
-
+    convert = get_point_value(sponsorId)
     # Loop to the minimum of the amount of results and the amount of products to show
     for i in range(0, min(amount, len(results))):
         limitedresults.append(results[i])
+    for row in limitedresults:
+        row['price'] = int(row['price']/convert)
 
     return render_template('driver/driverResults.html', numresults = len(results), query = search, results = limitedresults)
 

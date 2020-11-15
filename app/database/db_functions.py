@@ -254,89 +254,6 @@ def product_search(search, spon_id, mylist, order):
 
     return products
 
-    ''' 
-    I cleaned up the search function to use a regex in order to make searching easier,
-    in case I missed something I left the original function below.
-
-#    print(mylist)
-
-    dirty_search = search
-    numwords = len(dirty_search.split())
-    clean_search = [None] * numwords
-
-    #for loop to add as many spon_ids to search
-#    print(spon_id[1])    
-    multigenrelong = "SELECT name,price,rating, description, img_url, product_id FROM product WHERE available = 1"
-    if(str(spon_id) != 'Any'):
-        multigenrelong += " AND (sponsor_id= '"+str(spon_id)+"')"
-
-    if mylist != "None":
-        multigenrelong += " AND Genre = '"+mylist+"'"
-        print(multigenrelong)
-    else:
-        
-        print(multigenrelong)
-    
-
-    #This searches by multiple genres
-#    multigenrelong = "SELECT name,price,rating, description FROM product WHERE available = 1 AND ("
-    multiOR = " OR "
-    multigenre = "Genre ="
-    returninfo = "\n"
-    searchup = "priceup: ratingup:"
-    searchdown = "pricedown: ratingdown:"
-    one = 0
-    priceup = 0
-    pricedown = 0
-    ratingup = 0
-    ratingdown = 0
-
-    dirty_search.lower()
-#    print(dirty_search)
-
-    if(dirty_search != " "):
-        multigenrelong += " AND name= '"+dirty_search +"' "
-
-    print(multigenrelong)
-    if order == "priceup":
-         priceup = 1
-    elif order == "ratingup":
-         ratingup = 1
-    elif order == "pricedown":
-         pricedown = 1
-    elif order == "ratingdown":
-         ratingdown = 1
-
-    multigenrelong = multigenrelong.replace(":","")
-
-    if priceup == 1:
-        multigenrelong = multigenrelong + " ORDER BY price DESC"
-    elif pricedown == 1:
-        multigenrelong = multigenrelong + " ORDER BY price ASC"
-    elif ratingup == 1:
-        multigenrelong = multigenrelong + " ORDER BY rating DESC"
-    elif ratingdown == 1:
-        multigenrelong = multigenrelong + " ORDER BY rating ASC"    
-    print(multigenrelong)
-    got = cursor.exec(multigenrelong) 
-
-    products = []
-    for row in got:
-        prod = {"name":row[0], "price":row[1], "rating":row[2], "description":row[3], "img_url":row[4], "id":row[5]}
-        products.append(prod)
-#    finalprod["product_info"] = products
-#    if(products[0]['rating'] == None):
-#        results[0]['rating'] = -1
-    print(products)
-    return products
-
-    for row in (0,len(products)-1):
-        if products[row]['rating'] == None:
-            products[row]['rating'] = -1
-        print(products[row])
-        products[row]['rating'] = round(products[row]['rating'])
-'''
-
 def updateproductorder(uid, pid, rating):
     try:
         cursor.exec("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
@@ -465,6 +382,23 @@ def get_products_by_name(search):
 def update_sponsor_rate(sponsor_id, rate):
     sql = "UPDATE sponsor SET point_value=%s WHERE sponsor_id=%s"
     cursor.exec(sql, (rate, sponsor_id))
+
+#gets the next available order id, returns 1 if no orders exist
+def get_next_order_id():
+    num = cursor.exec("SELECT MAX(Order_ID) FROM Product_Orders")
+
+    if( num[0] == None ):
+        return 1
+    else:
+        return num[0] + 1
+
+def add_new_order(uid, pid, rating, spid, amount, oid):
+    query = 'INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, Order_ID) VALUES ({}, {}, {}, NOW(), {}, {}, {})'
+    query = query.format(uid, pid, rating, spid, amount, oid)
+    try:
+        cursor.exec(query)
+    except Exception as e:
+            raise Exception(e)
 
 #main used to test functions
 if __name__ == "__main__":

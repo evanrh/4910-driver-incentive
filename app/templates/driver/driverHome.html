@@ -95,7 +95,7 @@
     </div>
   </form>
 
-{% set trunc = 40 %}
+{% set trunc = 200 %}
 {% if resultrec != ' ' %}
     <h2> Recommended </h2>
     <p>This item was a recommended just for you!</p>
@@ -115,10 +115,14 @@
                                     {% else %}
                                     <p class="card-text">{{ segment['description'] }}</p>
                                     {% endif %}
-                                    <form action="/productpage" method="POST">
-                                    <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
-                                    </form>
-                                    <button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
+                                    <div class="row">
+                                        <form action="/productpage" method="POST">
+                                            <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
+                                        </form>
+                                        <form>
+                                            <button id="addToCart" class="add btn btn-success" name="{{segment['id']}}">Add To Cart</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                     </div>
@@ -147,10 +151,14 @@
                                     {% else %}
                                     <p class="card-text">{{ segment['description'] }}</p>
                                     {% endif %}
-                                    <form action="/productpage" method="POST">
-                                    <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
-                                    </form>
-                                    <button id="addToCart" name="{{segment['id']}}">Add To Cart</button>
+                                    <div class="row">
+                                        <form action="/productpage" method="POST">
+                                            <button id="{{segment['name']}}" type="submit" class="add btn btn-primary" name="productname" value = "{{segment['name']}}">View</button>
+                                        </form>
+                                        <form>
+                                            <button id="addToCart" class="add btn btn-success" name="{{segment['id']}}">Add To Cart</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                     </div>

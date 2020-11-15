@@ -594,7 +594,7 @@ class Admin(AbsUser):
             raise Exception(e)
     
     def getProductInfo(self, id):
-        query = 'SELECT name,price, img_url FROM product WHERE product_id = %s'
+        query = 'SELECT name, price, img_url FROM product WHERE product_id = %s'
         val = (id)
 
         try:

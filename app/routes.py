@@ -712,13 +712,20 @@ def checkout():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
+    def getProductInfo(id):
+        return Admin().getProductInfo(id)
+
+    # Vars
     cartTotal = 0
     success = True
     purchase = session['shoppingCart'].copy()
+    ordernum = get_next_order_id()
     now = datetime.datetime.now()
-
+    uid = session['userInfo']['properties']['id']
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    conversionrate = get_point_value(spid)
+    print(conversionrate)
     for item in session['shoppingCart']:
-        print(getprodinfo(item))
         cartTotal += getprodinfo(item)[1]
     
     if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
@@ -726,7 +733,7 @@ def checkout():
     
     else:
         sponsor = Sponsor()
-        name = getSponsorName(session['userInfo']['properties']['selectedSponsor'][0])
+        name = getSponsorName(spid)
         sponsor.populate(name)
 
         # Subtract the points
@@ -735,15 +742,16 @@ def checkout():
         session.modified = True
 
         # Add to the database
-
+        for item in session['shoppingCart']:
+            #amount = getProductInfo(item)[1] / conversionrate
+            for x in range(0, item[1]):
+                #add_new_order(uid, item, '3', spid, amount, ordernum)
+                pass
         # Clear the cart
         session['shoppingCart'].clear()
         session.modified = True
-    
-    def getProductInfo(id):
-        return Admin().getProductInfo(id)
 
-    return render_template('driver/driverReciept.html', purchase = purchase, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
+    return render_template('driver/driverReciept.html', purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/sendto", methods=["GET","POST"])
 def sendto():

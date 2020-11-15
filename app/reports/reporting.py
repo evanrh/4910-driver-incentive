@@ -21,7 +21,7 @@ class ReportController():
         """ Get statistics about each sponsor in a date range 
             dates: tuple(start_date, end_date)
         """
-        sql = "SELECT * FROM Product_Orders WHERE sponsor_id=%s AND TimeStamp BETWEEN %s AND %s"
+        sql = "SELECT * FROM Product_Orders WHERE Sponsor_Id=%s AND TimeStamp BETWEEN %s AND %s"
         start = dates[0].month
         end = dates[1].month
         vals = (sid, dates[0], dates[1])
@@ -53,5 +53,26 @@ class ReportController():
         except Exception as e:
             print(e)
             return None
+
+    def driver_purchases(self, sid): 
+        """ Get list of all drivers and their purchases that are affilated with sponsor sid """
+        sql = "SELECT user, name, amount FROM Product_Orders NATURAL JOIN driver, product WHERE Product_Orders.Product_ID=product.product_id AND Product_Orders.Sponsor_ID=%s"
+
+        try:
+            orders = self.conn.exec(sql, (sid, ))
+            names = list(map(lambda e: e[0], orders))
+
+            drivers = dict(map(lambda e: (e, []), names))
+
+            def func(order):
+                drivers[order[0]].append(order[1])
+                return order
+
+            orders = tuple(map(func, orders))
+            return drivers
+        except Exception as e:
+            print(e)
+            return None
+
     def __del__(self):
         self.conn.close()

@@ -1050,29 +1050,50 @@ def reports():
                 fname = "{}-total-sales-report.csv".format(2020)
 
             else: 
-                # Report of sales by sponsor, summarized by month
-                # Report of purchases by driver, summarized by sponsor
 
                 # Elements are all named sponsor, so this grabs the whole list of them
                 sponsors = request.form.getlist('sponsor')
-                sponsorHeaders = ('Month','Sponsor', 'Purchases Total', 'Expenses')
-                w.writerow(sponsorHeaders)
 
-                def sponsTot(s):
-                    id = get_table_id(s)[0]
-                    return (s, cont.sponsor_stats(id, (startDate, endDate)))
+                if request.form['reporttype'] == 'Sales by sponsor':
+                # Report of sales by sponsor, summarized by month
+                    sponsorHeaders = ('Month','Sponsor', 'Purchases Total', 'Expenses')
+                    w.writerow(sponsorHeaders)
 
-                sponsorTotals = dict(map(sponsTot, sponsors)) 
-                print(sponsorTotals)
+                    def sponsTot(s):
+                        id = get_table_id(s)[0]
+                        return (s, cont.sponsor_stats(id, (startDate, endDate)))
+
+                    sponsorTotals = dict(map(sponsTot, sponsors)) 
+                    print(sponsorTotals)
 
 
-                for i in range(startDate.month, endDate.month+1):
-                    w.writerow( (datetime.datetime(startDate.year, i, 1).strftime("%B"), ) )
-                    for j in sponsorTotals:
-                        purchase = round(float(sponsorTotals[j][i]), 2)
-                        w.writerow( ('', j, purchase, purchase * .01) )
+                    for i in range(startDate.month, endDate.month+1):
+                        w.writerow( (datetime.datetime(startDate.year, i, 1).strftime("%B"), ) )
+                        for j in sponsorTotals:
+                            purchase = round(float(sponsorTotals[j][i]), 2)
+                            w.writerow( ('', j, purchase, purchase * .01) )
 
-                fname = "{}-sponsor-sales-report.csv".format('-'.join([startDate.strftime("%m-%d"), endDate.strftime("%m-%d")]))
+                    fname = "{}-sponsor-sales-report.csv".format('-'.join([startDate.strftime("%m-%d"), endDate.strftime("%m-%d")]))
+                else:
+                    # Report of purchases by driver, summarized by sponsor
+                    sponsorHeaders = ('Sponsor','Driver','Purchases')
+                    w.writerow(sponsorHeaders)
+
+                    def driverAgg(s):
+                        id = get_table_id(s)[0]
+                        return (s, cont.driver_purchases(id))
+
+                    sponsorSumms = dict(map(driverAgg, sponsors))
+
+                    for sp in sponsorSumms.keys():
+                        w.writerow((sp, ''))
+                        print(sponsorSumms[sp])
+                        for dr in sponsorSumms[sp]:
+                            w.writerow(('', dr)) 
+                            for purchase in sponsorSumms[sp][dr]:
+                                w.writerow(('', '', purchase))
+                    fname = "{}-driver-summary-report.csv".format(date.today().strftime('%m-%d'))
+
 
             # Serve report file
             del cont

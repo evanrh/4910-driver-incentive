@@ -267,9 +267,14 @@ def driverNotification():
 def driverManagePurchase():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
+
+    def getProductInfo(id):
+        return Admin().getProductInfo(id)
+    
     purchaseList = []
     # get purchase list
-    return render_template('driver/driverManagePurchase.html', purchaseList = purchaseList)
+    purchaseList = get_orders_by_driver(session['userInfo']['properties']['id'])
+    return render_template('driver/driverManagePurchase.html', getProductInfo = getProductInfo,  purchaseList = purchaseList)
 
 @app.route("/driverProfile")
 def driverProfile():
@@ -724,8 +729,7 @@ def checkout():
     now = datetime.datetime.now()
     uid = session['userInfo']['properties']['id']
     spid = session['userInfo']['properties']['selectedSponsor'][0]
-    conversionrate = get_point_value(spid)
-    print(conversionrate)
+    
     for item in session['shoppingCart']:
         cartTotal += getprodinfo(item)[1]
     
@@ -744,10 +748,10 @@ def checkout():
 
         # Add to the database
         for item in session['shoppingCart']:
-            #amount = getProductInfo(item)[1] / conversionrate
-            for x in range(0, item[1]):
-                #add_new_order(uid, item, '3', spid, amount, ordernum)
-                pass
+            amount = getProductInfo(item)[1]
+            for x in range(0, session['shoppingCart'].get(item)):
+                add_new_order(uid, item, '3', spid, amount, ordernum)
+
         # Clear the cart
         session['shoppingCart'].clear()
         session.modified = True

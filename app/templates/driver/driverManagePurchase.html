@@ -2,7 +2,38 @@
 {% block driverContent %}
 <h1>Manage Purchases</h1>
 {% if purchaseList %}
+    {% for order in purchaseList %}
+        {% if order != None %}
+        <p> Order Number: {{ order }} </p>
+        <p> Date: {{ purchaseList.get(order)[0][2].strftime('%m-%d-%Y %I:%M %p') }}</p>
 
+        <div id='cart'>
+            <table>
+                <tr class='column-headings'>
+                <th></th>
+                <th>Item</th>
+                <th>Unit Price</th>
+                </tr>
+
+            {% set total = [0] %}
+
+            {% for item in purchaseList.get(order) %}
+                {% set itemdata = getProductInfo(item[0]) %}
+                <tr class='item'>
+                {% if itemdata[2] %}
+                <td class="item_img"><img src="{{ itemdata[2] }}"> </td>
+                {% else %}
+                <td class="item_img"> NOIMG </td>
+                {% endif %}
+                <td class='item_name'> {{ itemdata[0] }} </td>
+                <td class='item_price'> {{ itemdata[1] }} </td>
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+
+        {% endif %}
+    {% endfor %}
 {% else %}
 <p>You currently don't have any purchases!</p>
 {%endif%}

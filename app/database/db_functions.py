@@ -254,6 +254,45 @@ def product_search(search, spon_id, mylist, order):
 
     return products
 
+#gets the next available order id, returns 1 if no orders exist
+def get_next_order_id():
+    num = cursor.exec("SELECT MAX(Order_ID) FROM Product_Orders")
+
+    if( num[0][0] == None ):
+        return 1
+    else:
+        return num[0][0] + 1
+
+#add a new order to the product_orders table
+def add_new_order(uid, pid, rating, spid, amount, oid):
+    query = 'INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, Order_ID) VALUES ({}, {}, {}, CURRENT_TIMESTAMP, {}, {}, {})'
+    query = query.format(uid, pid, rating, spid, amount, oid)
+    try:
+        cursor.exec(query)
+    except Exception as e:
+            raise Exception(e)
+
+#get all orders from a certain driver
+def get_orders_by_driver(uid):
+    query = 'SELECT Order_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount FROM Product_Orders WHERE Driver_ID = %s ORDER BY Order_ID DESC' % uid
+
+    try:
+        orders = cursor.exec(query)
+
+    except Exception as e:
+            raise Exception(e)
+    
+    orderDict = {}
+    for order in orders:
+        orderlist = list(order[1:])
+        if order[0] in orderDict:
+            orderDict[order[0]].append(orderlist)
+        else:
+            orderDict[order[0]] = [orderlist]
+
+    print(orderDict)
+    return orderDict
+
 def updateproductorder(uid, pid, rating):
     try:
         cursor.exec("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
@@ -383,25 +422,8 @@ def update_sponsor_rate(sponsor_id, rate):
     sql = "UPDATE sponsor SET point_value=%s WHERE sponsor_id=%s"
     cursor.exec(sql, (rate, sponsor_id))
 
-#gets the next available order id, returns 1 if no orders exist
-def get_next_order_id():
-    num = cursor.exec("SELECT MAX(Order_ID) FROM Product_Orders")
-
-    if( num[0] == None ):
-        return 1
-    else:
-        return num[0] + 1
-
-def add_new_order(uid, pid, rating, spid, amount, oid):
-    query = 'INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, Order_ID) VALUES ({}, {}, {}, NOW(), {}, {}, {})'
-    query = query.format(uid, pid, rating, spid, amount, oid)
-    try:
-        cursor.exec(query)
-    except Exception as e:
-            raise Exception(e)
-        
 def get_point_value(sponsor_id):
-    sql = "SELECT point_value FROM sponsor WHERE sponsor_id=%"
+    sql = "SELECT point_value FROM sponsor WHERE sponsor_id=%s"
     result = cursor.exec(sql, (sponsor_id, ))
 
     # Return conversion rate if sponsor exists, otherwise, None

@@ -292,6 +292,7 @@ def get_orders_by_driver(uid):
 
     return orderDict
 
+
 def updateproductorder(uid, pid, rating):
     try:
         cursor.exec("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
@@ -365,11 +366,12 @@ def recommend(userid):
     return product_search(finalproductnamestr, "Any", "None", "priceup")
     
 
-
+"""
+No longer needed if using Sponsor remove points, keeping code in case of breakage
 def Davidsubpoints(userna, amount, spon_id):
     cursor.exec("UPDATE driver_bridge SET points = points - "+str(amount)+" WHERE driver_id = '"+str(userna)+"' AND sponsor_id = '"+str(spon_id)+"'")
     return ''
-
+"""
 
 def getprodinfo(pid):
     try:

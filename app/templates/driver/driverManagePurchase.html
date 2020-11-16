@@ -26,7 +26,7 @@
                 <td class="item_img"> NOIMG </td>
                 {% endif %}
                 <td class='item_name'> {{ itemdata[0] }} </td>
-                <td class='item_price'> {{ itemdata[1] }} </td>
+                <td class='item_price'> {{ (itemdata[1] / convert)|int }} </td>
                 </tr>
             {% endfor %}
             </table>

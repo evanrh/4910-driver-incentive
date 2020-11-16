@@ -168,7 +168,7 @@ class Admin(AbsUser):
 
         out = self.database.exec(query)
         #self.database.close()
-        print(out)
+
         return out[0][0] == 0 or out == None
 
     def update_info(self, data: dict):
@@ -359,7 +359,7 @@ class Admin(AbsUser):
         #self.database = getNewConnection()
         username = str(username).strip()
         sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = \'{}\''.format(username)
-        print(sql)
+
         id = self.database.exec(sql)
         if id[0][0] != None:
             role = 'driver'
@@ -717,7 +717,7 @@ class Sponsor(AbsUser):
 
         out = self.database.exec(query) 
         #self.database.close()
-        print(out)
+
         return out[0][0] == 0 or out == None
 
     def update_info(self, data: dict):
@@ -1235,7 +1235,6 @@ class Driver(AbsUser):
         self.properties['END'] = 'NULL'
         self.properties['active'] = 1
         query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\', \'{active}\')'.format(**self.properties)
-        print(query)
 
         try:
             self.database.exec(query)
@@ -1256,7 +1255,7 @@ class Driver(AbsUser):
 
         out = self.database.exec(query) 
         #self.database.close()
-        print(out)
+
         return out[0][0] == 0 or out == None
 
     def get_current_id(self):

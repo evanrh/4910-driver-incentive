@@ -118,8 +118,9 @@ def home():
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)
                 recommended[0]['price'] = int(recommended[0]['price']/convert)
-                for row in popitems:
-                    row['price'] = int(row['price']/convert)
+                if popitems != ' ':
+                    for row in popitems:
+                            row['price'] = int(row['price']/convert)
             else:
                 sponsorId = None
 
@@ -272,13 +273,16 @@ def driverManagePurchase():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    convert = get_point_value(spid)
+
     def getProductInfo(id):
         return Admin().getProductInfo(id)
     
     purchaseList = []
     # get purchase list
     purchaseList = get_orders_by_driver(session['userInfo']['properties']['id'])
-    return render_template('driver/driverManagePurchase.html', getProductInfo = getProductInfo,  purchaseList = purchaseList)
+    return render_template('driver/driverManagePurchase.html', convert = convert, getProductInfo = getProductInfo,  purchaseList = purchaseList)
 
 @app.route("/driverProfile")
 def driverProfile():
@@ -290,11 +294,13 @@ def driverProfile():
 def driverCart():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    convert = get_point_value(spid)
 
     def getProductInfo(id):
         return Admin().getProductInfo(id)
     
-    return render_template('driver/driverCart.html', getProductInfo = getProductInfo)
+    return render_template('driver/driverCart.html', convert = convert, getProductInfo = getProductInfo)
 
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
@@ -733,9 +739,10 @@ def checkout():
     now = datetime.datetime.now()
     uid = session['userInfo']['properties']['id']
     spid = session['userInfo']['properties']['selectedSponsor'][0]
-    
+    convert = get_point_value(spid)
+
     for item in session['shoppingCart']:
-        cartTotal += getprodinfo(item)[1]
+        cartTotal += int((getprodinfo(item)[1]) / convert)
     
     if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
         success = False
@@ -760,7 +767,7 @@ def checkout():
         session['shoppingCart'].clear()
         session.modified = True
 
-    return render_template('driver/driverReciept.html', purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
+    return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/sendto", methods=["GET","POST"])
 def sendto():
@@ -901,11 +908,6 @@ def buynowrecipt():
 
     return render_template('driver/driverReciept.html', purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
-
-
-
-
-
 @app.route("/thanks", methods=["GET","POST"])
 def thanks():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -917,10 +919,6 @@ def thanks():
         num = form['review']
         pid = form['product']
 
-
-    print(num)
-    print(pid)
-    print(userId)
     updateproductorder(userId, pid, num)
     return render_template('driver/driverThanks.html')
 
@@ -970,7 +968,7 @@ def updateAccount(username):
             return json.dumps({'status': 'OK', 'user': username})
 
     sessRole = session['userInfo']['properties']['role']
-    print(sessRole)
+
     if sessRole == 'admin':
         uid, role = get_table_id(username)
         user = None
@@ -1160,6 +1158,7 @@ def reports():
         return render_template(templateName)
     else:
         return redirect(url_for('home'))
+
 @app.context_processor
 def sponsorTitle():
     def getSponsorTit(id):

@@ -362,7 +362,7 @@ def recommend(userid):
     #return the productID
     finalproductnametup = cursor.exec("SELECT name FROM product WHERE product_id = '"+otherproductstr+"'")
     finalproductnamestr = ''.join(map(str, finalproductnametup[0]))
-    print(product_search(finalproductnamestr, "Any", "None", "priceup"))
+    #print(product_search(finalproductnamestr, "Any", "None", "priceup"))
     return product_search(finalproductnamestr, "Any", "None", "priceup")
     
 
@@ -383,30 +383,31 @@ def getprodinfo(pid):
 def getpopitems(sponid):
 #Grab a list of the most popular items in DESC order for the current sponsor
     TopThreeTup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sponid)+"' GROUP BY Product_ID ORDER BY COUNT(*) DESC")
-    print(TopThreeTup)
-#    otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
+    #print(TopThreeTup)
+    #otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
     TopThreeStr = []
     for i in range(0, 3):
         if(i >= len(TopThreeTup)):
             break
         TopThreeStr.append(''.join(map(str, TopThreeTup[i])))
-#    print(TopThreeStr)
+    #print(TopThreeStr)
     for i in range(0, 3):
         if i >= len(TopThreeStr):
             break
         nametup = cursor.exec("SELECT name FROM product WHERE product_id = '"+TopThreeStr[i]+"'")
         TopThreeStr[i] = ''.join(map(str, nametup[0]))
-#Got the names of the top three
-    print(TopThreeStr)
+    #Got the names of the top three
+    #print(TopThreeStr)
     finallist = [' '] * 3
     for i in range(0,3):
         if(i >= len(TopThreeStr)):
             break
         temp = (product_search(TopThreeStr[i], sponid, "None", "priceup"))
-        finallist[i] = temp[0]
+        if len(temp) > 0:
+            finallist[i] = temp[0]
 
-    print("Printing final list")
-    print(finallist)
+    #print("Printing final list")
+    #print(finallist)
     if(finallist[0] == ' '):
         return ' '
     return finallist

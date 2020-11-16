@@ -35,10 +35,10 @@
                 {% endif %}
                 <td class='item_name'> {{ itemdata[0] }} </td>
                 <td class='item_quantity'>{{ purchase.get(item) }} </td>
-                <td class='item_price'> {{ itemdata[1] }} </td>
-                <td class='item_total'> {{ itemdata[1] * purchase.get(item) }} </td>
+                <td class='item_price'> {{ (itemdata[1] / convert)|int }} </td>
+                <td class='item_total'> {{ (itemdata[1] / convert)|int * purchase.get(item) }} </td>
                 </tr>
-                {% if total.append(total.pop() + ( itemdata[1] * purchase.get(item) )) %}{% endif %}
+                {% if total.append(total.pop() + ( (itemdata[1] / convert)|int * purchase.get(item) )) %}{% endif %}
             {% endfor %}
 
             <tr class='total'>

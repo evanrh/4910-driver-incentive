@@ -109,7 +109,7 @@
 				{%endif%}
                                 <div class="card-body">
                                     <h5><strong>{{ segment['name'] }}</strong></h5>
-                                    <h4>${{ segment['price'] }}</h4>
+                                    <h4>{{ segment['price'] }} Points</h4>
                                     {% if segment['description'] | length > trunc %}
                                     <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
                                     {% else %}
@@ -145,7 +145,7 @@
 				{%endif%}
 				<div class="card-body">
                                     <h5><strong>{{ segment['name'] }}</strong></h5>
-                                    <h4>${{ segment['price'] }}</h4>
+                                    <h4>{{ segment['price'] }} Points</h4>
                                     {% if segment['description'] | length > trunc %}
                                     <p class="card-text">{{ segment['description'][0:trunc] + '...' }}</p>
                                     {% else %}

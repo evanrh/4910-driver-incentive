@@ -94,10 +94,10 @@ def home():
 
             # Messages to be displayed in banner
             inbox_list = userInfo.get_inbox_list()
-            if 'System Management' in inbox_list and len(inbox_list) == 1:
-                Message = "You have an important message from System Management"
-            elif 'System Management' in inbox_list and len(inbox_list > 1):
-                Message += ' and ' + str(len(inbox_list) - 1) + ' other unread message'
+            if 'System' in inbox_list and len(inbox_list) == 1:
+                Message = "You have an important message from our System Management"
+            elif 'System' in inbox_list and len(inbox_list) > 1:
+                Message = 'You have an important message from our System Management and ' + str(len(inbox_list) - 1) + ' other unread messages'
             elif len(inbox_list) > 0:
                 Message = "You have " + str(len(inbox_list)) + ' unread messages'
             else:
@@ -531,13 +531,23 @@ def settings():
                 pwd = generate_password_hash(request.form['pass'], 'sha256')
                 userInfo.update_info({'pwd': pwd})
                 return render_template(userInfo.getRole() + "/settings.html")
-
+            elif 'change-notis' in request.form.keys():
+                notis['points'] = 1 if 'points' in request.form.keys() else 0
+                notis['orders'] = 1 if 'orders' in request.form.keys() else 0
+                notis['issue'] = 1 if 'issue' in request.form.keys() else 0
+                notis = {}
+                driver = Driver()
+                driver.populate(session['userInfo']['properties']['user'])
+                driver.update_noti(notis)
+                return render_template('driver/settings.html', notis = notis)
+                
         if userInfo.getRole() == "driver":
             return render_template('driver/settings.html')
-        if userInfo.getRole() == "sponsor":
-            return render_template('sponsor/settings.html')
-        if userInfo.getRole() == "admin":
-            return render_template('admin/settings.html')
+            driver = Driver()
+            driver.populate(session['userInfo']['properties']['user'])
+            notis = driver.get_notifications()
+            return render_template('driver/settings.html', notis = notis)
+
 
 # App Functions
 @app.route("/switchSponsor", methods=['GET', 'POST'])

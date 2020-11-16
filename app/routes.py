@@ -117,7 +117,8 @@ def home():
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)
-                recommended[0]['price'] = int(recommended[0]['price']/convert)
+                if recommended != ' ':
+                    recommended[0]['price'] = int(recommended[0]['price']/convert)
                 if popitems != ' ':
                     for row in popitems:
                             row['price'] = int(row['price']/convert)

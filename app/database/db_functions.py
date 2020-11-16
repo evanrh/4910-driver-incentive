@@ -265,16 +265,32 @@ def get_next_order_id():
 
 #add a new order to the product_orders table
 def add_new_order(uid, pid, rating, spid, amount, oid):
-    query = 'INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, Order_ID) VALUES ({}, {}, {}, CURRENT_TIMESTAMP, {}, {}, {})'
+    query = 'INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, Order_ID, canceled) VALUES ({}, {}, {}, CURRENT_TIMESTAMP, {}, {}, {}, false)'
     query = query.format(uid, pid, rating, spid, amount, oid)
     try:
         cursor.exec(query)
     except Exception as e:
             raise Exception(e)
 
+#ability to mark an order as canceled
+def cancel_order(order):
+    query = 'UPDATE Product_Orders SET canceled = true WHERE Order_ID = %s' % order
+    try:
+        cursor.exec(query)
+    except Exception as e:
+            raise Exception(e)
+
+# ability to get order info
+def get_order_info(order):
+    query = 'SELECT Product_ID, rating, TimeStamp, Sponsor_ID, amount, canceled FROM Product_Orders WHERE Order_ID = %s' % order
+    try:
+        return cursor.exec(query)
+    except Exception as e:
+            raise Exception(e)
+
 #get all orders from a certain driver
 def get_orders_by_driver(uid):
-    query = 'SELECT Order_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount FROM Product_Orders WHERE Driver_ID = %s ORDER BY Order_ID DESC' % uid
+    query = 'SELECT Order_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, canceled FROM Product_Orders WHERE Driver_ID = %s ORDER BY Order_ID DESC' % uid
 
     try:
         orders = cursor.exec(query)

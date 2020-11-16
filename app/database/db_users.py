@@ -12,7 +12,7 @@ from werkzeug.security import check_password_hash
 
 config = {'host': os.getenv('DB_HOST'), 'database': os.getenv('DB_NAME'), 'user': os.getenv('DB_USER'), 'password': os.getenv('DB_PASS'), 'autocommit': True}
 global pool1 
-pool1 = ConnectionPool(size = 8, name = 'pool1', **config )
+pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
 
 def getConnection(ex=0):
     if ex == 1:

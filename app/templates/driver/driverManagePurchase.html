@@ -5,8 +5,15 @@
     {% for order in purchaseList %}
         {% if order != None %}
         <p> Order Number: {{ order }} </p>
+        <p> Sponsor: {{ getSponsorTitle(purchaseList.get(order)[0][1]) }} </p>
         <p> Date: {{ purchaseList.get(order)[0][2].strftime('%m-%d-%Y %I:%M %p') }}</p>
-
+        {% if purchaseList.get(order)[0][5] == 1 %}
+        <p>Order cancelled.</p>
+        {% elif (now - purchaseList.get(order)[0][2]).total_seconds() > 86400 %}
+        <p>24 hours passed since purchase.</p>
+        {% else %}
+        <button class="tfbutton" name="{{ order }}" id='cancelOrder' style='color:red;'>Cancel</button>
+        {% endif %}
         <div id='cart'>
             <table>
                 <tr class='column-headings'>
@@ -23,7 +30,7 @@
                 {% if itemdata[2] %}
                 <td class="item_img"><img src="{{ itemdata[2] }}"> </td>
                 {% else %}
-                <td class="item_img"> NOIMG </td>
+                <td class="item_img"> NO IMG </td>
                 {% endif %}
                 <td class='item_name'> {{ itemdata[0] }} </td>
                 <td class='item_price'> {{ (itemdata[1] / convert)|int }} </td>

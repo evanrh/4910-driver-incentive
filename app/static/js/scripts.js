@@ -155,6 +155,19 @@ $(function() {
   });
 });
 
+// cancel order
+$(function() {
+  $(document).on('click', '#cancelOrder', function(e) {
+    var order =  $(this).attr("name")
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/cancelOrder', 
+      type: 'POST', 
+      data: order
+    })
+  });
+});
+
 // Theme code
 $("#themeSelect").change(function() {
   if ($(this).val() == "dark") {

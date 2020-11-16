@@ -112,8 +112,8 @@ def home():
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
                 genres = getgenres()
-                recommended = recommend(userid)
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+                recommended = recommend(userid, sponsorId)
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)

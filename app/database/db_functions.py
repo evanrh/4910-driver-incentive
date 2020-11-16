@@ -352,9 +352,9 @@ Grab the user who bought that same product most recently
 Return the product that the second user bought most recently, excluding the current product
 
 """
-def recommend(userid):
+def recommend(userid, sid):
     #Select a tuple list of all the products ordered by most recent
-    OGproducttup = cursor.exec("SELECT product_id FROM Product_Orders WHERE Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
+    OGproducttup = cursor.exec("SELECT product_id FROM Product_Orders WHERE Sponsor_ID = '"+str(sid)+"' AND Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
     #Return nothing if the user hasn't bought anything
     if(len(OGproducttup) < 1 ):
         return ' '
@@ -370,7 +370,7 @@ def recommend(userid):
     otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
 #    print(otherdriveridstr)
     #Grap the most recent purchase from the other driver that isn't the OG product
-    otherproducttup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
+    otherproducttup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sid)+"' AND Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
     if(len(otherproducttup) <1 ):
         return ' '
     otherproductstr = ''.join(map(str, otherproducttup[0]))

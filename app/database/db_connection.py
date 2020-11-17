@@ -174,8 +174,8 @@ class Connection(pymysql.connections.Connection):
         cur.close()
         return rows
 
-    #def __del__(self):
-        #pymysql.connections.Connection.close(self)
+    def __del__(self):
+        pymysql.connections.Connection.close(self)
 
 
 

@@ -11,8 +11,11 @@
 	{%endif%}
 	</div>
 	<p> {{results['description']}}</p>
+	{%if convert%}
+	<p> {{results['price']/ convert }} Points</p>
+	{%endif%}
 	<p> ${{results['price']}}</p>
-	<form action="/buynow" method="POST">
+	<form action="/buynowrecipt" method="POST">
 		<div>
 			<button id='{{results['name']}}' type="submit" class="tfbutton" name='buy' value="{{results['name']}}">Buy Now!</button>
 		</div>

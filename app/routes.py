@@ -873,31 +873,15 @@ def productpage():
 
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
-
+    convert = get_point_value(sponsorId)
     if request.method == 'POST':
         form = request.form
         got = form['productname']
         results = product_search(got, sponsorId, "None", "priceup" )
 
 #    print(results[0]['name'])
-        return render_template('driver/driverProduct.html', results = results[0])
+        return render_template('driver/driverProduct.html',convert = convert, results = results[0])
 
-@app.route("/buynow", methods=["GET", "POST"])
-def buynow():
-    if permissionCheck(["driver", "sponsor", "admin"]) == False:
-        return redirect(url_for('home'))
-
-    currSponsor = Sponsor()
-    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
-
-
-    if request.method == 'POST':
-        form = request.form
-        got = form['buy']
-        results = product_search(got, sponsorId, "None", "priceup" )
-
-    return render_template('driver/driverBuyNow.html', results = results[0])
-     
 @app.route("/buynowrecipt", methods=["GET", "POST"])
 def buynowrecipt():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -913,6 +897,7 @@ def buynowrecipt():
         got = form['buy']
         results = product_search(got, spid, "None", "priceup" )
 
+    print("got my " + got)
     # Vars
     cartTotal = 0
     success = True
@@ -922,9 +907,10 @@ def buynowrecipt():
     ordernum = results[0]['id']
     now = datetime.datetime.now()
     uid = session['userInfo']['properties']['id']
+    convert = get_point_value(spid)
 
     #cartTotal only needs one price
-    cartTotal = int(results[0]['price'])
+    cartTotal = int(results[0]['price']/convert)
 
     if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
         success = False
@@ -946,7 +932,7 @@ def buynowrecipt():
             add_new_order(uid, item['id'], '3', spid, amount, ordernum)
 
 
-    return render_template('driver/driverReciept.html', purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
+    return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/thanks", methods=["GET","POST"])
 def thanks():

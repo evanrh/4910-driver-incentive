@@ -67,12 +67,15 @@ function drawLineChart() {
         type: 'POST',
         data: '',
         success: function(response) {
+            // Create row and half wrapper variables
             var row = document.createElement('div');
             row.className = 'row';
             var half = null;
             document.getElementById('charts').appendChild(row);
 
+            // Loop through each sponsor in response
             $.each(response, (index, value) => {
+                // Create node and wrapper for half. Then, add them to the DOM at #charts
                 var node = document.createElement('div');
                 var wrap = document.createElement('div');
                 wrap.className = 'one-half';
@@ -83,11 +86,13 @@ function drawLineChart() {
                 wrap.appendChild(node);
                 row.appendChild(wrap);
                 
+                // Start a new row if at an even numbered element
                 if ((index % 2) == 0) {
                     row = document.createElement('div');
                     row.className = 'row';
                     document.getElementById('charts').appendChild(row);
                 }
+                // Create graph data
                 var trace = {
                     x: months,
                     y: Object.keys(value['results']).map((key, index) => value['results'][key]),

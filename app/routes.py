@@ -1202,27 +1202,16 @@ def sponList():
     """ AJAX endpoint for getting list of sponsors and their ids """
     if session['userInfo']['properties']['role'] == 'admin':
         sponsors = Sponsor().get_users()
+        cont = ReportController()
+        now = date.today()
+        startDate = datetime.datetime(now.year, 1, 1)
+        endDate = datetime.datetime(now.year, 12, 31)
         sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
-        return json.dumps(sponsors)
-    else:
-        return json.dumps({})
-
-@app.route('/sponsorInfo', methods=['POST'])
-def sponInfo():
-    """ AJAX endpoint to get an aggregation of sponsor sales """
-    if session['userInfo']['properties']['role'] == 'admin':
-        if request.json:
-            data = request.json
-            cont = ReportController()
-            now = date.today()
-
-            startDate = datetime.datetime(now.year, 1, 1)
-            endDate = datetime.datetime(now.year, 12, 31)
-            results = cont.sponsor_stats(data['id'], (startDate, endDate))
-            results = list(map(lambda x: x if not isinstance(x[1], Decimal) else (x[0], float(x[1])), results.items()))
-            out = {'name': data['name'], 'results': results}
-            del cont
-            return json.dumps(out)
+        results = list(map(lambda x: cont.sponsor_stats(x[1], (startDate, endDate)), sponsors))
+        results = list(map(lambda x: dict(map(lambda y: (y[0], int(y[1])), x.items())), results))
+        output = list(map(lambda x: {'info': x[0], 'results': x[1]}, zip(sponsors, results)))
+        print(output)
+        return json.dumps(output)
     else:
         return json.dumps({})
 

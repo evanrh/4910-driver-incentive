@@ -81,12 +81,13 @@ var chart = new google.visualization.LineChart(document.getElementById('curve_ch
 </div>
 {% endblock %}
 {% block footer %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script type="text/javascript">
 google.charts.load('visualization', { packages: ['corechart'] });
 google.charts.setOnLoadCallback(drawLineChart);
 function drawLineChart() {
     var loc = "{{ url_for('sponList') }}";
-    var sponsors = [];
+    var months = Array.from(Array(13).keys()).slice(1)
     $.ajax({
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
@@ -94,34 +95,28 @@ function drawLineChart() {
         type: 'POST',
         data: '',
         success: function(response) {
-            for(var i = 0; i < response.length; i++) {
-                var name = response[i][0];
-                google.charts.load('current', {'packages':['line']});
-                $.ajax({
-                    contentType: 'application/json; charset=utf-8',
-                    dataType: 'json',
-                    url: "{{ url_for('sponInfo') }}",
-                    type: 'POST',
-                    data: JSON.stringify({'id': response[i][1], 'name': response[i][0]}),
-                    success: function(r) {
-                        var node = document.createElement('div');
-                        node.className = "sponsor-chart";
-                        var chart = new google.visualization.LineChart(node);
-                        var options = {
-                            title: r['name'] + "'s Sales",
-                            legend: { position: 'bottom' },
-                            vAxis: {
-                                viewWindow: { min: 0 }
-                            }
-                        };
-                        var data = google.visualization.arrayToDataTable([
-                            ['Month', 'Sales']
-                        ].concat(r['results']));
-                        chart.draw(data, options)
-                        document.getElementById('charts').appendChild(node);
-                    }
-                });
-            }
+            $.each(response, (index, value) => {
+                var node = document.createElement('div');
+                node.className = 'sponsor-chart';
+                document.getElementById('charts').appendChild(node);
+                
+                var trace = {
+                    x: months,
+                    y: Object.keys(value['results']).map((key, index) => value['results'][key]),
+                    type: 'scatter'
+                };
+                var layout = {
+                    title: value['info'][0] + "'s Sales",
+                    xaxis: { title: 'Month' },
+                    yaxis: { title: 'Sales' }
+                };
+                var fig = {
+                    data: [trace],
+                    layout: layout
+                };
+
+                Plotly.newPlot(node, fig);
+            });
         }
     });
 }

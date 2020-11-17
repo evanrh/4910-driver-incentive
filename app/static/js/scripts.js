@@ -175,6 +175,8 @@ $("#themeSelect").change(function() {
     var color3 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme3');
     var color4 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme4');
     document.cookie = 'theme=clemson'
+    var aud = new Audio('/static/sounds/Tiger_Rag.mp3');
+    aud.play();
   } else if ($(this).val() == "seizure") {
     var color1 = getComputedStyle(document.documentElement).getPropertyValue('--seizure-theme1');
     var color2 = getComputedStyle(document.documentElement).getPropertyValue('--seizure-theme2');

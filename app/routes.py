@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.wrappers import Response
 from datetime import date
 from io import StringIO, BytesIO
+from decimal import Decimal
 from app.database.db_functions import *
 from app.database.db_users import *
 from app.database.db_connection import *
@@ -16,6 +17,7 @@ import datetime
 import json
 import time
 import csv
+import calendar
 
 # Using this to encode our class to store user data
 class CustomJSONEncoder(JSONEncoder):
@@ -137,11 +139,14 @@ def home():
 
         if userInfo.getRole() == "admin":
             inbox_list = userInfo.get_inbox_list()
+            sponsors = Sponsor().get_users()
+            sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
+            print(sponsors)
             if len(inbox_list) > 0:
                 Message = "You have " + str(len(inbox_list)) + ' unread messages'
             else:
                 Message = ""
-            return render_template('admin/adminHome.html', head = Message)
+            return render_template('admin/adminHome.html', head = Message, sponsors=sponsors)
 
     return render_template('landing/login.html')
 
@@ -542,11 +547,12 @@ def settings():
                 return render_template('driver/settings.html', notis = notis)
                 
         if userInfo.getRole() == "driver":
-            return render_template('driver/settings.html')
             driver = Driver()
             driver.populate(session['userInfo']['properties']['user'])
             notis = driver.get_notifications()
             return render_template('driver/settings.html', notis = notis)
+        else:
+            return render_template(session['userInfo']['properties']['role'] + '/settings.html')
 
 
 # App Functions
@@ -1071,10 +1077,7 @@ def reports():
 
         if request.method == 'POST':
 
-            import calendar
             cont = ReportController()
-            proxy = StringIO()
-            w = csv.writer(proxy)
 
             startDate = request.form['startdate'].split('-')
             startDate = datetime.datetime(int(startDate[0]), int(startDate[1]), 1)
@@ -1093,30 +1096,34 @@ def reports():
                 numAdmins = cont.number_users('admin')
                 metaHeaders = ('# of Drivers', '# of Sponsors', '# of Admins')
 
-                w.writerow(metaHeaders)
-                w.writerow((numDrivers, numSponsors, numAdmins))
-                w.writerow(())
+                cont.write(metaHeaders)
+                cont.write((numDrivers, numSponsors, numAdmins))
+                cont.write(())
                 sales = cont.total_sales((startDate, endDate))
 
-                w.writerow(('Month','Sales'))
+                cont.write(('Month','Sales'))
 
                 # Function to write each month into report over sales
                 def func(month):
-                    w.writerow( (datetime.datetime(startDate.year, month[0], 1).strftime("%m"), round(float(month[1]), 2)) )
+                    cont.write( (datetime.datetime(startDate.year, month[0], 1).strftime("%m"), round(float(month[1]), 2)) )
                     return month
 
                 sales = dict(map(func, sales.items()))
                 fname = "{}-total-sales-report.csv".format(2020)
 
             else: 
-
                 # Elements are all named sponsor, so this grabs the whole list of them
+
                 sponsors = request.form.getlist('sponsor')
+
+                if not sponsors:
+                    flash('No sponsor selected!')
+                    return render_template('admin/adminReports.html', sponsors=sponsorNames)
 
                 if request.form['reporttype'] == 'Sales by sponsor':
                 # Report of sales by sponsor, summarized by month
                     sponsorHeaders = ('Month','Sponsor', 'Purchases Total', 'Expenses')
-                    w.writerow(sponsorHeaders)
+                    cont.write(sponsorHeaders)
 
                     def sponsTot(s):
                         id = get_table_id(s)[0]
@@ -1127,16 +1134,16 @@ def reports():
 
 
                     for i in range(startDate.month, endDate.month+1):
-                        w.writerow( (datetime.datetime(startDate.year, i, 1).strftime("%B"), ) )
+                        cont.write( (datetime.datetime(startDate.year, i, 1).strftime("%B"), ) )
                         for j in sponsorTotals:
                             purchase = round(float(sponsorTotals[j][i]), 2)
-                            w.writerow( ('', j, purchase, purchase * .01) )
+                            cont.write( ('', j, purchase, purchase * .01) )
 
                     fname = "{}-sponsor-sales-report.csv".format('-'.join([startDate.strftime("%m-%d"), endDate.strftime("%m-%d")]))
                 else:
                     # Report of purchases by driver, summarized by sponsor
                     sponsorHeaders = ('Sponsor','Driver','Purchases')
-                    w.writerow(sponsorHeaders)
+                    cont.write(sponsorHeaders)
 
                     def driverAgg(s):
                         id = get_table_id(s)[0]
@@ -1145,21 +1152,18 @@ def reports():
                     sponsorSumms = dict(map(driverAgg, sponsors))
 
                     for sp in sponsorSumms.keys():
-                        w.writerow((sp, ''))
+                        cont.write((sp, ''))
                         print(sponsorSumms[sp])
                         for dr in sponsorSumms[sp]:
-                            w.writerow(('', dr)) 
+                            cont.write(('', dr)) 
                             for purchase in sponsorSumms[sp][dr]:
-                                w.writerow(('', '', purchase))
+                                cont.write(('', '', purchase))
                     fname = "{}-driver-summary-report.csv".format(date.today().strftime('%m-%d'))
 
 
             # Serve report file
+            mem = cont.get_file()
             del cont
-            mem = BytesIO()
-            mem.write(proxy.getvalue().encode('utf-8'))
-            mem.seek(0)
-            proxy.close()
 
             now = date.today()
             return send_file(mem, as_attachment=True, attachment_filename=fname, mimetype='text/csv')
@@ -1168,6 +1172,35 @@ def reports():
         return render_template(templateName)
     else:
         return redirect(url_for('home'))
+
+@app.route('/sponsorList', methods=['POST'])
+def sponList():
+    """ AJAX endpoint for getting list of sponsors and their ids """
+    if session['userInfo']['properties']['role'] == 'admin':
+        sponsors = Sponsor().get_users()
+        sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
+        return json.dumps(sponsors)
+    else:
+        return json.dumps({})
+
+@app.route('/sponsorInfo', methods=['POST'])
+def sponInfo():
+    """ AJAX endpoint to get an aggregation of sponsor sales """
+    if session['userInfo']['properties']['role'] == 'admin':
+        if request.json:
+            data = request.json
+            cont = ReportController()
+            now = date.today()
+
+            startDate = datetime.datetime(now.year, 1, 1)
+            endDate = datetime.datetime(now.year, 12, 31)
+            results = cont.sponsor_stats(data['id'], (startDate, endDate))
+            results = list(map(lambda x: x if not isinstance(x[1], Decimal) else (x[0], float(x[1])), results.items()))
+            out = {'name': data['name'], 'results': results}
+            del cont
+            return json.dumps(out)
+    else:
+        return json.dumps({})
 
 @app.context_processor
 def sponsorTitle():

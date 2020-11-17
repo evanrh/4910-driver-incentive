@@ -1,6 +1,11 @@
 {% extends "admin/adminBase.html" %}
-{% block adminContent %}
 {% block header %}
+<style>
+    .sponsor-chart {
+        height: 500px;
+        width: 700px;
+    }
+</style>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
   google.charts.load('current', {'packages':['corechart']});
@@ -21,7 +26,7 @@
       legend: { position: 'bottom' }
     };
 
-    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
     chart.draw(data, options);
     var chart = new google.visualization.LineChart(document.getElementById('curve_chart2'));
     chart.draw(data, options);
@@ -33,12 +38,16 @@
     chart.draw(data, options);
     var chart = new google.visualization.LineChart(document.getElementById('curve_chart6'));
     chart.draw(data, options);
+    
   }
 </script>
 {% endblock %}
 
-<div class = "header-banner">{{head}} </div>
+
+{% block adminContent %}
+<div class = "header-banner">{{ head }} </div>
 <h1>Application Statistics</h1>
+<div id="charts">
 <div class="row">
     <div class="one-half">
         <h2>Sponsor 1</h2>
@@ -69,5 +78,53 @@
         <div id="curve_chart6" style="width: 700px; height: 500px"></div>
     </div>
 </div>
-
+</div>
+{% endblock %}
+{% block footer %}
+<script type="text/javascript">
+google.charts.load('visualization', { packages: ['corechart'] });
+google.charts.setOnLoadCallback(drawLineChart);
+function drawLineChart() {
+    var loc = "{{ url_for('sponList') }}";
+    var sponsors = [];
+    $.ajax({
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        url: loc,
+        type: 'POST',
+        data: '',
+        success: function(response) {
+            for(var i = 0; i < response.length; i++) {
+                var name = response[i][0];
+                google.charts.load('current', {'packages':['line']});
+                $.ajax({
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    url: "{{ url_for('sponInfo') }}",
+                    type: 'POST',
+                    data: JSON.stringify({'id': response[i][1], 'name': response[i][0]}),
+                    success: function(r) {
+                        var node = document.createElement('div');
+                        node.className = "sponsor-chart";
+                        var chart = new google.visualization.LineChart(node);
+                        var options = {
+                            title: r['name'] + "'s Sales",
+                            legend: { position: 'bottom' },
+                            vAxis: {
+                                viewWindow: { min: 0 }
+                            }
+                        };
+                        var data = google.visualization.arrayToDataTable([
+                            ['Month', 'Sales']
+                        ].concat(r['results']));
+                        chart.draw(data, options)
+                        document.getElementById('charts').appendChild(node);
+                    }
+                });
+            }
+        }
+    });
+}
+    
+</script>
 {% endblock %}

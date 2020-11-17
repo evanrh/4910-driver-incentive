@@ -1,12 +1,14 @@
 from ..database.db_users import getConnection
-from io import StringIO
+from io import StringIO, BytesIO
 from datetime import datetime
 from functools import reduce
 import csv
+import calendar
 
 class ReportController():
     def __init__(self):
         self.conn = getConnection()
+        self.file = CSVManager()
     
     def number_users(self, userType):
         sql = "SELECT COUNT(*) FROM {}".format(userType)
@@ -21,7 +23,7 @@ class ReportController():
         """ Get statistics about each sponsor in a date range 
             dates: tuple(start_date, end_date)
         """
-        sql = "SELECT * FROM Product_Orders WHERE Sponsor_Id=%s AND TimeStamp BETWEEN %s AND %s"
+        sql = "SELECT Order_ID, TimeStamp, amount FROM Product_Orders WHERE Sponsor_Id=%s AND TimeStamp BETWEEN %s AND %s"
         start = dates[0].month
         end = dates[1].month
         vals = (sid, dates[0], dates[1])
@@ -31,19 +33,13 @@ class ReportController():
             results = dict(map(lambda i: (i, reduce(lambda x,y: x + y, map(lambda o: o[-1], filter(lambda order: order[1].month == i, orders)), 0)), range(start,end+1)))
             return results
 
-            # Get amount of each order
-            amounts = list(map(lambda e: e[-1], orders))
-
-            results['spent'] = reduce(lambda x,y: x+y, amounts) if amounts else 0
-            results['drivers'] = num_drivers
-            return results
         except Exception as e:
             print(e)
             return None
 
     def total_sales(self, dates=()):
         """ Get total amount of sales per month in date range """
-        sql = "SELECT * FROM Product_Orders WHERE TimeStamp BETWEEN %s AND %s"
+        sql = "SELECT Order_ID, TimeStamp, amount FROM Product_Orders WHERE TimeStamp BETWEEN %s AND %s"
         
         try:
             orders = self.conn.exec(sql, dates)
@@ -74,5 +70,25 @@ class ReportController():
             print(e)
             return None
 
+    def write(self, row: tuple):
+        self.file.writerow(row)
+
+    def get_file(self):
+        return self.file.create()
     def __del__(self):
         self.conn.close()
+
+class CSVManager():
+    def __init__(self):
+        self.stream = StringIO()
+        self.writer = csv.writer(self.stream)
+
+    def writerow(self, row: tuple):
+        self.writer.writerow(row)
+
+    def create(self):
+        mem = BytesIO()
+        mem.write(self.stream.getvalue().encode('utf-8'))
+        mem.seek(0)
+        self.stream.close()
+        return mem

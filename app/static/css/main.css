@@ -629,4 +629,34 @@ img  {
       display: block;
       text-align: left;
     }
+    .logo {
+		width: 100%
+	}
+	.container2 {
+		padding: 40px;
+		width:100%;
+	}
+	h2 {
+		line-height: 110%;
+	}
+	.tftextinput {
+		width: 80%;
+	}
+	.searchheader {
+		margin: 0 auto;
+	}
+	.full-mobile {
+		width: 100%;
+	}
+	body {
+		margin: 4px;
+	}
+	label {
+		display:inline;
+	}
+	input {
+		margin: 10px;
+		padding: 10px;
+		display: inline;
+	}
 }

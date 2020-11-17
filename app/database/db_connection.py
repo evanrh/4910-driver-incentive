@@ -236,6 +236,11 @@ class ConnectionPool:
 
     def size(self):
         return self._pool.qsize()
+    
+    def __del__(self):
+        for _ in range(self._size):
+            conn = self._pool.get()
+            del conn
 
 
 class GetConnectionFromPoolError(Exception):

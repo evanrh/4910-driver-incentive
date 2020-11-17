@@ -114,12 +114,13 @@ def home():
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
                 genres = getgenres()
-                recommended = recommend(userid)
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+                recommended = recommend(userid, sponsorId)
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)
-                recommended[0]['price'] = int(recommended[0]['price']/convert)
+                if recommended != ' ':
+                    recommended[0]['price'] = int(recommended[0]['price']/convert)
                 if popitems != ' ':
                     for row in popitems:
                             row['price'] = int(row['price']/convert)
@@ -280,6 +281,7 @@ def driverManagePurchase():
 
     spid = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(spid)
+    now = datetime.datetime.utcnow()
 
     def getProductInfo(id):
         return Admin().getProductInfo(id)
@@ -287,7 +289,7 @@ def driverManagePurchase():
     purchaseList = []
     # get purchase list
     purchaseList = get_orders_by_driver(session['userInfo']['properties']['id'])
-    return render_template('driver/driverManagePurchase.html', convert = convert, getProductInfo = getProductInfo,  purchaseList = purchaseList)
+    return render_template('driver/driverManagePurchase.html', now = now, convert = convert, getProductInfo = getProductInfo,  purchaseList = purchaseList)
 
 @app.route("/driverProfile")
 def driverProfile():
@@ -340,7 +342,7 @@ def sponsorProfile():
 
 @app.route("/sponsorSystemSettings", methods=['GET', 'POST'])
 def sponsorSystemSettings():
-    if permissionCheck(["sponsor", "admin"]) == False:
+    if permissionCheck(["sponsor"]) == False:
         return redirect(url_for('home'))
 
     if request.method == 'POST':
@@ -737,6 +739,28 @@ def removeFromCart():
     id = data[0].split("=")[1]
     session['shoppingCart'].pop(id)
     session.modified = True
+    return ('', 204)
+
+@app.route("/cancelOrder", methods=["GET","POST"])
+def cancelOrder():
+    data = request.get_data().decode("utf-8") 
+    order = data.strip()
+    spid = get_order_info(order)[0][1]
+    convert = get_point_value(spid)
+    orderTotal = 0
+    # Refund Points
+    orderinfo = get_order_info(order)
+    for item in orderinfo:
+        orderTotal += int(float(item[4]) / convert)
+    sponsor = Sponsor()
+    name = getSponsorName(spid)
+    sponsor.populate(name)
+    sponsor.add_points(session['userInfo']['properties']['id'], orderTotal)
+    session['userInfo']['properties']['selectedSponsor'][1] += orderTotal
+    session.modified = True
+
+    # Cancel Order
+    cancel_order(order)
     return ('', 204)
 
 @app.route("/checkout", methods=["GET","POST"])

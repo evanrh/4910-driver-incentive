@@ -119,11 +119,13 @@ def home():
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)
+                print(popitems)
                 if recommended != ' ':
                     recommended[0]['price'] = int(recommended[0]['price']/convert)
                 if popitems != ' ':
                     for row in popitems:
-                            row['price'] = int(row['price']/convert)
+                            if row != ' ':
+                                row['price'] = int(row['price']/convert)
             else:
                 sponsorId = None
 

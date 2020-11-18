@@ -331,6 +331,7 @@ def getpopitems(sponid):
 
 #    print("Printing final list")
 #    print(finallist)
+#    print("End print")
     if(finallist[0] == ' '):
         return ' '
     cursor.close()

@@ -419,7 +419,9 @@ def adminManageAcc():
     def getDriverList(sponsorName):
         currSponsor = Sponsor()
         currSponsor.populate(sponsorName)
-        return currSponsor.view_drivers()
+        drivers = currSponsor.view_drivers()
+        del currSponsor
+        return drivers
     
     return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
                                                         suspendedUsers = suspendedUsers, getDriverList = getDriverList, 

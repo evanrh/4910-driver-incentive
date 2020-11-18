@@ -373,10 +373,15 @@ class Admin(AbsUser):
         else:
             role = 'admin'
 
-
+        query = 'UPDATE ' + role + ' SET active = 0 WHERE user = %s'
+        val = (username, )
+        if role == 'sponsor':
+            query = 'UPDATE sponsor_logins SET active = 0 where sponsor_id = %s'
+            val = (id[0][1], )
+        
         try:
             self.database.exec('DELETE FROM suspend WHERE user = %s', (username, ))
-            self.database.exec('UPDATE ' + role + ' SET active = 0 WHERE user = %s', (username, ))
+            self.database.exec(query, val)
             #self.database.close()
         except Exception as e:
             raise Exception(e)
@@ -422,7 +427,7 @@ class Admin(AbsUser):
             return []
     
     def get_disabled_sponsors(self):
-        sql = 'select user, title, sponsor_id, date_join FROM sponsor WHERE active = 0'
+        sql = 'select sponsor_logins.username, title, sponsor_id, date_join FROM sponsor join sponsor_logins USING(sponsor_id) WHERE sponsor_logins.active = 0'
         
         try:
             data = self.database.exec(sql)
@@ -782,7 +787,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor where active = 1"
+        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor"
 
         try:
             out = self.database.exec(query)
@@ -864,6 +869,14 @@ class Sponsor(AbsUser):
 
     def populate(self, username: str):
         #self.database = getNewConnection()
+        #if passing in title as name, pick the first username of that sponsor to populate
+        title = self.database.exec('SELECT title from sponsor')
+        title_list = []
+        for x in title:
+            title_list.append(x[0])
+        if username in title_list:
+            username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
+
         query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
         vals = (username, )
 

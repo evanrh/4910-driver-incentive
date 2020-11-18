@@ -138,6 +138,7 @@
     <p>These are the most popular items in your catalog!</p>
             <div class="row">
                 {% for segment in popular %}
+		{%if segment != ' '%}
                     <div class="one-third">
                             <div class="card">
 				{% if segment['img_url'] != None%}
@@ -165,6 +166,7 @@
                     {% if loop.index % 3 == 0 %}
                     <div class="row">
                     {% endif %}
+		 {%endif%}   
                 {% endfor %}
             </div>
 

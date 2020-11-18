@@ -233,7 +233,6 @@ def getnumproducts(spon_id):
     try:
         cursor = getConnection()
         returnnum = cursor.exec(query, val)
-        cursor.close()
 
     except Exception as e:
         raise Exception(e)
@@ -242,7 +241,7 @@ def getnumproducts(spon_id):
     num = 0
     if returnnum:
         num = returnnum[0][0]
-
+    cursor.close()
     return num
 
 
@@ -261,6 +260,7 @@ def recommend(userid, sid):
     OGproducttup = cursor.exec("SELECT product_id FROM Product_Orders WHERE Sponsor_ID = '"+str(sid)+"' AND Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
     #Return nothing if the user hasn't bought anything
     if(len(OGproducttup) < 1 ):
+        cursor.close()
         return ' '
 #   We only need the first element
     OGproductstr = ''.join(map(str, OGproducttup[0]))
@@ -270,12 +270,14 @@ def recommend(userid, sid):
     otherdriveridtup = cursor.exec("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID !='"+str(userid)+"' AND product_id = '"+OGproductstr+"' AND Driver_ID IN (SELECT Driver_ID FROM Product_Orders GROUP BY Driver_ID HAVING COUNT(*) >1) ORDER BY TimeStamp Desc")
 #    print(otherdriveridtup)
     if(len(otherdriveridtup) < 1):
+        cursor.close()
         return ' '
     otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
 #    print(otherdriveridstr)
     #Grap the most recent purchase from the other driver that isn't the OG product
     otherproducttup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sid)+"' AND Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
     if(len(otherproducttup) <1 ):
+        cursor.close()
         return ' '
     otherproductstr = ''.join(map(str, otherproducttup[0]))
 #    print(otherproductstr)
@@ -332,9 +334,9 @@ def getpopitems(sponid):
 
     #print("Printing final list")
     #print(finallist)
+    cursor.close()
     if(finallist[0] == ' '):
         return ' '
-    cursor.close()
     return finallist
 
 # Gets a list of products from all sponsors based on search

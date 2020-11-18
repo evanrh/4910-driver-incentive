@@ -92,18 +92,18 @@ def home():
 
         session.pop('_flashes', None)
 
-        if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
+        # Messages to be displayed in banner
+        inbox_list = userInfo.get_inbox_list()
+        if 'System' in inbox_list and len(inbox_list) == 1:
+            Message = "You have an important message from our System Management"
+        elif 'System' in inbox_list and len(inbox_list) > 1:
+            Message = 'You have an important message from our System Management and ' + str(len(inbox_list) - 1) + ' other unread messages'
+        elif len(inbox_list) > 0:
+            Message = "You have " + str(len(inbox_list)) + ' unread messages'
+        else:
+            Message = ""
 
-            # Messages to be displayed in banner
-            inbox_list = userInfo.get_inbox_list()
-            if 'System' in inbox_list and len(inbox_list) == 1:
-                Message = "You have an important message from our System Management"
-            elif 'System' in inbox_list and len(inbox_list) > 1:
-                Message = 'You have an important message from our System Management and ' + str(len(inbox_list) - 1) + ' other unread messages'
-            elif len(inbox_list) > 0:
-                Message = "You have " + str(len(inbox_list)) + ' unread messages'
-            else:
-                Message = ""
+        if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
 
             # Product page information
             recommended = []
@@ -131,22 +131,12 @@ def home():
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
-            inbox_list = userInfo.get_inbox_list()
-            if len(inbox_list) > 0:
-                Message = "You have " + str(len(inbox_list)) + ' unread messages'
-            else:
-                Message = ""
             return render_template('sponsor/sponsorHome.html', head = Message)
 
         if userInfo.getRole() == "admin":
-            inbox_list = userInfo.get_inbox_list()
             sponsors = Sponsor().get_users()
             sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
             print(sponsors)
-            if len(inbox_list) > 0:
-                Message = "You have " + str(len(inbox_list)) + ' unread messages'
-            else:
-                Message = ""
             return render_template('admin/adminHome.html', head = Message, sponsors=sponsors)
 
     return render_template('landing/login.html')
@@ -477,6 +467,11 @@ def inbox(username):
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        if not bool(messages):
+            system = Admin().populate('System')
+            system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
+            del system
+            messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
@@ -486,6 +481,12 @@ def inbox(username):
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        if not bool(messages):
+            system = Admin()
+            system.populate('System')
+            system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
+            del system
+            messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
@@ -496,6 +497,11 @@ def inbox(username):
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        if not bool(messages):
+            system = Admin().populate('System')
+            system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
+            del system
+            messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
@@ -538,6 +544,27 @@ def settings():
                 pwd = generate_password_hash(request.form['pass'], 'sha256')
                 userInfo.update_info({'pwd': pwd})
                 return render_template(userInfo.getRole() + "/settings.html")
+            elif 'add_new_sponsor_login' in request.form.keys():
+                form = request.form
+                username = form['username']
+                password = form['password']
+                confirm_password = form['confirm_password']
+                sponsor = Sponsor(user=username)
+                if sponsor.check_username_available():
+                    if password != confirm_password:
+                        flash("Passwords do not match!")
+                        return render_template('sponsor/settings.html')
+                    else:
+                        pwd = generate_password_hash(password, method='sha256')
+                        sponsor.populate(session['userInfo']['properties']['user'])
+                        sponsor.add_new_sponsor_login(username, pwd)
+                        del sponsor
+                        flash("New login successfully created")
+                        return render_template('sponsor/settings.html')
+                else:
+                    flash("Username already taken")
+                    return render_template('sponsor/settings.html')
+
             elif 'change-notis' in request.form.keys():
                 notis['points'] = 1 if 'points' in request.form.keys() else 0
                 notis['orders'] = 1 if 'orders' in request.form.keys() else 0

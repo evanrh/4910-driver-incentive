@@ -19,9 +19,9 @@ def getConnection(ex=0):
         connection.close()
         connection = pool1.get_connection()
         return connection
-        #print(pool1.size())
+        print(pool1.size())
 
-    #print(pool1.size())
+    print(pool1.size())
     return pool1.get_connection()
 
 def getNewConnection():
@@ -32,12 +32,11 @@ def isActive(username):
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
     id = conn.exec(sql)
     if id[0][0] != None:
-        role =  'driver'
+        query = "SELECT active FROM driver WHERE user = \'{}\'".format(username)
     elif id[0][1] != None:
-        role =  'sponsor'
+        query = "SELECT active FROM sponsor_logins WHERE username = \'{}\'".format(username)
     else:
-        role = 'admin'
-    query = "SELECT active FROM " + role + ' WHERE user = \'{}\''.format(username)
+        query = "SELECT active FROM admin WHERE user = \'{}\'".format(username)
     active = conn.exec(query)
     conn.close()
     return active[0][0] == 1
@@ -696,7 +695,7 @@ class Admin(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        #print(pool1.size())
+        print(pool1.size())
         
 
 class Sponsor(AbsUser):
@@ -743,14 +742,14 @@ class Sponsor(AbsUser):
         #params = dict(filter(lambda x: x[0] != 'selectedSponsor', self.properties.items()))
         try:
             self.database.exec(query)
-            self.add_to_users()
+            self.add_new_sponsor_login(self.properties['user'], self.properties['pwd'])
             #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def check_password(self, pwd_hash):
-        query = "SELECT pwd FROM sponsor WHERE user=%s"
+        query = "SELECT password FROM sponsor_logins WHERE username=%s"
         db_pwd = self.database.exec(query, self.properties['user'])
         #self.database.close()
 
@@ -817,11 +816,24 @@ class Sponsor(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    #here to satisfy interface, can't use because I need to pass in variables
     def add_to_users(self):
-        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
-        query = query.format('Sponsor_ID', self.properties['user'], self.properties['id'])
+        pass
+        query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
+        query = query.format(self.properties['user'], self.properties['id'])
         self.database.exec(query)
         #self.database.close()
+
+    def add_new_sponsor_login(self, username, pwd):
+        query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'.format(username, self.properties['id'])
+        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s)'
+        q_vals = (username, pwd, self.properties['id'])
+        try:
+            self.database.exec(query)
+            self.database.exec(q_login, q_vals)
+        except Exception as e:
+            raise Exception(e)
+    
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
@@ -852,7 +864,7 @@ class Sponsor(AbsUser):
 
     def populate(self, username: str):
         #self.database = getNewConnection()
-        query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor WHERE user = %s'
+        query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
         vals = (username, )
 
         try:
@@ -1329,7 +1341,7 @@ class Sponsor(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        #print(pool1.size())
+        print(pool1.size())
         
 
 
@@ -1903,7 +1915,7 @@ class Driver(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        #print(pool1.size())
+        print(pool1.size())
         
 
 

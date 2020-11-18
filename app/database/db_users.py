@@ -363,8 +363,16 @@ class Admin(AbsUser):
 
         #self.database = getNewConnection()
         username = str(username).strip()
+
+        #if username is sponsor title
+        title = self.database.exec('SELECT title from sponsor')
+        title_list = []
+        for x in title:
+            title_list.append(x[0])
+        if username in title_list:
+            username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
+
         sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = \'{}\''.format(username)
-        print(sql)
         id = self.database.exec(sql)
         if id[0][0] != None:
             role = 'driver'
@@ -401,7 +409,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_sponsorless_drivers(self):
-        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (SELECT driver.driver_id FROM driver INNER JOIN driver_bridge WHERE driver.driver_id = driver_bridge.driver_id AND driver_bridge.apply=0) AND active = 1'
+        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver JOIN driver_bridge USING(driver_id) JOIN sponsor_logins USING(sponsor_id) WHERE ((SELECT COUNT(*) FROM sponsor_logins WHERE active = 0 AND sponsor_id = driver_bridge.sponsor_id) > 0) union SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (SELECT driver.driver_id FROM driver INNER JOIN driver_bridge WHERE driver.driver_id = driver_bridge.driver_id AND driver_bridge.apply=0) AND active = 1'
         
         try:
             data = self.database.exec(sql)
@@ -463,6 +471,8 @@ class Admin(AbsUser):
             role = 'admin'
         
         query = 'UPDATE ' + role + ' SET active = 1 WHERE user = \'{}\''.format(username)
+        if role == 'sponsor':
+            query = "UPDATE sponsor_logins SET active = 1 WHERE sponsor_id = {}".format(id[0][1])
         try:
             data = self.database.exec(query)
             #self.database.close()
@@ -787,7 +797,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor"
+        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
 
         try:
             out = self.database.exec(query)

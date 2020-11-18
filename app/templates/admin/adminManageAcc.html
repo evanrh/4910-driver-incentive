@@ -81,18 +81,18 @@
 
                 <tr>
                     <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
-                    <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
+                    <td><button name=" {{ title }} " id='remove' style='color:red;'>X</button></td>
                     <td> {{ title }} </td>
                     <td> {{ id }} </td>
                     {% if title in suspendedUsers %}
-                    <td><button name=" {{ user }} " id='unsuspend' style='color:red;'>X</button></td>
+                    <td><button name=" {{ title }} " id='unsuspend' style='color:red;'>X</button></td>
                     {% else %}
-                    <td><button name=" {{ user }} " id='suspend'>X</button></td>
+                    <td><button name=" {{ title }} " id='suspend'>X</button></td>
                     {% endif %}
                     <td> {{ datejoined }} </td>
                     <td>
-                        <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
-                        <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+                        <input name="{{ title }}" id="sendmessage{{ title }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                        <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ title }}' id='sendmessage'>Send</button>
                     </td>
                 </tr>
 

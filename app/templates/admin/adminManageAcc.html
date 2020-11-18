@@ -66,14 +66,12 @@
             {% endfor %}
             <tr><td><br></td></tr>
             {% for sponsor in sponsorList %}
-                {% set user = sponsor[1] %}
                 {% set title = sponsor[0] %}
-                {% set id = sponsor[2] %}
-                {% set datejoined = sponsor[7] %}
+                {% set id = sponsor[1] %}
+                {% set datejoined = sponsor[6] %}
                 <tr>
                     <th class='heading'> Sponsor </th>
                     <th>Delete</th>
-                    <th>User Name</th>
                     <th>Title</th>
                     <th>Sponsor ID</th>
                     <th>Suspend</th>
@@ -83,23 +81,22 @@
 
                 <tr>
                     <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
-                    <td><button name=" {{ user }} " id='remove' style='color:red;'>X</button></td>
-                    <td> {{ user }} </td>
+                    <td><button name=" {{ title }} " id='remove' style='color:red;'>X</button></td>
                     <td> {{ title }} </td>
                     <td> {{ id }} </td>
-                    {% if user in suspendedUsers %}
-                    <td><button name=" {{ user }} " id='unsuspend' style='color:red;'>X</button></td>
+                    {% if title in suspendedUsers %}
+                    <td><button name=" {{ title }} " id='unsuspend' style='color:red;'>X</button></td>
                     {% else %}
-                    <td><button name=" {{ user }} " id='suspend'>X</button></td>
+                    <td><button name=" {{ title }} " id='suspend'>X</button></td>
                     {% endif %}
                     <td> {{ datejoined }} </td>
                     <td>
-                        <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
-                        <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
+                        <input name="{{ title }}" id="sendmessage{{ title }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>
+                        <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ title }}' id='sendmessage'>Send</button>
                     </td>
                 </tr>
 
-                {% if getDriverList(sponsor[1]) %}
+                {% if getDriverList(sponsor[0]) %}
                 <tr>
                     <td class='driverRow'>Drivers</td>
                     <td class='driverRow'>Remove</td>
@@ -113,7 +110,7 @@
                     <td class='driverRow'>Date Joined</td>
                 </tr>
 
-                    {% for driver in getDriverList(sponsor[1]) %}
+                    {% for driver in getDriverList(sponsor[0]) %}
                         {% set user = driver[3] %}
                         {% set first = driver[0] %}
                         {% set last = driver[2] %}
@@ -121,7 +118,7 @@
                         {% set datejoined = driver[5] %}
                         <tr>
                             <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
-                            <td><button class="{{ sponsor[1] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
+                            <td><button class="{{ sponsor[0] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
                             <td> {{ user }} </td>
                             <td> {{ first  }} </td>
                             <td> {{ last }} </td>
@@ -132,8 +129,8 @@
                             {% endif %}
                             <td> {{ points }} </td>
                             <td>
-                                <input name="{{ user }}" id='addpoints{{ user }}{{ sponsor[1] }}' placeholder='Add Pts'>
-                                <button class="{{ sponsor[1] }}" name='{{ user }}' id='addpoints'>+</button>
+                                <input name="{{ user }}" id='addpoints{{ user }}{{ sponsor[0] }}' placeholder='Add Pts'>
+                                <button class="{{ sponsor[0] }}" name='{{ user }}' id='addpoints'>+</button>
                             </td>
                             <td>
                                 <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>

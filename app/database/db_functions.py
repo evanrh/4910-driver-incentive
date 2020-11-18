@@ -1,87 +1,6 @@
 import datetime
 from .db_users import getConnection, getNewConnection
 
-#cursor for the database
-cursor = getConnection()
-
-#adds a driver to the database. Parameters are:
-#First Name, Middle Name, Last Name, Username, Address, Phone number, email, password and image url
-def add_driver(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL', address = 'NULL', 
-                phone = 0, email = 'NULL', pwd = 'NULL', image = 'NULL'):
-    try:
-        sql = "INSERT INTO driver VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s)"
-        driver_id = get_next_driver_id()
-        val = (fname, mname, lname, user, driver_id, 0, 0, address, phone, email, pwd, "NULL", image)
-        cursor.exec(sql, val)
-        add_to_users(user, 'driver', driver_id)
-        
-    except Exception as e:
-        raise Exception(e)
-
-#adds a sponsor to the database. Parameters are:
-#Title of Sponsor,  Username, Address, Phone number, email, password and image url
-def add_sponsor(title = 'NULL', user = 'NULL', address = 'NULL', 
-                phone = 0, email = 'NULL', pwd = 'NULL', image = 'NULL'):
-
-    sql = "INSERT INTO sponsor VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
-    sponsor_id = get_next_sponsor_id()
-    val = (title, user, sponsor_id, address, phone, email, pwd, image, "NULL")
-    cursor.exec(sql, val)
-    add_to_users(user, 'sponsor', sponsor_id)
-    
-#adds an admin to the database. Parameters are:
-#First Name, Middle Name, Last Name, Username, Phone number, email, password and image url
-def add_admin(fname = 'NULL', mname = 'NULL', lname = 'NULL', user = 'NULL',  
-                phone = 0, email = 'NULL', pwd = 'NULL', image = 'NULL'):
-
-    sql = "INSERT INTO admin VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
-    admin_id = get_next_admin_id()
-    val = (fname, mname, lname, user, admin_id, phone, email, pwd, "NULL")
-    cursor.exec(sql, val)
-    add_to_users(user, 'admin', admin_id)
-    
-#gets the next available driver id, returns 1 if no drivers exist
-def get_next_driver_id():
-    num = cursor.exec("SELECT MAX(driver_id) FROM driver")
-
-    if( num[0] == None ):
-        return 1
-    else:
-        return num[0] + 1
-
-#gets the next available sponsor id, returns 1 if no sponsor exist
-def get_next_sponsor_id():
-    num = cursor.exec("SELECT MAX(sponsor_id) FROM sponsor")
-
-    if( num[0] == None ):
-        return 1
-    else:
-        return num[0] + 1
-
-#gets the next available admin id, returns 1 if no admin exist
-def get_next_admin_id():
-    num = cursor.exec("SELECT MAX(admin_id) FROM admin")
-
-    if( num[0] == None ):
-        return 1
-    else:
-        return num[0] + 1
-
-#adds the username and role of the user to the user table
-#assumes username isn't already in table
-#called on by add_driver, add_sponsor, add_admin
-def add_to_users(user = 'NULL', role = 'driver', id = 0):
-    if role == 'driver':
-        role = "Driver_ID"
-    elif role == 'sponsor':
-        role = "Sponsor_ID"
-    else:
-        role = "Admin_ID"
-
-    query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, NOW())'
-    query = query.format(role, user, id)
-    cursor.exec(query)
-
 #checks to see if the password entered by the user matches password with that username
 #searches through user table for username and role
 #uses role to search through specific table for username and password
@@ -94,7 +13,9 @@ def pwd_check(user = 'NULL', pwd = 'NULL'):
     
     sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
     val = (user, )
+    cursor = getConnection()
     current_password = cursor.exec(sql, val)
+    cursor.close()
 
     if pwd == current_password[0]:
         return True
@@ -108,45 +29,9 @@ def change_password(user, pwd):
 
     sql = 'UPDATE ' + table + ' SET pwd = %s WHERE user = %s'
     val = (pwd, user)
+    cursor = getConnection()
     cursor.exec(sql, val)
-
-#prints out all of the drivers
-def get_drivers():
-    driver_list = cursor.exec("SELECT * FROM driver")
-    for driver in driver_list:
-        print(driver)
-
-#prints out all of the sponsors
-def get_sponsors():
-    sponsor_list = cursor.exec("SELECT * FROM sponsor")
-    for sponsor in sponsor_list:
-        print(sponsor)
-
-#prints out all of the admins
-def get_admins():
-    admin_list = cursor.exec("SELECT * FROM admin")
-    for admin in admin_list:
-        print(admin)
-
-#prints out all of the users 
-def get_users():
-    print("---ADMINS---")
-    user_list = cursor.exec('SELECT UserName, Admin_ID, last_in FROM users WHERE Admin_ID > 0 ORDER BY Admin_ID DESC')
-    for user in user_list:
-        print(user)
-    print("\n---SPONSORS---")
-    user_list = cursor.exec('SELECT UserName, Sponsor_ID, last_in FROM users WHERE Sponsor_ID > 0 ORDER BY Sponsor_ID DESC')
-    for user in user_list:
-        print(user)
-    print("\n---DRIVERS---")
-    user_list = cursor.exec('SELECT user, driver_id FROM driver WHERE driver_id > 0 ORDER BY driver_id DESC')
-    for user in user_list:
-        print(user)
-    print("\n---USERS---")
-    user_list = cursor.exec('SELECT * FROM users ORDER BY Admin_ID DESC, Sponsor_ID DESC, Driver_ID ASC')
-
-    for user in user_list:
-        print(user)
+    cursor.close()
 
 # Returns password hash for a user
 def get_password(user='NULL'):
@@ -156,6 +41,8 @@ def get_password(user='NULL'):
     id, table = get_table_id(user)
     
     sql = 'SELECT pwd FROM ' + table + ' WHERE user = %s'
+    if table == 'sponsor':
+        sql = 'SELECT password FROM sponsor_logins WHERE username = %s'
     val = (user, )
     conn = getConnection()
     current_password = conn.exec(sql, val)
@@ -192,26 +79,24 @@ def get_table_id(user):
     else:
         return id[0][2], 'admin'
 
-# Cancels a users suspension
-def cancel_suspension(username):
-    query = 'DELETE FROM suspend WHERE user = %s'
-    vals = (username, )
-    try:
-        cursor.exec(query, vals)
-    except Exception as e:
-        raise Exception(e)
 
 # Takes in a sponsor id and gets their username
 def getSponsorName(ident):
     try:
-        return cursor.exec("SELECT user FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
+        cursor = getConnection()
+        name = cursor.exec("SELECT user FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
+        cursor.close()
+        return name
     except Exception as e:
             raise Exception(e)
 
 # Takes in a sponsor id and gets their title
 def getSponsorTitle(ident):
     try:
-        return cursor.exec("SELECT title FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
+        cursor = getConnection()
+        title =  cursor.exec("SELECT title FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
+        cursor.close()
+        return title
     except Exception as e:
             raise Exception(e)
 
@@ -240,7 +125,9 @@ def product_search(search, spon_id, mylist, order):
     vals = (search,)
 
     try:
+        cursor = getConnection()
         data = cursor.exec(multigenrelong, vals)
+        cursor.close()
     except Exception as e:
         raise Exception(e)
 
@@ -256,7 +143,9 @@ def product_search(search, spon_id, mylist, order):
 
 #gets the next available order id, returns 1 if no orders exist
 def get_next_order_id():
+    cursor = getConnection()
     num = cursor.exec("SELECT MAX(Order_ID) FROM Product_Orders")
+    cursor.close()
 
     if( num[0][0] == None ):
         return 1
@@ -268,7 +157,9 @@ def add_new_order(uid, pid, rating, spid, amount, oid):
     query = 'INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, Order_ID, canceled) VALUES ({}, {}, {}, CURRENT_TIMESTAMP, {}, {}, {}, false)'
     query = query.format(uid, pid, rating, spid, amount, oid)
     try:
+        cursor = getConnection()
         cursor.exec(query)
+        cursor.close()
     except Exception as e:
             raise Exception(e)
 
@@ -276,7 +167,9 @@ def add_new_order(uid, pid, rating, spid, amount, oid):
 def cancel_order(order):
     query = 'UPDATE Product_Orders SET canceled = true WHERE Order_ID = %s' % order
     try:
+        cursor = getConnection()
         cursor.exec(query)
+        cursor.close()
     except Exception as e:
             raise Exception(e)
 
@@ -284,7 +177,9 @@ def cancel_order(order):
 def get_order_info(order):
     query = 'SELECT Product_ID, rating, TimeStamp, Sponsor_ID, amount, canceled FROM Product_Orders WHERE Order_ID = %s' % order
     try:
+        cursor = getConnection()
         return cursor.exec(query)
+        cursor.close()
     except Exception as e:
             raise Exception(e)
 
@@ -293,7 +188,9 @@ def get_orders_by_driver(uid):
     query = 'SELECT Order_ID, Product_ID, rating, TimeStamp, Sponsor_ID, amount, canceled FROM Product_Orders WHERE Driver_ID = %s ORDER BY Order_ID DESC' % uid
 
     try:
+        cursor = getConnection()
         orders = cursor.exec(query)
+        cursor.close()
 
     except Exception as e:
             raise Exception(e)
@@ -311,14 +208,18 @@ def get_orders_by_driver(uid):
 
 def updateproductorder(uid, pid, rating):
     try:
+        cursor = getConnection()
         cursor.exec("INSERT INTO Product_Orders (Driver_ID, Product_ID, rating, TimeStamp) VALUES ('"+str(uid)+"', '"+str(pid)+"','"+str(rating)+"' , CURRENT_TIMESTAMP)")
+        cursor.close()
     except Exception as e:
             raise Exception(e)
 
 # Return a list of all genres
 def getgenres():
     try:
+        cursor = getConnection()
         returngenre = cursor.exec("SELECT DISTINCT Genre FROM product")
+        cursor.close()
     except Exception as e:
             raise Exception(e)
 
@@ -330,7 +231,9 @@ def getnumproducts(spon_id):
     val = (spon_id,)
 
     try:
+        cursor = getConnection()
         returnnum = cursor.exec(query, val)
+        cursor.close()
 
     except Exception as e:
         raise Exception(e)
@@ -353,6 +256,7 @@ Return the product that the second user bought most recently, excluding the curr
 
 """
 def recommend(userid, sid):
+    cursor = getConnection()
     #Select a tuple list of all the products ordered by most recent
     OGproducttup = cursor.exec("SELECT product_id FROM Product_Orders WHERE Sponsor_ID = '"+str(sid)+"' AND Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
     #Return nothing if the user hasn't bought anything
@@ -379,6 +283,7 @@ def recommend(userid, sid):
     finalproductnametup = cursor.exec("SELECT name FROM product WHERE product_id = '"+otherproductstr+"'")
     finalproductnamestr = ''.join(map(str, finalproductnametup[0]))
     #print(product_search(finalproductnamestr, "Any", "None", "priceup"))
+    cursor.close()
     return product_search(finalproductnamestr, "Any", "None", "priceup")
     
 
@@ -391,13 +296,16 @@ def Davidsubpoints(userna, amount, spon_id):
 
 def getprodinfo(pid):
     try:
+        cursor = getConnection()
         return cursor.exec("SELECT name, price, img_url FROM product WHERE product_id = %s" % pid)[0]
+        cursor.close()
     except Exception as e:
         raise Exception(e)
 
 #Trashed this and redoing based on sponsor catalogues only
 def getpopitems(sponid):
 #Grab a list of the most popular items in DESC order for the current sponsor
+    cursor = getConnection()
     TopThreeTup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sponid)+"' GROUP BY Product_ID ORDER BY COUNT(*) DESC")
 #    print(TopThreeTup)
     TopThreeStr = []
@@ -425,25 +333,32 @@ def getpopitems(sponid):
 #    print(finallist)
     if(finallist[0] == ' '):
         return ' '
+    cursor.close()
     return finallist
 
 # Gets a list of products from all sponsors based on search
 def get_products_by_name(search):
+    cursor = getConnection()
     query = "SELECT name FROM product WHERE name REGEXP(%s)"
     val = cursor.exec(query, (search, ))
     matches = list(map(lambda x: x[0], val))
+    cursor.close()
     return matches
 
 # Updates the point conversion rate for a sponsor
 def update_sponsor_rate(sponsor_id, rate):
+    cursor = getConnection()
     sql = "UPDATE sponsor SET point_value=%s WHERE sponsor_id=%s"
     cursor.exec(sql, (rate, sponsor_id))
+    cursor.close()
 
 def get_point_value(sponsor_id):
+    cursor = getConnection()
     sql = "SELECT point_value FROM sponsor WHERE sponsor_id=%s"
     result = cursor.exec(sql, (sponsor_id, ))
 
     # Return conversion rate if sponsor exists, otherwise, None
+    cursor.close()
     if result:
         return result[0][0]
     else:
@@ -521,6 +436,5 @@ if __name__ == "__main__":
     print(get_suspended_users())
     print(if_username_exist('remove'))
     """
-    cursor.close()
     
 

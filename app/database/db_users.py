@@ -19,9 +19,9 @@ def getConnection(ex=0):
         connection.close()
         connection = pool1.get_connection()
         return connection
-        #print(pool1.size())
+        print(pool1.size())
 
-    #print(pool1.size())
+    print(pool1.size())
     return pool1.get_connection()
 
 def getNewConnection():
@@ -32,12 +32,11 @@ def isActive(username):
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
     id = conn.exec(sql)
     if id[0][0] != None:
-        role =  'driver'
+        query = "SELECT active FROM driver WHERE user = \'{}\'".format(username)
     elif id[0][1] != None:
-        role =  'sponsor'
+        query = "SELECT active FROM sponsor_logins WHERE username = \'{}\'".format(username)
     else:
-        role = 'admin'
-    query = "SELECT active FROM " + role + ' WHERE user = \'{}\''.format(username)
+        query = "SELECT active FROM admin WHERE user = \'{}\'".format(username)
     active = conn.exec(query)
     conn.close()
     return active[0][0] == 1
@@ -364,8 +363,16 @@ class Admin(AbsUser):
 
         #self.database = getNewConnection()
         username = str(username).strip()
+
+        #if username is sponsor title
+        title = self.database.exec('SELECT title from sponsor')
+        title_list = []
+        for x in title:
+            title_list.append(x[0])
+        if username in title_list:
+            username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
+
         sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = \'{}\''.format(username)
-        print(sql)
         id = self.database.exec(sql)
         if id[0][0] != None:
             role = 'driver'
@@ -374,10 +381,15 @@ class Admin(AbsUser):
         else:
             role = 'admin'
 
-
+        query = 'UPDATE ' + role + ' SET active = 0 WHERE user = %s'
+        val = (username, )
+        if role == 'sponsor':
+            query = 'UPDATE sponsor_logins SET active = 0 where sponsor_id = %s'
+            val = (id[0][1], )
+        
         try:
             self.database.exec('DELETE FROM suspend WHERE user = %s', (username, ))
-            self.database.exec('UPDATE ' + role + ' SET active = 0 WHERE user = %s', (username, ))
+            self.database.exec(query, val)
             #self.database.close()
         except Exception as e:
             raise Exception(e)
@@ -397,7 +409,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_sponsorless_drivers(self):
-        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (SELECT driver.driver_id FROM driver INNER JOIN driver_bridge WHERE driver.driver_id = driver_bridge.driver_id AND driver_bridge.apply=0) AND active = 1'
+        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver JOIN driver_bridge USING(driver_id) JOIN sponsor_logins USING(sponsor_id) WHERE ((SELECT COUNT(*) FROM sponsor_logins WHERE active = 0 AND sponsor_id = driver_bridge.sponsor_id) > 0) union SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (SELECT driver.driver_id FROM driver INNER JOIN driver_bridge WHERE driver.driver_id = driver_bridge.driver_id AND driver_bridge.apply=0) AND active = 1'
         
         try:
             data = self.database.exec(sql)
@@ -423,7 +435,7 @@ class Admin(AbsUser):
             return []
     
     def get_disabled_sponsors(self):
-        sql = 'select user, title, sponsor_id, date_join FROM sponsor WHERE active = 0'
+        sql = 'select sponsor_logins.username, title, sponsor_id, date_join FROM sponsor join sponsor_logins USING(sponsor_id) WHERE sponsor_logins.active = 0'
         
         try:
             data = self.database.exec(sql)
@@ -459,6 +471,8 @@ class Admin(AbsUser):
             role = 'admin'
         
         query = 'UPDATE ' + role + ' SET active = 1 WHERE user = \'{}\''.format(username)
+        if role == 'sponsor':
+            query = "UPDATE sponsor_logins SET active = 1 WHERE sponsor_id = {}".format(id[0][1])
         try:
             data = self.database.exec(query)
             #self.database.close()
@@ -696,7 +710,7 @@ class Admin(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        #print(pool1.size())
+        print(pool1.size())
         
 
 class Sponsor(AbsUser):
@@ -743,14 +757,14 @@ class Sponsor(AbsUser):
         #params = dict(filter(lambda x: x[0] != 'selectedSponsor', self.properties.items()))
         try:
             self.database.exec(query)
-            self.add_to_users()
+            self.add_new_sponsor_login(self.properties['user'], self.properties['pwd'])
             #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def check_password(self, pwd_hash):
-        query = "SELECT pwd FROM sponsor WHERE user=%s"
+        query = "SELECT password FROM sponsor_logins WHERE username=%s"
         db_pwd = self.database.exec(query, self.properties['user'])
         #self.database.close()
 
@@ -783,7 +797,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor where active = 1"
+        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
 
         try:
             out = self.database.exec(query)
@@ -817,11 +831,24 @@ class Sponsor(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    #here to satisfy interface, can't use because I need to pass in variables
     def add_to_users(self):
-        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
-        query = query.format('Sponsor_ID', self.properties['user'], self.properties['id'])
+        pass
+        query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
+        query = query.format(self.properties['user'], self.properties['id'])
         self.database.exec(query)
         #self.database.close()
+
+    def add_new_sponsor_login(self, username, pwd):
+        query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'.format(username, self.properties['id'])
+        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s)'
+        q_vals = (username, pwd, self.properties['id'])
+        try:
+            self.database.exec(query)
+            self.database.exec(q_login, q_vals)
+        except Exception as e:
+            raise Exception(e)
+    
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
@@ -852,7 +879,15 @@ class Sponsor(AbsUser):
 
     def populate(self, username: str):
         #self.database = getNewConnection()
-        query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor WHERE user = %s'
+        #if passing in title as name, pick the first username of that sponsor to populate
+        title = self.database.exec('SELECT title from sponsor')
+        title_list = []
+        for x in title:
+            title_list.append(x[0])
+        if username in title_list:
+            username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
+
+        query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
         vals = (username, )
 
         try:
@@ -1329,7 +1364,7 @@ class Sponsor(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        #print(pool1.size())
+        print(pool1.size())
         
 
 
@@ -1903,7 +1938,7 @@ class Driver(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        #print(pool1.size())
+        print(pool1.size())
         
 
 

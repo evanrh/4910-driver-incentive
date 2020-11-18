@@ -5,7 +5,7 @@
     {% for order in purchaseList %}
         {% if order != None %}
         <p> Order Number: {{ order }} </p>
-        <p> Sponsor: {{ getSponsorTitle(purchaseList.get(order)[0][1]) }} </p>
+        <p> Sponsor: {{ getSponsorTitle(purchaseList.get(order)[0][3]) }} </p>
         <p> Date: {{ purchaseList.get(order)[0][2].strftime('%m-%d-%Y %I:%M %p') }}</p>
         {% if purchaseList.get(order)[0][5] == 1 %}
         <p>Order cancelled.</p>

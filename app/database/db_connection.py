@@ -174,8 +174,8 @@ class Connection(pymysql.connections.Connection):
         cur.close()
         return rows
 
-    #def __del__(self):
-        #pymysql.connections.Connection.close(self)
+    def __del__(self):
+        pymysql.connections.Connection.close(self)
 
 
 
@@ -236,6 +236,11 @@ class ConnectionPool:
 
     def size(self):
         return self._pool.qsize()
+    
+    def __del__(self):
+        for _ in range(self._size):
+            conn = self._pool.get()
+            del conn
 
 
 class GetConnectionFromPoolError(Exception):

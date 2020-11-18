@@ -143,3 +143,42 @@ body {
     left: 15px;
 }
 
+/* media queries */ 
+
+@media screen and (max-width: 600px)
+{
+
+    .one-sixth,
+    .one-fifth,
+    .one-fourth,
+    .one-third,
+    .two-fifths,
+    .one-half,
+    .three-fifths,
+    .two-thirds,
+    .four-fifths,
+    .five-sixths,
+    .full {
+        padding: 10px;
+        width: 100%;
+    } 
+
+    .hide-mobile {
+        display: none;
+    }
+    
+    .static-mobile {
+        position: static;
+    }
+}
+
+@media (min-width: 601px)
+{
+    .hide-desktop {
+        display: none;
+    }
+    
+    .static-desktop {
+        position: static;
+    }
+}

@@ -897,7 +897,7 @@ def buynowrecipt():
         got = form['buy']
         results = product_search(got, spid, "None", "priceup" )
 
-    print("got my " + got)
+
     # Vars
     cartTotal = 0
     success = True

@@ -157,3 +157,9 @@ class AdminAPIAuth(Resource):
             return {'message': 'success', 'content': {'username': data['username'], 'token': token.decode('ascii')}}
         else:
             return {'message': 'Incorrect credentials'}, 200
+
+    @admin_api.doc(security='apikey')
+    @token_required
+    def get(self):
+        return 'You passed!'
+        pass

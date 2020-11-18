@@ -1,6 +1,10 @@
 from app import app
-from flask import Flask, flash, redirect, render_template, request, session, abort, url_for
+from flask import Flask, flash, redirect, render_template, request, session, abort, url_for, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.wrappers import Response
+from datetime import date
+from io import StringIO, BytesIO
+from decimal import Decimal
 from app.database.db_functions import *
 from app.database.db_users import *
 from app.database.db_connection import *
@@ -8,8 +12,12 @@ from flask.json import JSONEncoder
 from tempfile import TemporaryFile
 from app.products.etsy_driver import EtsyController
 from app.products.catalog import CatalogController
+from app.reports.reporting import ReportController
+import datetime
 import json
 import time
+import csv
+import calendar
 
 # Using this to encode our class to store user data
 class CustomJSONEncoder(JSONEncoder):
@@ -70,13 +78,13 @@ def upload_file(f):
     # Send tempf to driver
     tempf.close()
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def home():
     # Using the global class to access data
     global userInfo
     global Message
 
-    if not session.get('logged_in') or not session.get('userInfo'):
+    if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -84,58 +92,52 @@ def home():
 
         session.pop('_flashes', None)
 
+        # Messages to be displayed in banner
+        inbox_list = userInfo.get_inbox_list()
+        if 'System' in inbox_list and len(inbox_list) == 1:
+            Message = "You have an important message from our System Management"
+        elif 'System' in inbox_list and len(inbox_list) > 1:
+            Message = 'You have an important message from our System Management and ' + str(len(inbox_list) - 1) + ' other unread messages'
+        elif len(inbox_list) > 0:
+            Message = "You have " + str(len(inbox_list)) + ' unread messages'
+        else:
+            Message = ""
+
         if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
-            rec = []
+
+            # Product page information
+            recommended = []
             genres = []
-            userna = session['userInfo']['properties']['user']
+            popitems = []
+            numproducts = 0
+            userid = session['userInfo']['properties']['id']
 
             if not session['userInfo']['properties']['selectedSponsor'] == None:
                 genres = getgenres()
-                rec = recommend(userna)
-                pass
-            
-
-            currSponsor = Sponsor()
-            if session['userInfo']['properties']['selectedSponsor'] == None:
-                sponsorId = None
-            else:
                 sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
-
-            inbox_list = userInfo.get_inbox_list()
-            if 'System Management' in inbox_list and len(inbox_list) == 1:
-                Message = "You have an important message from System Management"
-            elif 'System Management' in inbox_list and len(inbox_list > 1):
-                Message += ' and ' + str(len(inbox_list) - 1) + ' other unread message'
-            elif len(inbox_list) > 0:
-                Message = "You have " + str(len(inbox_list)) + ' unread messages'
-            else:
-                Message = ""
-
-
-            # Fix sponsorless driver issue
-            if sponsorId:
+                recommended = recommend(userid, sponsorId)
                 numproducts = getnumproducts(sponsorId)
+                popitems = getpopitems(sponsorId)
+                convert = get_point_value(sponsorId)
+                if recommended != ' ':
+                    recommended[0]['price'] = int(recommended[0]['price']/convert)
+                if popitems != ' ':
+                    for row in popitems:
+                            row['price'] = int(row['price']/convert)
             else:
-                numproducts = 0
-            popitems = getpopitems()
-            return render_template('driver/driverHome.html', genres = genres, resultrec = rec, head = Message, numprod = numproducts, popular = popitems, curspon= sponsorId)
+                sponsorId = None
 
+
+            return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
-            inbox_list = userInfo.get_inbox_list()
-            if len(inbox_list) > 0:
-                Message = "You have " + str(len(inbox_list)) + ' unread messages'
-            else:
-                Message = ""
             return render_template('sponsor/sponsorHome.html', head = Message)
 
         if userInfo.getRole() == "admin":
-            inbox_list = userInfo.get_inbox_list()
-            if len(inbox_list) > 0:
-                Message = "You have " + str(len(inbox_list)) + ' unread messages'
-            else:
-                Message = ""
-            return render_template('admin/adminHome.html', head = Message)
+            sponsors = Sponsor().get_users()
+            sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
+            print(sponsors)
+            return render_template('admin/adminHome.html', head = Message, sponsors=sponsors)
 
     return render_template('landing/login.html')
 
@@ -187,6 +189,10 @@ def do_admin_login():
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
+    global userInfo
+    del userInfo
+    userInfo = Driver()
+    del session['userInfo']
     return redirect(url_for('home'))
 
 
@@ -250,7 +256,6 @@ def driverPointsLeader():
 
     drivers = currSponsor.view_leaderboard()
 
-
     return render_template('driver/driverPointsLeader.html', drivers=drivers)
 
 @app.route("/driverNotification")
@@ -263,7 +268,18 @@ def driverNotification():
 def driverManagePurchase():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
-    return render_template('driver/driverManagePurchase.html')
+
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    convert = get_point_value(spid)
+    now = datetime.datetime.utcnow()
+
+    def getProductInfo(id):
+        return Admin().getProductInfo(id)
+    
+    purchaseList = []
+    # get purchase list
+    purchaseList = get_orders_by_driver(session['userInfo']['properties']['id'])
+    return render_template('driver/driverManagePurchase.html', now = now, convert = convert, getProductInfo = getProductInfo,  purchaseList = purchaseList)
 
 @app.route("/driverProfile")
 def driverProfile():
@@ -275,12 +291,13 @@ def driverProfile():
 def driverCart():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    convert = get_point_value(spid)
 
     def getProductInfo(id):
-        itemInfo = Admin().getProductInfo(id)
-        return itemInfo
+        return Admin().getProductInfo(id)
     
-    return render_template('driver/driverCart.html', getProductInfo = getProductInfo)
+    return render_template('driver/driverCart.html', convert = convert, getProductInfo = getProductInfo)
 
 # Sponsor Page Routes
 @app.route("/sponsorNotification")
@@ -315,16 +332,17 @@ def sponsorProfile():
 
 @app.route("/sponsorSystemSettings", methods=['GET', 'POST'])
 def sponsorSystemSettings():
-    if permissionCheck(["sponsor", "admin"]) == False:
+    if permissionCheck(["sponsor"]) == False:
         return redirect(url_for('home'))
 
     if request.method == 'POST':
         rate = request.form['rate']
         sid = session['userInfo']['properties']['id']
-        userInfo.properties['point_value'] = rate
+        userInfo.properties['point_value'] = float(rate)
         update_sponsor_rate(sid, rate)
         flash('Conversion rate updated!')
 
+    print(userInfo.properties['point_value'])
     return render_template('sponsor/sponsorSystemSettings.html', rate=userInfo.properties['point_value'])
 
 @app.route("/sponsorViewDriver")
@@ -401,7 +419,9 @@ def adminManageAcc():
     def getDriverList(sponsorName):
         currSponsor = Sponsor()
         currSponsor.populate(sponsorName)
-        return currSponsor.view_drivers()
+        drivers = currSponsor.view_drivers()
+        del currSponsor
+        return drivers
     
     return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
                                                         suspendedUsers = suspendedUsers, getDriverList = getDriverList, 
@@ -449,6 +469,11 @@ def inbox(username):
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        if not bool(messages):
+            system = Admin().populate('System')
+            system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
+            del system
+            messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
@@ -458,6 +483,12 @@ def inbox(username):
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        if not bool(messages):
+            system = Admin()
+            system.populate('System')
+            system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
+            del system
+            messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
@@ -468,6 +499,11 @@ def inbox(username):
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
+        if not bool(messages):
+            system = Admin().populate('System')
+            system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
+            del system
+            messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
@@ -510,13 +546,45 @@ def settings():
                 pwd = generate_password_hash(request.form['pass'], 'sha256')
                 userInfo.update_info({'pwd': pwd})
                 return render_template(userInfo.getRole() + "/settings.html")
+            elif 'add_new_sponsor_login' in request.form.keys():
+                form = request.form
+                username = form['username']
+                password = form['password']
+                confirm_password = form['confirm_password']
+                sponsor = Sponsor(user=username)
+                if sponsor.check_username_available():
+                    if password != confirm_password:
+                        flash("Passwords do not match!")
+                        return render_template('sponsor/settings.html')
+                    else:
+                        pwd = generate_password_hash(password, method='sha256')
+                        sponsor.populate(session['userInfo']['properties']['user'])
+                        sponsor.add_new_sponsor_login(username, pwd)
+                        del sponsor
+                        flash("New login successfully created")
+                        return render_template('sponsor/settings.html')
+                else:
+                    flash("Username already taken")
+                    return render_template('sponsor/settings.html')
 
+            elif 'change-notis' in request.form.keys():
+                notis['points'] = 1 if 'points' in request.form.keys() else 0
+                notis['orders'] = 1 if 'orders' in request.form.keys() else 0
+                notis['issue'] = 1 if 'issue' in request.form.keys() else 0
+                notis = {}
+                driver = Driver()
+                driver.populate(session['userInfo']['properties']['user'])
+                driver.update_noti(notis)
+                return render_template('driver/settings.html', notis = notis)
+                
         if userInfo.getRole() == "driver":
-            return render_template('driver/settings.html')
-        if userInfo.getRole() == "sponsor":
-            return render_template('sponsor/settings.html')
-        if userInfo.getRole() == "admin":
-            return render_template('admin/settings.html')
+            driver = Driver()
+            driver.populate(session['userInfo']['properties']['user'])
+            notis = driver.get_notifications()
+            return render_template('driver/settings.html', notis = notis)
+        else:
+            return render_template(session['userInfo']['properties']['role'] + '/settings.html')
+
 
 # App Functions
 @app.route("/switchSponsor", methods=['GET', 'POST'])
@@ -702,10 +770,73 @@ def removeFromCart():
     session.modified = True
     return ('', 204)
 
+@app.route("/cancelOrder", methods=["GET","POST"])
+def cancelOrder():
+    data = request.get_data().decode("utf-8") 
+    order = data.strip()
+    spid = get_order_info(order)[0][1]
+    convert = get_point_value(spid)
+    orderTotal = 0
+    # Refund Points
+    orderinfo = get_order_info(order)
+    for item in orderinfo:
+        orderTotal += int(float(item[4]) / convert)
+    sponsor = Sponsor()
+    name = getSponsorName(spid)
+    sponsor.populate(name)
+    sponsor.add_points(session['userInfo']['properties']['id'], orderTotal)
+    session['userInfo']['properties']['selectedSponsor'][1] += orderTotal
+    session.modified = True
+
+    # Cancel Order
+    cancel_order(order)
+    return ('', 204)
+
 @app.route("/checkout", methods=["GET","POST"])
 def checkout():
-    #Todo
-    return ('', 204)
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
+    def getProductInfo(id):
+        return Admin().getProductInfo(id)
+
+    # Vars
+    cartTotal = 0
+    success = True
+    purchase = session['shoppingCart'].copy()
+    ordernum = get_next_order_id()
+    now = datetime.datetime.now()
+    uid = session['userInfo']['properties']['id']
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    convert = get_point_value(spid)
+
+    for item in session['shoppingCart']:
+        cartTotal += int((getprodinfo(item)[1]) / convert)
+    
+    if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
+        success = False
+    
+    else:
+        sponsor = Sponsor()
+        name = getSponsorName(spid)
+        sponsor.populate(name)
+
+        # Subtract the points
+        sponsor.add_points(session['userInfo']['properties']['id'], -cartTotal)
+        session['userInfo']['properties']['selectedSponsor'][1] -= cartTotal
+        session.modified = True
+
+        # Add to the database
+        for item in session['shoppingCart']:
+            amount = getProductInfo(item)[1]
+            for x in range(0, session['shoppingCart'].get(item)):
+                add_new_order(uid, item, '3', spid, amount, ordernum)
+
+        # Clear the cart
+        session['shoppingCart'].clear()
+        session.modified = True
+
+    return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/sendto", methods=["GET","POST"])
 def sendto():
@@ -733,14 +864,16 @@ def sendto():
 
 @app.route("/productsearch", methods=["GET","POST"])
 def productsearch():
-    search = "no input"
-    results = "blah blah blah blah"  
-    limitedresults = [" "] * 50
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
 
-    currSponsor = Sponsor()
+    # Setting up default variables
+    search = ""
+    results = "" 
+    amount = 0
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
 
-
+    # On post, get information from filter form
     if request.method == 'POST':
         form = request.form
         search = form['search']
@@ -748,70 +881,92 @@ def productsearch():
         order = form['orderby']
         amount = int(form['amount'])
         results = product_search(search, sponsorId, mylist, order)
-    
-    count = 0; 
-#    print(results)
-    limitedresults = []
 
-    for i in range(0, amount):
-        if(count < len(results)):
-            limitedresults.append(results[i])
-        else:
-            break
-        count += 1
-#    print(results)
-#    print(limitedresults)
-    numresults = len(results) 
-    return render_template('driver/driverResults.html', numresults = numresults, query = search, results = limitedresults)
+    # Store limited amount of results and send to page
+    limitedresults = []
+    convert = get_point_value(sponsorId)
+    # Loop to the minimum of the amount of results and the amount of products to show
+    for i in range(0, min(amount, len(results))):
+        limitedresults.append(results[i])
+    for row in limitedresults:
+        row['price'] = int(row['price']/convert)
+
+    return render_template('driver/driverResults.html', numresults = len(results), query = search, results = limitedresults)
 
 
 #Very much a building block, may scrap if need be
 @app.route("/productpage", methods=["GET","POST"])
 def productpage():
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
+
     currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
-
+    convert = get_point_value(sponsorId)
     if request.method == 'POST':
         form = request.form
         got = form['productname']
         results = product_search(got, sponsorId, "None", "priceup" )
 
 #    print(results[0]['name'])
-        return render_template('driver/driverProduct.html', results = results[0])
+        return render_template('driver/driverProduct.html',convert = convert, results = results[0])
 
-@app.route("/buynow", methods=["GET", "POST"])
-def buynow():
-    currSponsor = Sponsor()
-    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
-
-
-    if request.method == 'POST':
-        form = request.form
-        got = form['buy']
-        results = product_search(got, sponsorId, "None", "priceup" )
-
-    return render_template('driver/driverBuyNow.html', results = results[0])
-     
 @app.route("/buynowrecipt", methods=["GET", "POST"])
 def buynowrecipt():
-    currSponsor = Sponsor()
-    sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
 
-
+    def getProductInfo(id):
+        return Admin().getProductInfo(id)
+    
+    #Retooling checkout for single item purchases
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
     if request.method == 'POST':
         form = request.form
         got = form['buy']
-        results = product_search(got, sponsorId, "None", "priceup" )
+        results = product_search(got, spid, "None", "priceup" )
 
-    userId = session['userInfo']['properties']['id']
-    Davidsubpoints(userId, results[0]['price'], sponsorId)   
-    print(userId, results[0]['price'], sponsorId)
-     
-    return render_template('driver/driverBuyNowRecipt.html', results = results[0])
+    print("got my " + got)
+    # Vars
+    cartTotal = 0
+    success = True
+    purchase = dict()
+    purchase[results[0]['id']] = 1
+    #ordernum is the single id from the product
+    ordernum = results[0]['id']
+    now = datetime.datetime.now()
+    uid = session['userInfo']['properties']['id']
+    convert = get_point_value(spid)
+
+    #cartTotal only needs one price
+    cartTotal = int(results[0]['price']/convert)
+
+    if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
+        success = False
+    
+    else:
+        sponsor = Sponsor()
+        name = getSponsorName(spid)
+        sponsor.populate(name)
+
+        # Subtract the points
+        sponsor.add_points(session['userInfo']['properties']['id'], -cartTotal)
+        session['userInfo']['properties']['selectedSponsor'][1] -= cartTotal
+        session.modified = True
+
+        #Switched cart for results, the single item info
+        # Add to the database
+        for item in results:
+            amount = getProductInfo(item['id'])[1]
+            add_new_order(uid, item['id'], '3', spid, amount, ordernum)
+
+
+    return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
+
 @app.route("/thanks", methods=["GET","POST"])
 def thanks():
-
-
+    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+        return redirect(url_for('home'))
 
     userId = session['userInfo']['properties']['id']
     if request.method == "POST":
@@ -819,14 +974,8 @@ def thanks():
         num = form['review']
         pid = form['product']
 
-
-    print(num)
-    print(pid)
-    print(userId)
     updateproductorder(userId, pid, num)
     return render_template('driver/driverThanks.html')
-
-
 
 @app.route("/productAJAX", methods=["POST"])
 def productAJAX():
@@ -874,7 +1023,7 @@ def updateAccount(username):
             return json.dumps({'status': 'OK', 'user': username})
 
     sessRole = session['userInfo']['properties']['role']
-    print(sessRole)
+
     if sessRole == 'admin':
         uid, role = get_table_id(username)
         user = None
@@ -949,3 +1098,140 @@ def catalog(sponsor):
     else:
         flash('Access not allowed')
         return redirect(url_for('home'))
+
+# Download report view
+@app.route('/reports', methods=['GET','POST'])
+def reports():
+    role = session['userInfo']['properties']['role']
+    templateName = '{}/{}Reports.html'.format(role, role)
+
+    if not session['logged_in']: 
+        return redirect(url_for('home'))
+
+    if role == 'admin':
+        sponsorList = Sponsor().get_users()
+
+        # Get list of all sponsor names from sponsor tuples
+        sponsorNames = list(map(lambda elem: elem[1], sponsorList))
+
+        if request.method == 'POST':
+
+            cont = ReportController()
+
+            startDate = request.form['startdate'].split('-')
+            startDate = datetime.datetime(int(startDate[0]), int(startDate[1]), 1)
+
+            endDate = request.form['enddate'].split('-')
+            endDate = datetime.datetime(int(endDate[0]), int(endDate[1]), calendar.monthrange(int(endDate[0]), int(endDate[1]))[1])
+
+
+            fname = ""
+            if request.form['reporttype'] == 'Sales over time':
+                # Report of sales over time
+
+                # Get number of each user type
+                numDrivers = cont.number_users('driver')
+                numSponsors = cont.number_users('sponsor')
+                numAdmins = cont.number_users('admin')
+                metaHeaders = ('# of Drivers', '# of Sponsors', '# of Admins')
+
+                cont.write(metaHeaders)
+                cont.write((numDrivers, numSponsors, numAdmins))
+                cont.write(())
+                sales = cont.total_sales((startDate, endDate))
+
+                cont.write(('Month','Sales'))
+
+                # Function to write each month into report over sales
+                def func(month):
+                    cont.write( (datetime.datetime(startDate.year, month[0], 1).strftime("%m"), round(float(month[1]), 2)) )
+                    return month
+
+                sales = dict(map(func, sales.items()))
+                fname = "{}-total-sales-report.csv".format(2020)
+
+            else: 
+                # Elements are all named sponsor, so this grabs the whole list of them
+
+                sponsors = request.form.getlist('sponsor')
+
+                if not sponsors:
+                    flash('No sponsor selected!')
+                    return render_template('admin/adminReports.html', sponsors=sponsorNames)
+
+                if request.form['reporttype'] == 'Sales by sponsor':
+                # Report of sales by sponsor, summarized by month
+                    sponsorHeaders = ('Month','Sponsor', 'Purchases Total', 'Expenses')
+                    cont.write(sponsorHeaders)
+
+                    def sponsTot(s):
+                        id = get_table_id(s)[0]
+                        return (s, cont.sponsor_stats(id, (startDate, endDate)))
+
+                    sponsorTotals = dict(map(sponsTot, sponsors)) 
+                    print(sponsorTotals)
+
+
+                    for i in range(startDate.month, endDate.month+1):
+                        cont.write( (datetime.datetime(startDate.year, i, 1).strftime("%B"), ) )
+                        for j in sponsorTotals:
+                            purchase = round(float(sponsorTotals[j][i]), 2)
+                            cont.write( ('', j, purchase, purchase * .01) )
+
+                    fname = "{}-sponsor-sales-report.csv".format('-'.join([startDate.strftime("%m-%d"), endDate.strftime("%m-%d")]))
+                else:
+                    # Report of purchases by driver, summarized by sponsor
+                    sponsorHeaders = ('Sponsor','Driver','Purchases')
+                    cont.write(sponsorHeaders)
+
+                    def driverAgg(s):
+                        id = get_table_id(s)[0]
+                        return (s, cont.driver_purchases(id))
+
+                    sponsorSumms = dict(map(driverAgg, sponsors))
+
+                    for sp in sponsorSumms.keys():
+                        cont.write((sp, ''))
+                        print(sponsorSumms[sp])
+                        for dr in sponsorSumms[sp]:
+                            cont.write(('', dr)) 
+                            for purchase in sponsorSumms[sp][dr]:
+                                cont.write(('', '', purchase))
+                    fname = "{}-driver-summary-report.csv".format(date.today().strftime('%m-%d'))
+
+
+            # Serve report file
+            mem = cont.get_file()
+            del cont
+
+            now = date.today()
+            return send_file(mem, as_attachment=True, attachment_filename=fname, mimetype='text/csv')
+        return render_template(templateName, sponsors=sponsorNames)
+    elif role == 'sponsor':
+        return render_template(templateName)
+    else:
+        return redirect(url_for('home'))
+
+@app.route('/sponsorList', methods=['POST'])
+def sponList():
+    """ AJAX endpoint for getting list of sponsors and their ids """
+    if session['userInfo']['properties']['role'] == 'admin':
+        sponsors = Sponsor().get_users()
+        cont = ReportController()
+        now = date.today()
+        startDate = datetime.datetime(now.year, 1, 1)
+        endDate = datetime.datetime(now.year, 12, 31)
+        sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
+        results = list(map(lambda x: cont.sponsor_stats(x[1], (startDate, endDate)), sponsors))
+        results = list(map(lambda x: dict(map(lambda y: (y[0], int(y[1])), x.items())), results))
+        output = list(map(lambda x: {'info': x[0], 'results': x[1]}, zip(sponsors, results)))
+        print(output)
+        return json.dumps(output)
+    else:
+        return json.dumps({})
+
+@app.context_processor
+def sponsorTitle():
+    def getSponsorTit(id):
+        return getSponsorTitle(id)
+    return dict(getSponsorTitle=getSponsorTit)

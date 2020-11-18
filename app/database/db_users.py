@@ -21,6 +21,7 @@ def getConnection(ex=0):
         return connection
         print(pool1.size())
 
+    print(pool1.size())
     return pool1.get_connection()
 
 def getNewConnection():
@@ -31,12 +32,11 @@ def isActive(username):
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)
     id = conn.exec(sql)
     if id[0][0] != None:
-        role =  'driver'
+        query = "SELECT active FROM driver WHERE user = \'{}\'".format(username)
     elif id[0][1] != None:
-        role =  'sponsor'
+        query = "SELECT active FROM sponsor_logins WHERE username = \'{}\'".format(username)
     else:
-        role = 'admin'
-    query = "SELECT active FROM " + role + ' WHERE user = \'{}\''.format(username)
+        query = "SELECT active FROM admin WHERE user = \'{}\'".format(username)
     active = conn.exec(query)
     conn.close()
     return active[0][0] == 1
@@ -131,6 +131,7 @@ class Admin(AbsUser):
     def setLogIn(self, loggedIn):
         self.loggedIn = loggedIn
 
+    # gets the next id from the database
     def get_next_id(self):
         query = 'SELECT MAX(admin_id) FROM admin'
         rows = self.database.exec(query)
@@ -141,6 +142,7 @@ class Admin(AbsUser):
         else:
             return rows[0][0] + 1
 
+    #adds the user to the database
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         self.properties['END'] = 'NULL'
@@ -156,6 +158,7 @@ class Admin(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    #compares the pwd_hash with the password in the database
     def check_password(self, pwd_hash):
         query = "SELECT pwd FROM admin WHERE user=%s"
         db_pwd = self.database.exec(query, self.properties['user'])
@@ -163,6 +166,7 @@ class Admin(AbsUser):
 
         return check_password_hash(pwd_hash, db_pwd)
 
+    #checks to see if the user name is available
     def check_username_available(self):
         query = "SELECT COUNT(*) FROM users WHERE UserName=\"{}\"".format(self.properties['user'])
 
@@ -171,6 +175,7 @@ class Admin(AbsUser):
         print(out)
         return out[0][0] == 0 or out == None
 
+    #updates the info of the admin in the database. 
     def update_info(self, data: dict):
         
         query = "UPDATE admin SET "
@@ -280,7 +285,6 @@ class Admin(AbsUser):
         try:
             self.database.exec('DELETE from suspend WHERE date_return <= NOW()')
             suspended_user = self.database.exec(sql, val)
-            #self.database.close()
         except Exception as e:
             raise Exception(e)
         
@@ -292,7 +296,8 @@ class Admin(AbsUser):
     #this function adds a driver to a suspension list and their length of suspension
     def suspend_user(self, username, year, month, day):
 
-        #self.database = getNewConnection()
+
+        #change the time into a string
         if month < 10:
             month = '0' + str(month)
         else:
@@ -358,8 +363,16 @@ class Admin(AbsUser):
 
         #self.database = getNewConnection()
         username = str(username).strip()
+
+        #if username is sponsor title
+        title = self.database.exec('SELECT title from sponsor')
+        title_list = []
+        for x in title:
+            title_list.append(x[0])
+        if username in title_list:
+            username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
+
         sql = 'SELECT Driver_ID, Sponsor_ID FROM users WHERE UserName = \'{}\''.format(username)
-        print(sql)
         id = self.database.exec(sql)
         if id[0][0] != None:
             role = 'driver'
@@ -368,15 +381,21 @@ class Admin(AbsUser):
         else:
             role = 'admin'
 
-
+        query = 'UPDATE ' + role + ' SET active = 0 WHERE user = %s'
+        val = (username, )
+        if role == 'sponsor':
+            query = 'UPDATE sponsor_logins SET active = 0 where sponsor_id = %s'
+            val = (id[0][1], )
+        
         try:
             self.database.exec('DELETE FROM suspend WHERE user = %s', (username, ))
-            self.database.exec('UPDATE ' + role + ' SET active = 0 WHERE user = %s', (username, ))
+            self.database.exec(query, val)
             #self.database.close()
         except Exception as e:
             raise Exception(e)
 
 
+    #add a driver to a sponsor, takes in their id numbers
     def add_to_sponsor(self, driver_id, sponsor_id):
         bridge_query = 'INSERT INTO driver_bridge VALUES (%s, %s, 0, 0)'
         points_query = 'INSERT INTO points_leaderboard VALUES (%s, %s, 0)'
@@ -390,7 +409,7 @@ class Admin(AbsUser):
             raise Exception(e)
 
     def get_sponsorless_drivers(self):
-        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (select driver.driver_id from driver inner join driver_bridge where driver.driver_id = driver_bridge.driver_id) AND active = 1'
+        sql = 'SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver JOIN driver_bridge USING(driver_id) JOIN sponsor_logins USING(sponsor_id) WHERE ((SELECT COUNT(*) FROM sponsor_logins WHERE active = 0 AND sponsor_id = driver_bridge.sponsor_id) > 0) union SELECT driver.user, driver.first_name, driver.last_name, driver.driver_id, driver.date_join FROM driver WHERE driver.driver_id NOT IN (SELECT driver.driver_id FROM driver INNER JOIN driver_bridge WHERE driver.driver_id = driver_bridge.driver_id AND driver_bridge.apply=0) AND active = 1'
         
         try:
             data = self.database.exec(sql)
@@ -416,7 +435,7 @@ class Admin(AbsUser):
             return []
     
     def get_disabled_sponsors(self):
-        sql = 'select user, title, sponsor_id, date_join FROM sponsor WHERE active = 0'
+        sql = 'select sponsor_logins.username, title, sponsor_id, date_join FROM sponsor join sponsor_logins USING(sponsor_id) WHERE sponsor_logins.active = 0'
         
         try:
             data = self.database.exec(sql)
@@ -452,33 +471,42 @@ class Admin(AbsUser):
             role = 'admin'
         
         query = 'UPDATE ' + role + ' SET active = 1 WHERE user = \'{}\''.format(username)
+        if role == 'sponsor':
+            query = "UPDATE sponsor_logins SET active = 1 WHERE sponsor_id = {}".format(id[0][1])
         try:
             data = self.database.exec(query)
             #self.database.close()
         except Exception as e:
             raise Exception(e)
 
+    #gets a list of current users that this user has a messsage from
     def get_inbox_list(self):
+        #select all message that have not yet been read that involve this user
         message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
+            #do some awesome database magic
             data = self.database.exec(message_query, vals)
-            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         user_list = []
+        #if there is any data from the database
         if data:
+            #loop through every message it returns
             for d in data:
+                #if the TARGET is not already in the list AND it is not this user, add to the list
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     user_list.append(d[0])
+                #if the SENDER is not already in the list AND it is not this user, add to the list
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):                       
                     user_list.append(d[1])
 
         return user_list
-
+    #mark messages as aseen
     def messages_are_seen(self, user):
+        #flag in case the user wants to mark all as seen
         if user == "MARK_ALL":
             query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
             query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
@@ -490,6 +518,7 @@ class Admin(AbsUser):
             except Exception as e:
                 raise Exception(e)
         else:
+            #set the flags where the sender and target (that is this user) has seen the conversation
             query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
             query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
             val1 = (self.properties['user'], user)
@@ -501,8 +530,7 @@ class Admin(AbsUser):
             except Exception as e:
                 raise Exception(e)
 
-
-
+    #get info of the other user in the conversation
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
         val = (user, )
@@ -530,9 +558,10 @@ class Admin(AbsUser):
         data_list.insert(0, role)
         return data_list
 
-
+    # return a list of lists with each list being a new message with the sender, msg, and timestamp being in each list
+    #the first list will contain info about the other user in the convo
     def view_messages(self):
-        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time ASC'
+        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time DESC'
         vals = (self.properties['user'], self.properties['user'])
 
         try:
@@ -543,26 +572,50 @@ class Admin(AbsUser):
         message_dict = {}
 
         if data:
+            #for each message this user has
             for d in data:
+                #the list is currently the keys of our message dictionary
                 user_list = list(message_dict.keys())
+                #if the target is not in the list and is not the user
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
+
+                    #make a new key in the dictionary 
                     message_dict[d[0]] = []
+
                     #get info about user from database
                     info = self.get_msg_info(d[0])
+
                     #if user is inactive add disabled tag to their last name and remove the tag from the list
                     if info[len(info) - 1] == 0:
                         info[len(info) - 2] += '(Disabled)'
                     info.pop(len(info) - 1)
+
+                    #add their info to the dictionary
                     message_dict[d[0]].append(info)
+
+                    #flag for appending will user later
                     user = 0
+
+                #if the sender is not in the list and is not the user
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
+
+                    #make a new key in the dictionary 
                     message_dict[d[1]] = []
+
+                    #get info about user from database
                     info = self.get_msg_info(d[1])
+
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
                     if info[len(info) - 1] == 0:
                         info[len(info) - 2] += '(Disabled)'
                     info.pop(len(info) - 1)
+
+                    #add their info to the dictionary
                     message_dict[d[1]].append(info)
+
+                    #flag for appending will user later
                     user = 1
+                #if the user is us so we can talk to ourselves :)
                 elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
                     message_dict[d[0]] = []
                     info = self.get_msg_info(d[0])
@@ -576,11 +629,16 @@ class Admin(AbsUser):
                         user = 0
                     else:
                         user = 1
-                    
+                #add the message to the dictionary, insert into the first spot (most recent message) with d[user] being their name
+                #d[1] being the sender in the convo, d[2] the message, and d[3] the timestamp
                 message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
+    #send a message to another user
+    #the target is the username of the user you want to send a message to
+    #the message is what you're getting them for dinner
+    #....lol jk
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
@@ -652,6 +710,7 @@ class Admin(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
+        print(pool1.size())
         
 
 class Sponsor(AbsUser):
@@ -691,21 +750,21 @@ class Sponsor(AbsUser):
     def add_user(self):
         self.properties['id'] = self.get_next_id()
         self.properties['active'] = 1
-        query = 'INSERT INTO sponsor VALUES (%(title)s, %(user)s, %(id)s, %(address)s, %(phone)s, %(email)s, %(pwd)s, %(image)s, NOW(), %(END)s, 0.01, %(active)s)'
         self.properties['END'] = 'NULL'
+        query = 'INSERT INTO sponsor VALUES (\'{title}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', \'{image}\', NOW(), \'{END}\', 0.01, \'{active}\')'.format(**self.properties)
 
         # Filter properties to be all except selectedSponsor because list issue
-        params = dict(filter(lambda x: x[0] != 'selectedSponsor', self.properties.items()))
+        #params = dict(filter(lambda x: x[0] != 'selectedSponsor', self.properties.items()))
         try:
-            self.database.exec(query, params=params)
-            self.add_to_users()
+            self.database.exec(query)
+            self.add_new_sponsor_login(self.properties['user'], self.properties['pwd'])
             #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def check_password(self, pwd_hash):
-        query = "SELECT pwd FROM sponsor WHERE user=%s"
+        query = "SELECT password FROM sponsor_logins WHERE username=%s"
         db_pwd = self.database.exec(query, self.properties['user'])
         #self.database.close()
 
@@ -738,7 +797,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, user, sponsor_id, address, phone, email, image, date_join FROM sponsor where active = 1"
+        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
 
         try:
             out = self.database.exec(query)
@@ -772,11 +831,24 @@ class Sponsor(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    #here to satisfy interface, can't use because I need to pass in variables
     def add_to_users(self):
-        query = 'INSERT INTO users (Username, {}, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
-        query = query.format('Sponsor_ID', self.properties['user'], self.properties['id'])
+        pass
+        query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'
+        query = query.format(self.properties['user'], self.properties['id'])
         self.database.exec(query)
         #self.database.close()
+
+    def add_new_sponsor_login(self, username, pwd):
+        query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'.format(username, self.properties['id'])
+        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s)'
+        q_vals = (username, pwd, self.properties['id'])
+        try:
+            self.database.exec(query)
+            self.database.exec(q_login, q_vals)
+        except Exception as e:
+            raise Exception(e)
+    
 
     def setSandbox(self, sandbox):
         self.properties['sandbox'] = sandbox
@@ -807,7 +879,15 @@ class Sponsor(AbsUser):
 
     def populate(self, username: str):
         #self.database = getNewConnection()
-        query = 'SELECT title, user, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor WHERE user = %s'
+        #if passing in title as name, pick the first username of that sponsor to populate
+        title = self.database.exec('SELECT title from sponsor')
+        title_list = []
+        for x in title:
+            title_list.append(x[0])
+        if username in title_list:
+            username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
+
+        query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
         vals = (username, )
 
         try:
@@ -920,7 +1000,15 @@ class Sponsor(AbsUser):
             #self.database.close()
         except Exception as e:
             raise Exception(e)
-    
+
+        #send a message to the driver
+        query = 'select user from driver where driver_id = %s'
+        val = (driver_id, )
+        username = self.database.exec(query, val)[0][0]
+        system = Admin()
+        system.populate('System')
+        system.send_message(username, 'Congratulations your sponsor application has been reviewed and accepted by {}!'.format(self.properties['user']))
+
     def decline_application(self, driver_id):
         query = 'DELETE FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s'
         vals = (driver_id, self.properties['id'])
@@ -931,35 +1019,77 @@ class Sponsor(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+        #send a message to the driver
+        query = 'select user from driver where driver_id = %s'
+        val = (driver_id, )
+        username = self.database.exec(query, val)[0][0]
+        system = Admin().populate('System')
+        system.send_message(username, '{} has reviewed and denied your request.'.format(self.properties['user']))
+
+    #add points to the driver, enter their driver_id and amount of points you want to give them
+    # IF NEGATIVE POINTS ARE GREATER THAN CURRENT POINTS (basically they don't have enough points for the purchase) THIS FUNCTION WILL RETURN FALSE
     def add_points(self, driver_id, add_points):
-        #self.database = getNewConnection()
 
+        #get the driver's points
         data = self.database.exec('SELECT points FROM driver_bridge WHERE driver_id = %s AND sponsor_id = %s AND apply = 0', (driver_id, self.properties['id']))
-        #self.database.close()
         current_points = data[0][0]
 
-        current_points += add_points
+        #add the points to the current points
+        new_point_value = current_points + add_points
 
-        query = 'UPDATE driver_bridge SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
-        vals = (current_points, driver_id, self.properties['id'])
-        try: 
-            self.database.exec(query, vals)
-            self.database.commit()
-        except Exception as e:
-            raise Exception(e)
+        #evaluate the points. if they don't have enough points and want an issue notificiation. send it. 
+        if new_point_value < 0:
+            query = 'select notification.user, notification.issue from notification inner join driver on notification.user = driver.user where driver.driver_id = %s'
+            val = (driver_id, )
+            data = self.database.exec(query, val)
+            username = data[0][0]
+            issue_noti = data[0][1]
+            #if they want notifications for points added/subtracted, tell em
+            if issue_noti == 1:
+                system = Admin()
+                system.populate('System')
+                msg = 'ERROR: You have in sufficient points for a purchase for sponsor {}. Current points: {}  Purchase Price: {}'.format(self.properties['title'], current_points, abs(add_points))
+                system.send_message(username, msg)
+            return False
 
-        data = self.database.exec('SELECT points FROM points_leaderboard WHERE driver_id = %s AND sponsor_id = %s', (driver_id, self.properties['id']))
-        current_points = data[0][0]
-
-        current_points += add_points
-        vals = (current_points, driver_id, self.properties['id'])
-        
-        leader = 'UPDATE points_leaderboard SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
-        try: 
-            self.database.exec(leader, vals)
-            self.database.close()
-        except Exception as e:
-            raise Exception(e)
+        else:
+            #update their new point value
+            query = 'UPDATE driver_bridge SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
+            vals = (new_point_value, driver_id, self.properties['id'])
+            try: 
+                self.database.exec(query, vals)
+            except Exception as e:
+                raise Exception(e)
+             
+             #get their leaderboard points
+            data = self.database.exec('SELECT points FROM points_leaderboard WHERE driver_id = %s AND sponsor_id = %s', (driver_id, self.properties['id']))
+            leader_points = data[0][0]
+            #only update the leaderboard points if they are gaining points
+            if add_points > 0:
+                leader_points += add_points
+                leader = 'UPDATE points_leaderboard SET points = %s WHERE driver_id = %s AND sponsor_id = %s'
+                vals = (leader_points, driver_id, self.properties['id'])
+                try: 
+                    self.database.exec(leader, vals)
+                except Exception as e:
+                    raise Exception(e)
+            #send message to user
+            #get username and points notification
+            query = 'select notification.user, notification.points from notification inner join driver on notification.user = driver.user where driver.driver_id = %s'
+            val = (driver_id, )
+            data = self.database.exec(query, val)
+            username = data[0][0]
+            points_noti = data[0][1]
+            #if they want notifications for points added/subtracted, tell em
+            if points_noti == 1:
+                system = Admin()
+                system.populate('System')
+                if add_points > 0:
+                    msg = 'You have gained {} points for sponsor {}. Your total is now: {}'.format(add_points, self.properties['user'], new_point_value)
+                else:
+                    msg = 'You have lost {} points for sponsor {}. Your total is now {}'.format(add_points, self.properties['user'], new_point_value)
+                system.send_message(username, msg)
+            
 
     def view_leaderboard(self):
         query = 'SELECT driver.first_name, driver.mid_name, driver.last_name, driver.user, points_leaderboard.points FROM driver INNER JOIN points_leaderboard ON driver.driver_id = points_leaderboard.driver_id WHERE sponsor_id = %s  AND active = 1 ORDER BY points_leaderboard.points DESC'
@@ -986,27 +1116,42 @@ class Sponsor(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+        #send message to driver
+        query = 'select user from driver where driver_id = %s'
+        val = (driver_id, )
+        username = self.database.exec(query, val)[0][0]
+        system = Admin()
+        system.populate('System')
+        system.send_message(username, 'You have been removed as a driver from {}!'.format(self.properties['user']))
+
+    #gets a list of current users that this user has a messsage from
     def get_inbox_list(self):
+        #select all message that have not yet been read that involve this user
         message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
+            #do some awesome database magic
             data = self.database.exec(message_query, vals)
-            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         user_list = []
+        #if there is any data from the database
         if data:
+            #loop through every message it returns
             for d in data:
+                #if the TARGET is not already in the list AND it is not this user, add to the list
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     user_list.append(d[0])
+                #if the SENDER is not already in the list AND it is not this user, add to the list
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):                       
                     user_list.append(d[1])
 
         return user_list
-
+    #mark messages as aseen
     def messages_are_seen(self, user):
+        #flag in case the user wants to mark all as seen
         if user == "MARK_ALL":
             query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
             query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
@@ -1018,6 +1163,7 @@ class Sponsor(AbsUser):
             except Exception as e:
                 raise Exception(e)
         else:
+            #set the flags where the sender and target (that is this user) has seen the conversation
             query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
             query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
             val1 = (self.properties['user'], user)
@@ -1029,8 +1175,7 @@ class Sponsor(AbsUser):
             except Exception as e:
                 raise Exception(e)
 
-
-
+    #get info of the other user in the conversation
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
         val = (user, )
@@ -1058,40 +1203,64 @@ class Sponsor(AbsUser):
         data_list.insert(0, role)
         return data_list
 
-
+    # return a list of lists with each list being a new message with the sender, msg, and timestamp being in each list
+    #the first list will contain info about the other user in the convo
     def view_messages(self):
-        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time ASC'
+        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time DESC'
         vals = (self.properties['user'], self.properties['user'])
 
         try:
             data = self.database.exec(message_query, vals)
-            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         message_dict = {}
 
         if data:
+            #for each message this user has
             for d in data:
+                #the list is currently the keys of our message dictionary
                 user_list = list(message_dict.keys())
+                #if the target is not in the list and is not the user
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
+
+                    #make a new key in the dictionary 
                     message_dict[d[0]] = []
+
                     #get info about user from database
                     info = self.get_msg_info(d[0])
+
                     #if user is inactive add disabled tag to their last name and remove the tag from the list
                     if info[len(info) - 1] == 0:
                         info[len(info) - 2] += '(Disabled)'
                     info.pop(len(info) - 1)
+
+                    #add their info to the dictionary
                     message_dict[d[0]].append(info)
+
+                    #flag for appending will user later
                     user = 0
+
+                #if the sender is not in the list and is not the user
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
+
+                    #make a new key in the dictionary 
                     message_dict[d[1]] = []
+
+                    #get info about user from database
                     info = self.get_msg_info(d[1])
+
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
                     if info[len(info) - 1] == 0:
                         info[len(info) - 2] += '(Disabled)'
                     info.pop(len(info) - 1)
+
+                    #add their info to the dictionary
                     message_dict[d[1]].append(info)
+
+                    #flag for appending will user later
                     user = 1
+                #if the user is us so we can talk to ourselves :)
                 elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
                     message_dict[d[0]] = []
                     info = self.get_msg_info(d[0])
@@ -1105,11 +1274,16 @@ class Sponsor(AbsUser):
                         user = 0
                     else:
                         user = 1
-                    
+                #add the message to the dictionary, insert into the first spot (most recent message) with d[user] being their name
+                #d[1] being the sender in the convo, d[2] the message, and d[3] the timestamp
                 message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
+    #send a message to another user
+    #the target is the username of the user you want to send a message to
+    #the message is what you're getting them for dinner
+    #....lol jk
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
@@ -1121,7 +1295,6 @@ class Sponsor(AbsUser):
             #self.database.close()
         except Exception as e:
             raise Exception(e)
-
 
     
     def upload_image(self, tempf):
@@ -1191,6 +1364,7 @@ class Sponsor(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
+        print(pool1.size())
         
 
 
@@ -1235,10 +1409,12 @@ class Driver(AbsUser):
         self.properties['END'] = 'NULL'
         self.properties['active'] = 1
         query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\', \'{active}\')'.format(**self.properties)
+        noti = 'INSERT INTO notification VALUES (\'{}\', 1, 1, 1)'.format(self.properties['user'])
         print(query)
 
         try:
             self.database.exec(query)
+            self.database.exec(noti)
             self.add_to_users()
             #self.database.close()
 
@@ -1487,27 +1663,34 @@ class Driver(AbsUser):
         except Exception as e:
             raise Exception(e)
 
+    #gets a list of current users that this user has a messsage from
     def get_inbox_list(self):
+        #select all message that have not yet been read that involve this user
         message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
 
         try:
+            #do some awesome database magic
             data = self.database.exec(message_query, vals)
-            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         user_list = []
+        #if there is any data from the database
         if data:
+            #loop through every message it returns
             for d in data:
+                #if the TARGET is not already in the list AND it is not this user, add to the list
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
                     user_list.append(d[0])
+                #if the SENDER is not already in the list AND it is not this user, add to the list
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):                       
                     user_list.append(d[1])
 
         return user_list
-
+    #mark messages as aseen
     def messages_are_seen(self, user):
+        #flag in case the user wants to mark all as seen
         if user == "MARK_ALL":
             query = 'UPDATE messages SET seens = 1 WHERE sender = %s'
             query2 = 'UPDATE messages SET seent = 1 WHERE target = %s'
@@ -1519,6 +1702,7 @@ class Driver(AbsUser):
             except Exception as e:
                 raise Exception(e)
         else:
+            #set the flags where the sender and target (that is this user) has seen the conversation
             query = 'UPDATE messages SET seent = 1 WHERE (target = %s AND sender = %s)'
             query2 = 'UPDATE messages SET seens = 1 WHERE (target = %s AND sender = %s)'
             val1 = (self.properties['user'], user)
@@ -1530,12 +1714,11 @@ class Driver(AbsUser):
             except Exception as e:
                 raise Exception(e)
 
-
+    #get info of the other user in the conversation
     def get_msg_info(self, user):
         sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = %s'
         val = (user, )
         id = self.database.exec(sql, val)
-
         if id[0][0] != None:
             role =  'driver'
         elif id[0][1] != None:
@@ -1559,40 +1742,64 @@ class Driver(AbsUser):
         data_list.insert(0, role)
         return data_list
 
-
+    # return a list of lists with each list being a new message with the sender, msg, and timestamp being in each list
+    #the first list will contain info about the other user in the convo
     def view_messages(self):
-        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time ASC'
+        message_query = 'SELECT * FROM messages WHERE target = %s OR sender = %s ORDER BY time DESC'
         vals = (self.properties['user'], self.properties['user'])
 
         try:
             data = self.database.exec(message_query, vals)
-            #self.database.close()
         except Exception as e:
             raise Exception(e)
 
         message_dict = {}
 
         if data:
+            #for each message this user has
             for d in data:
+                #the list is currently the keys of our message dictionary
                 user_list = list(message_dict.keys())
+                #if the target is not in the list and is not the user
                 if (d[0] not in user_list) and (d[0] != self.properties['user']):
+
+                    #make a new key in the dictionary 
                     message_dict[d[0]] = []
+
                     #get info about user from database
                     info = self.get_msg_info(d[0])
+
                     #if user is inactive add disabled tag to their last name and remove the tag from the list
                     if info[len(info) - 1] == 0:
                         info[len(info) - 2] += '(Disabled)'
                     info.pop(len(info) - 1)
+
+                    #add their info to the dictionary
                     message_dict[d[0]].append(info)
+
+                    #flag for appending will user later
                     user = 0
+
+                #if the sender is not in the list and is not the user
                 elif (d[1] not in user_list) and (d[1] != self.properties['user']):
+
+                    #make a new key in the dictionary 
                     message_dict[d[1]] = []
+
+                    #get info about user from database
                     info = self.get_msg_info(d[1])
+
+                    #if user is inactive add disabled tag to their last name and remove the tag from the list
                     if info[len(info) - 1] == 0:
                         info[len(info) - 2] += '(Disabled)'
                     info.pop(len(info) - 1)
+
+                    #add their info to the dictionary
                     message_dict[d[1]].append(info)
+
+                    #flag for appending will user later
                     user = 1
+                #if the user is us so we can talk to ourselves :)
                 elif(d[0] == self.properties['user'] and d[1] == self.properties['user'] and d[0] not in user_list):
                     message_dict[d[0]] = []
                     info = self.get_msg_info(d[0])
@@ -1606,11 +1813,16 @@ class Driver(AbsUser):
                         user = 0
                     else:
                         user = 1
-                    
+                #add the message to the dictionary, insert into the first spot (most recent message) with d[user] being their name
+                #d[1] being the sender in the convo, d[2] the message, and d[3] the timestamp
                 message_dict[d[user]].insert(1, (d[1], d[2], d[3]))
         
         return message_dict
 
+    #send a message to another user
+    #the target is the username of the user you want to send a message to
+    #the message is what you're getting them for dinner
+    #....lol jk
     def send_message(self, target, message):
         time = 'SET time_zone = \'{}\''.format("America/New_York")
         query = 'INSERT INTO messages VALUES (%s, %s, %s, NOW(), 0, 1)'
@@ -1622,6 +1834,64 @@ class Driver(AbsUser):
             #self.database.close()
         except Exception as e:
             raise Exception(e)
+
+    #send user message of order if their notis are on
+    def send_order_info(self, msg):
+        query = 'select notification.user, notification.orders from notification inner join driver on notification.user = driver.user where driver.driver_id = {}'.format(self.properties['driver_id'])
+        data = self.database.exec(query)
+        username = data[0][0]
+        orders_noti = data[0][1]
+        if orders_noti == 1:
+            system = Admin()
+            system.populate('System')
+            system.send_message(self.populate['user'], msg)
+
+    #send issue of the order if their notis are on
+    def send_issue_info(self, msg):
+        query = 'select notification.user, notification.issue from notification inner join driver on notification.user = driver.user where driver.driver_id = {}'.format(self.properties['driver_id'])
+        data = self.database.exec(query)
+        username = data[0][0]
+        issue_noti = data[0][1]
+        if issue_noti == 1:
+            system = Admin()
+            system.populate('System')
+            system.send_message(self.populate['user'], msg)
+
+    #update the drivers notification settings
+    #pass in dictionary where keys are 'points', 'orders', 'issue' and value is 1 if they want noti or 0 if not
+    def update_noti(self, notis: dict):
+        #create update string
+        query = 'UPDATE notification SET '
+        q_list = []
+        #set for each key
+        for key in notis.keys():
+            q_list.append("{} = {}".format(key, notis[key]))
+
+        #join each part of q_list and add where clause
+        username = self.properties['user']
+        query += ", ".join(q_list) + " WHERE user=\"{}\"".format(username)
+
+        try:
+            self.database.exec(query)
+        except Exception as e:
+            raise Exception(e)
+
+    #get notification settings for user
+    #returns a dict with keys 'points', 'orders', 'issue' and vals 1 if true, 0 if false
+    def get_notifications(self):
+        query = 'SELECT * from notification WHERE user = \"{}\"'.format(self.properties['user'])
+        try:
+            data = self.database.exec(query)
+        except Exception as e:
+            raise Exception(e)
+        noti_dict = {}
+        noti_dict['points'] = data[0][1]
+        noti_dict['orders'] = data[0][2]
+        noti_dict['issue'] = data[0][3]
+
+        return noti_dict
+
+
     
     def upload_image(self, tempf):
         with open(tempf, 'rb') as file:
@@ -1668,6 +1938,7 @@ class Driver(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
+        print(pool1.size())
         
 
 

@@ -155,6 +155,19 @@ $(function() {
   });
 });
 
+// cancel order
+$(function() {
+  $(document).on('click', '#cancelOrder', function(e) {
+    var order =  $(this).attr("name")
+    $.ajax({ 
+      contentType: "charset=utf-8",
+      url: '/cancelOrder', 
+      type: 'POST', 
+      data: order
+    })
+  });
+});
+
 // Theme code
 $("#themeSelect").change(function() {
   if ($(this).val() == "dark") {
@@ -175,6 +188,9 @@ $("#themeSelect").change(function() {
     var color3 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme3');
     var color4 = getComputedStyle(document.documentElement).getPropertyValue('--clemson-theme4');
     document.cookie = 'theme=clemson'
+    var aud = new Audio('/static/sounds/Tiger_Rag.mp3');
+    aud.volume = 0.3;
+    aud.play();
   } else if ($(this).val() == "seizure") {
     var color1 = getComputedStyle(document.documentElement).getPropertyValue('--seizure-theme1');
     var color2 = getComputedStyle(document.documentElement).getPropertyValue('--seizure-theme2');

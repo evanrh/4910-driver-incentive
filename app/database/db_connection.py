@@ -1,5 +1,6 @@
 import pymysql
 from pymysql import Error
+from functools import wraps
 import pymysqlpool
 
 #gonna leave commented out and not deleted for now just in case
@@ -158,6 +159,10 @@ class Connection(pymysql.connections.Connection):
         """
         cur = self.cursor() if not dictcursor else self.cursor(pymysql.cursors.DictCursor)
         try:
+            self.ping()
+        except Exception as e:
+            self = self._recreate(*self.args, **self.kwargs)
+        try:
             if exec_many:
                 cur.executemany(sql, args)
             else:
@@ -169,8 +174,8 @@ class Connection(pymysql.connections.Connection):
         cur.close()
         return rows
 
-    #def __del__(self):
-        #pymysql.connections.Connection.close(self)
+    def __del__(self):
+        pymysql.connections.Connection.close(self)
 
 
 
@@ -231,6 +236,11 @@ class ConnectionPool:
 
     def size(self):
         return self._pool.qsize()
+    
+    def __del__(self):
+        for _ in range(self._size):
+            conn = self._pool.get()
+            del conn
 
 
 class GetConnectionFromPoolError(Exception):

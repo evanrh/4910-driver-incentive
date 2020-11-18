@@ -331,15 +331,10 @@ def getpopitems(sponid):
         if len(temp) > 0:
             finallist[i] = temp[0]
 
-<<<<<<< HEAD
-    #print("Printing final list")
-    #print(finallist)
-    cursor.close()
-=======
 #    print("Printing final list")
 #    print(finallist)
 #    print("End print")
->>>>>>> 817921db04bdc041c4b6f7a17659dd83f05443f1
+    cursor.close()
     if(finallist[0] == ' '):
         return ' '
     return finallist

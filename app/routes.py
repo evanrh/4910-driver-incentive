@@ -442,7 +442,7 @@ def adminPointsLeader():
     sponsors = []
     currSponsor = Sponsor()
     for sponsor in Sponsor().get_users():
-        currSponsor.populate(sponsor[1])
+        currSponsor.populate(sponsor[0])
         sponsors.append(currSponsor.view_leaderboard())
 
     return render_template('admin/adminPointsLeader.html', sponsors=sponsors)

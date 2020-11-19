@@ -83,7 +83,8 @@ def home():
     # Using the global class to access data
     global userInfo
     global Message
-
+    session['sandbox'] = None
+    session.modified = True
     if not session.get('logged_in') or not session.get('userInfo'):
         return render_template('landing/login.html')
     else:
@@ -103,7 +104,7 @@ def home():
         else:
             Message = ""
 
-        if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
+        if userInfo.getRole() == "driver" or session['sandbox'] == 'driver':
 
             # Product page information
             recommended = []
@@ -131,7 +132,7 @@ def home():
 
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
-        if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
+        if userInfo.getRole() == "sponsor" or session['sandbox'] == 'sponsor':
             return render_template('sponsor/sponsorHome.html', head = Message)
 
         if userInfo.getRole() == "admin":
@@ -146,9 +147,7 @@ def home():
 def do_admin_login():
     # Using the global class to access data
     global userInfo
-    admin = Admin()
-    suspendedUsers = admin.get_suspended_users()
-    del admin
+    suspendedUsers = Admin().get_suspended_users()
     # Get user input from web page
     username = request.form['username']
     pwd = request.form['password']
@@ -190,7 +189,6 @@ def logout():
     session['logged_in'] = False
     global userInfo
     del userInfo
-    userInfo = Driver()
     del session['userInfo']
     del session['sandbox']
     session.modified = True
@@ -355,7 +353,7 @@ def sponsorViewDriver():
 
     currSponsor = Sponsor()
 
-    if userInfo.getRole() == 'admin' or userInfo.getSandbox() == 'sponsor':
+    if userInfo.getRole() == 'admin' or session['sandbox'] == 'sponsor':
         sponsor = currSponsor.get_users()[0][1]
         drivers = currSponsor.view_drivers()
     else:
@@ -521,7 +519,7 @@ def inbox(username):
 def settings():
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
-        userInfo.setSandbox("NULL")
+        session['sandbox'] = None
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
         if request.method == 'POST':
@@ -617,7 +615,7 @@ def switchSponsor():
 @app.route("/sponsorView")
 def sponsorView():
     if userInfo.getRole() == "admin":
-        userInfo.setSandbox("sponsor")
+        session['sandbox'] = "sponsor"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     return render_template('sponsor/sponsorHome.html')
@@ -625,7 +623,7 @@ def sponsorView():
 @app.route("/driverView")
 def driverView():
     if userInfo.getRole() == ("admin" or "sponsor"):
-        userInfo.setSandbox("driver")
+        session['sandbox'] = "driver"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     genres = getgenres()
@@ -634,7 +632,7 @@ def driverView():
 
 @app.route("/returnView")
 def returnView():
-    userInfo.setSandbox("NULL")
+    session['sandbox'] = "NULL"
     permissionCheck(["driver", "sponsor", "admin"])
     session.modified = True
     return redirect(url_for('home'))

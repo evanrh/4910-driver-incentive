@@ -20,12 +20,13 @@ def getConnection(ex=0):
         pool1.__del__()
         pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
     else:
-        #print(pool1.size())
+        print(pool1.size())
         return pool1.get_connection()
 
+'''
 def getNewConnection():
     return pool1.get_connection()
-    
+'''
 def isActive(username):
     conn = getConnection()
     sql = 'SELECT Driver_ID, Sponsor_ID, Admin_ID FROM users WHERE UserName = \'{}\''.format(username)

@@ -1,5 +1,5 @@
 import datetime
-from .db_users import getConnection, getNewConnection
+from .db_users import getConnection
 
 #checks to see if the password entered by the user matches password with that username
 #searches through user table for username and role

@@ -137,7 +137,6 @@ def home():
         if userInfo.getRole() == "admin":
             sponsors = Sponsor().get_users()
             sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
-            print(sponsors)
             return render_template('admin/adminHome.html', head = Message, sponsors=sponsors)
 
     return render_template('landing/login.html')
@@ -149,7 +148,7 @@ def do_admin_login():
     global userInfo
     admin = Admin()
     suspendedUsers = admin.get_suspended_users()
-
+    del admin
     # Get user input from web page
     username = request.form['username']
     pwd = request.form['password']
@@ -184,7 +183,6 @@ def do_admin_login():
             flash('Logged in as: ' + userInfo.getUsername())
         else:
             flash('Incorrect login credentials!')
-
     return redirect(url_for('home'))
 
 @app.route("/logout")
@@ -235,6 +233,7 @@ def signup():
         else:
            flash('Username taken!')
 
+    del newDriver
     return render_template('landing/signup.html')
 
 @app.route("/about")
@@ -256,7 +255,7 @@ def driverPointsLeader():
     currSponsor.populate(sponsorName)
 
     drivers = currSponsor.view_leaderboard()
-
+    del currSponsor
     return render_template('driver/driverPointsLeader.html', drivers=drivers)
 
 @app.route("/driverNotification")
@@ -323,6 +322,7 @@ def sponsorPointsLeader():
         currSponsor.populate(sponsorName)
         drivers = currSponsor.view_leaderboard()
 
+    del currSponsor
     return render_template('sponsor/sponsorPointsLeader.html', drivers=drivers)
 
 @app.route("/sponsorProfile")
@@ -364,6 +364,7 @@ def sponsorViewDriver():
     currSponsor.populate(sponsor)
     applications = currSponsor.view_applications()
 
+    del currSponsor
     return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, applications = applications, suspendedUsers=suspendedUsers, sponsor=sponsor)
 
 @app.route("/adminManageAcc", methods=["GET", "POST"])
@@ -400,15 +401,17 @@ def adminManageAcc():
            if sponsorid != 'Null':
                Admin().add_to_sponsor(newUser.getID(), sponsorid)
            flash('Account created!')
+           del newUser
        elif role == "driver":
             newUser.populate(username)
             if sponsorid != 'Null':
                 Admin().add_to_sponsor(newUser.getID(), sponsorid)
             else:
                 flash('No sponsor id entered!')
+            del newUser
        else:
            flash('Username taken!')
-    
+
     admin = Admin()
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
@@ -423,7 +426,7 @@ def adminManageAcc():
         drivers = currSponsor.view_drivers()
         del currSponsor
         return drivers
-    
+    del admin
     return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
                                                         suspendedUsers = suspendedUsers, getDriverList = getDriverList, 
                                                         sponsorlessDrivers = sponsorlessDrivers, disabled = (disabledDrivers, disabledSponsors, disabledAdmins))
@@ -444,7 +447,7 @@ def adminPointsLeader():
     for sponsor in Sponsor().get_users():
         currSponsor.populate(sponsor[0])
         sponsors.append(currSponsor.view_leaderboard())
-
+    del currSponsor
     return render_template('admin/adminPointsLeader.html', sponsors=sponsors)
 
 @app.route("/adminReports")
@@ -493,7 +496,7 @@ def inbox(username):
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
-
+        del currentDriver
         return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
     if userInfo.getRole() == "admin":
@@ -653,6 +656,7 @@ def acceptapp():
     sponsor.populate(sponsorname[1])
 
     sponsor.accept_application(user[1].strip('+'))
+    del sponsor
     return ('', 204)
 
 @app.route("/rejectapp", methods=["GET","POST"])
@@ -664,6 +668,7 @@ def rejectapp():
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.decline_application(user[1].strip('+'))
+    del sponsor
     return ('', 204)
 
 @app.route("/suspend", methods=["GET","POST"])
@@ -708,7 +713,7 @@ def removeFromSponsor():
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.remove_driver(driver_id)
-
+    del sponsor
     return ('', 204)
 
 @app.route("/addpts", methods=["GET","POST"])
@@ -726,7 +731,7 @@ def addpts():
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.add_points(driver_id, int(points[1]))
-
+    del sponsor
     return ('', 204)
 
 @app.route("/sendmessage", methods=["GET","POST"])
@@ -750,7 +755,7 @@ def sendmessage():
     if not message == "":
         user.populate(username)
         user.send_message(reciever[1].strip('+'), message[1].replace('+', " "))
-
+    del user
     return ('', 204)
 
 @app.route("/addToCart", methods=["GET","POST"])
@@ -796,9 +801,9 @@ def cancelOrder():
     sponsor.add_points(session['userInfo']['properties']['id'], orderTotal)
     session['userInfo']['properties']['selectedSponsor'][1] += orderTotal
     session.modified = True
-
     # Cancel Order
     cancel_order(order)
+    del sponsor
     return ('', 204)
 
 @app.route("/checkout", methods=["GET","POST"])
@@ -844,7 +849,7 @@ def checkout():
         # Clear the cart
         session['shoppingCart'].clear()
         session.modified = True
-
+        del sponsor
     return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/sendto", methods=["GET","POST"])
@@ -869,6 +874,7 @@ def sendto():
         user.populate(username)
         user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
 
+    del user
     return ('', 204)
 
 @app.route("/productsearch", methods=["GET","POST"])
@@ -909,7 +915,6 @@ def productpage():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
-    currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(sponsorId)
     if request.method == 'POST':
@@ -968,7 +973,7 @@ def buynowrecipt():
             amount = getProductInfo(item['id'])[1]
             add_new_order(uid, item['id'], '3', spid, amount, ordernum)
 
-
+        del sponsor
     return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/thanks", methods=["GET","POST"])
@@ -1043,6 +1048,7 @@ def updateAccount(username):
             user = Admin()
         user.populate(username)
         posted(username, user)
+        del user
         return render_template('admin/adminUpdateAccount.html', user=user, role=role)
 
     elif sessRole == 'sponsor':
@@ -1234,6 +1240,7 @@ def sponList():
         results = list(map(lambda x: dict(map(lambda y: (y[0], int(y[1])), x.items())), results))
         output = list(map(lambda x: {'info': x[0], 'results': x[1]}, zip(sponsors, results)))
         print(output)
+        del sponsors
         return json.dumps(output)
     else:
         return json.dumps({})

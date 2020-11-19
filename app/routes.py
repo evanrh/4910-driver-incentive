@@ -227,13 +227,13 @@ def signup():
                     newDriver.apply_to_sponsor(int(sponsor))
                 except:
                     flash("No sponsor found!")
+            del newDriver
 
             flash('Account created!')
             return redirect(url_for('home'))
         else:
            flash('Username taken!')
 
-    del newDriver
     return render_template('landing/signup.html')
 
 @app.route("/about")
@@ -610,7 +610,6 @@ def settings():
         else:
             return render_template(session['userInfo']['properties']['role'] + '/settings.html')
 
-
 # App Functions
 @app.route("/switchSponsor", methods=['GET', 'POST'])
 def switchSponsor():
@@ -638,7 +637,7 @@ def sponsorView():
         session['sandbox'] = "sponsor"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
-    return render_template('sponsor/sponsorHome.html')
+    return redirect(url_for('home'))
 
 @app.route("/driverView")
 def driverView():
@@ -646,9 +645,7 @@ def driverView():
         session['sandbox'] = "driver"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
-    genres = getgenres()
-    
-    return render_template('driver/driverHome.html', genres = genres)
+    return redirect(url_for('home'))
 
 @app.route("/returnView")
 def returnView():

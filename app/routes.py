@@ -518,7 +518,8 @@ def settings():
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
         userInfo.setSandbox("NULL")
-
+        permissionCheck(["driver", "sponsor", "admin"])
+        session.modified = True
         if request.method == 'POST':
             if 'delete-account' in request.form.keys():
                 userInfo.delete()
@@ -613,12 +614,16 @@ def switchSponsor():
 def sponsorView():
     if userInfo.getRole() == "admin":
         userInfo.setSandbox("sponsor")
+        permissionCheck(["driver", "sponsor", "admin"])
+        session.modified = True
     return render_template('sponsor/sponsorHome.html')
 
 @app.route("/driverView")
 def driverView():
     if userInfo.getRole() == ("admin" or "sponsor"):
         userInfo.setSandbox("driver")
+        permissionCheck(["driver", "sponsor", "admin"])
+        session.modified = True
     genres = getgenres()
     
     return render_template('driver/driverHome.html', genres = genres)
@@ -626,6 +631,8 @@ def driverView():
 @app.route("/returnView")
 def returnView():
     userInfo.setSandbox("NULL")
+    permissionCheck(["driver", "sponsor", "admin"])
+    session.modified = True
     return redirect(url_for('home'))
 
 @app.errorhandler(404)

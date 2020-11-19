@@ -60,7 +60,7 @@ def permissionCheck(allowedRole):
         session['logged_in'] = False
         return redirect(url_for('home'))
 
-    if not userInfo.getRole() in allowedRole:
+    if not session['userInfo']['properties']['role'] in allowedRole:
         return False
 
 
@@ -83,7 +83,6 @@ def home():
     # Using the global class to access data
     global userInfo
     global Message
-
     if not session.get('logged_in') or not session.get('userInfo'):
         return render_template('landing/login.html')
     else:
@@ -103,7 +102,7 @@ def home():
         else:
             Message = ""
 
-        if userInfo.getRole() == "driver" or userInfo.getSandbox() == 'driver':
+        if session['userInfo']['properties']['role'] == "driver" or session['sandbox'] == 'driver':
 
             # Product page information
             recommended = []
@@ -131,13 +130,12 @@ def home():
 
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
-        if userInfo.getRole() == "sponsor" or userInfo.getSandbox() == 'sponsor':
+        if session['userInfo']['properties']['role'] == "sponsor" or session['sandbox'] == 'sponsor':
             return render_template('sponsor/sponsorHome.html', head = Message)
 
-        if userInfo.getRole() == "admin":
+        if session['userInfo']['properties']['role'] == "admin":
             sponsors = Sponsor().get_users()
             sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
-            print(sponsors)
             return render_template('admin/adminHome.html', head = Message, sponsors=sponsors)
 
     return render_template('landing/login.html')
@@ -145,11 +143,11 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
+    session['sandbox'] = None
+    session.modified = True
     # Using the global class to access data
     global userInfo
-    admin = Admin()
-    suspendedUsers = admin.get_suspended_users()
-
+    suspendedUsers = Admin().get_suspended_users()
     # Get user input from web page
     username = request.form['username']
     pwd = request.form['password']
@@ -184,7 +182,6 @@ def do_admin_login():
             flash('Logged in as: ' + userInfo.getUsername())
         else:
             flash('Incorrect login credentials!')
-
     return redirect(url_for('home'))
 
 @app.route("/logout")
@@ -192,8 +189,8 @@ def logout():
     session['logged_in'] = False
     global userInfo
     del userInfo
-    userInfo = Driver()
     del session['userInfo']
+    del session['sandbox']
     session.modified = True
     return redirect(url_for('home'))
 
@@ -235,6 +232,7 @@ def signup():
         else:
            flash('Username taken!')
 
+    del newDriver
     return render_template('landing/signup.html')
 
 @app.route("/about")
@@ -256,7 +254,7 @@ def driverPointsLeader():
     currSponsor.populate(sponsorName)
 
     drivers = currSponsor.view_leaderboard()
-
+    del currSponsor
     return render_template('driver/driverPointsLeader.html', drivers=drivers)
 
 @app.route("/driverNotification")
@@ -314,7 +312,7 @@ def sponsorPointsLeader():
 
     currSponsor = Sponsor()
     
-    if (userInfo.getRole() == "sponsor"):
+    if (session['userInfo']['properties']['role'] == "sponsor"):
         currSponsor.populate(userInfo.getUsername())
         drivers = currSponsor.view_leaderboard()
     else:
@@ -323,6 +321,7 @@ def sponsorPointsLeader():
         currSponsor.populate(sponsorName)
         drivers = currSponsor.view_leaderboard()
 
+    del currSponsor
     return render_template('sponsor/sponsorPointsLeader.html', drivers=drivers)
 
 @app.route("/sponsorProfile")
@@ -354,7 +353,7 @@ def sponsorViewDriver():
 
     currSponsor = Sponsor()
 
-    if userInfo.getRole() == 'admin' or userInfo.getSandbox() == 'sponsor':
+    if session['userInfo']['properties']['role'] == 'admin' or session['sandbox'] == 'sponsor':
         sponsor = currSponsor.get_users()[0][1]
         drivers = currSponsor.view_drivers()
     else:
@@ -364,6 +363,7 @@ def sponsorViewDriver():
     currSponsor.populate(sponsor)
     applications = currSponsor.view_applications()
 
+    del currSponsor
     return render_template('sponsor/sponsorViewDriver.html', drivers=drivers, applications = applications, suspendedUsers=suspendedUsers, sponsor=sponsor)
 
 @app.route("/adminManageAcc", methods=["GET", "POST"])
@@ -400,15 +400,17 @@ def adminManageAcc():
            if sponsorid != 'Null':
                Admin().add_to_sponsor(newUser.getID(), sponsorid)
            flash('Account created!')
+           del newUser
        elif role == "driver":
             newUser.populate(username)
             if sponsorid != 'Null':
                 Admin().add_to_sponsor(newUser.getID(), sponsorid)
             else:
                 flash('No sponsor id entered!')
+            del newUser
        else:
            flash('Username taken!')
-    
+
     admin = Admin()
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
@@ -423,7 +425,7 @@ def adminManageAcc():
         drivers = currSponsor.view_drivers()
         del currSponsor
         return drivers
-    
+    del admin
     return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
                                                         suspendedUsers = suspendedUsers, getDriverList = getDriverList, 
                                                         sponsorlessDrivers = sponsorlessDrivers, disabled = (disabledDrivers, disabledSponsors, disabledAdmins))
@@ -444,7 +446,7 @@ def adminPointsLeader():
     for sponsor in Sponsor().get_users():
         currSponsor.populate(sponsor[0])
         sponsors.append(currSponsor.view_leaderboard())
-
+    del currSponsor
     return render_template('admin/adminPointsLeader.html', sponsors=sponsors)
 
 @app.route("/adminReports")
@@ -466,7 +468,7 @@ def inbox(username):
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
-    if userInfo.getRole() == "driver":
+    if session['userInfo']['properties']['role'] == "driver":
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
@@ -480,7 +482,7 @@ def inbox(username):
             currentDriver.messages_are_seen(username)
 
         return render_template('driver/driverInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
-    if userInfo.getRole() == "sponsor":
+    if session['userInfo']['properties']['role'] == "sponsor":
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
@@ -493,10 +495,10 @@ def inbox(username):
         inbox_list = currentDriver.get_inbox_list()
         def mark_as_seen(username):
             currentDriver.messages_are_seen(username)
-
+        del currentDriver
         return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
-    if userInfo.getRole() == "admin":
+    if session['userInfo']['properties']['role'] == "admin":
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
@@ -517,7 +519,7 @@ def inbox(username):
 def settings():
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
-        userInfo.setSandbox("NULL")
+        session['sandbox'] = None
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
         if request.method == 'POST':
@@ -535,10 +537,10 @@ def settings():
                 # Check if no form boxes were filled in
                 if not len(data):
                     flash("Please fill in at least one box")
-                    return render_template(userInfo.getRole() + "/settings.html")
+                    return render_template(session['userInfo']['properties']['role'] + "/settings.html")
                 
                 userInfo.update_info(data)
-                return render_template(userInfo.getRole() + "/settings.html")
+                return render_template(session['userInfo']['properties']['role'] + "/settings.html")
 
             elif 'pwd-submit' in request.form.keys():
                 oldPwd = request.form['old_pass']
@@ -548,7 +550,7 @@ def settings():
                     return render_template(session['userInfo']['properties']['role'] + "/settings.html")
                 pwd = generate_password_hash(request.form['pass'], 'sha256')
                 userInfo.update_info({'pwd': pwd})
-                return render_template(userInfo.getRole() + "/settings.html")
+                return render_template(session['userInfo']['properties']['role'] + "/settings.html")
             elif 'add_new_sponsor_login' in request.form.keys():
                 form = request.form
                 username = form['username']
@@ -580,7 +582,7 @@ def settings():
                 driver.update_noti(notis)
                 return render_template('driver/settings.html', notis = notis)
                 
-        if userInfo.getRole() == "driver":
+        if session['userInfo']['properties']['role'] == "driver":
             driver = Driver()
             driver.populate(session['userInfo']['properties']['user'])
             notis = driver.get_notifications()
@@ -595,7 +597,7 @@ def switchSponsor():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
 
-    if not userInfo.getRole() == ("admin" or "sponsor"):
+    if not session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
         newSponsorid = request.form.get('sponsorSelect')
         sponsorlist = userInfo.view_sponsors()
         points = 0
@@ -612,16 +614,16 @@ def switchSponsor():
 
 @app.route("/sponsorView")
 def sponsorView():
-    if userInfo.getRole() == "admin":
-        userInfo.setSandbox("sponsor")
+    if session['userInfo']['properties']['role'] == "admin":
+        session['sandbox'] = "sponsor"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     return render_template('sponsor/sponsorHome.html')
 
 @app.route("/driverView")
 def driverView():
-    if userInfo.getRole() == ("admin" or "sponsor"):
-        userInfo.setSandbox("driver")
+    if session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
+        session['sandbox'] = "driver"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     genres = getgenres()
@@ -630,7 +632,7 @@ def driverView():
 
 @app.route("/returnView")
 def returnView():
-    userInfo.setSandbox("NULL")
+    session['sandbox'] = "NULL"
     permissionCheck(["driver", "sponsor", "admin"])
     session.modified = True
     return redirect(url_for('home'))
@@ -653,6 +655,7 @@ def acceptapp():
     sponsor.populate(sponsorname[1])
 
     sponsor.accept_application(user[1].strip('+'))
+    del sponsor
     return ('', 204)
 
 @app.route("/rejectapp", methods=["GET","POST"])
@@ -664,6 +667,7 @@ def rejectapp():
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.decline_application(user[1].strip('+'))
+    del sponsor
     return ('', 204)
 
 @app.route("/suspend", methods=["GET","POST"])
@@ -708,7 +712,7 @@ def removeFromSponsor():
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.remove_driver(driver_id)
-
+    del sponsor
     return ('', 204)
 
 @app.route("/addpts", methods=["GET","POST"])
@@ -726,7 +730,7 @@ def addpts():
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.add_points(driver_id, int(points[1]))
-
+    del sponsor
     return ('', 204)
 
 @app.route("/sendmessage", methods=["GET","POST"])
@@ -750,7 +754,7 @@ def sendmessage():
     if not message == "":
         user.populate(username)
         user.send_message(reciever[1].strip('+'), message[1].replace('+', " "))
-
+    del user
     return ('', 204)
 
 @app.route("/addToCart", methods=["GET","POST"])
@@ -796,9 +800,9 @@ def cancelOrder():
     sponsor.add_points(session['userInfo']['properties']['id'], orderTotal)
     session['userInfo']['properties']['selectedSponsor'][1] += orderTotal
     session.modified = True
-
     # Cancel Order
     cancel_order(order)
+    del sponsor
     return ('', 204)
 
 @app.route("/checkout", methods=["GET","POST"])
@@ -844,7 +848,7 @@ def checkout():
         # Clear the cart
         session['shoppingCart'].clear()
         session.modified = True
-
+        del sponsor
     return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/sendto", methods=["GET","POST"])
@@ -869,6 +873,7 @@ def sendto():
         user.populate(username)
         user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
 
+    del user
     return ('', 204)
 
 @app.route("/productsearch", methods=["GET","POST"])
@@ -909,7 +914,6 @@ def productpage():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
-    currSponsor = Sponsor()
     sponsorId = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(sponsorId)
     if request.method == 'POST':
@@ -968,7 +972,7 @@ def buynowrecipt():
             amount = getProductInfo(item['id'])[1]
             add_new_order(uid, item['id'], '3', spid, amount, ordernum)
 
-
+        del sponsor
     return render_template('driver/driverReciept.html', convert = convert, purchase = purchase, orderNumber = ordernum, success = success, total = cartTotal, date = now, getProductInfo = getProductInfo)
 
 @app.route("/thanks", methods=["GET","POST"])
@@ -1043,6 +1047,7 @@ def updateAccount(username):
             user = Admin()
         user.populate(username)
         posted(username, user)
+        del user
         return render_template('admin/adminUpdateAccount.html', user=user, role=role)
 
     elif sessRole == 'sponsor':
@@ -1234,6 +1239,7 @@ def sponList():
         results = list(map(lambda x: dict(map(lambda y: (y[0], int(y[1])), x.items())), results))
         output = list(map(lambda x: {'info': x[0], 'results': x[1]}, zip(sponsors, results)))
         print(output)
+        del sponsors
         return json.dumps(output)
     else:
         return json.dumps({})

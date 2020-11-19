@@ -60,7 +60,7 @@ def permissionCheck(allowedRole):
         session['logged_in'] = False
         return redirect(url_for('home'))
 
-    if not userInfo.getRole() in allowedRole:
+    if not session['userInfo']['properties']['role'] in allowedRole:
         return False
 
 
@@ -83,8 +83,6 @@ def home():
     # Using the global class to access data
     global userInfo
     global Message
-    session['sandbox'] = None
-    session.modified = True
     if not session.get('logged_in') or not session.get('userInfo'):
         return render_template('landing/login.html')
     else:
@@ -104,7 +102,7 @@ def home():
         else:
             Message = ""
 
-        if userInfo.getRole() == "driver" or session['sandbox'] == 'driver':
+        if session['userInfo']['properties']['role'] == "driver" or session['sandbox'] == 'driver':
 
             # Product page information
             recommended = []
@@ -132,10 +130,10 @@ def home():
 
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
-        if userInfo.getRole() == "sponsor" or session['sandbox'] == 'sponsor':
+        if session['userInfo']['properties']['role'] == "sponsor" or session['sandbox'] == 'sponsor':
             return render_template('sponsor/sponsorHome.html', head = Message)
 
-        if userInfo.getRole() == "admin":
+        if session['userInfo']['properties']['role'] == "admin":
             sponsors = Sponsor().get_users()
             sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
             return render_template('admin/adminHome.html', head = Message, sponsors=sponsors)
@@ -145,6 +143,8 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
+    session['sandbox'] = None
+    session.modified = True
     # Using the global class to access data
     global userInfo
     suspendedUsers = Admin().get_suspended_users()
@@ -312,7 +312,7 @@ def sponsorPointsLeader():
 
     currSponsor = Sponsor()
     
-    if (userInfo.getRole() == "sponsor"):
+    if (session['userInfo']['properties']['role'] == "sponsor"):
         currSponsor.populate(userInfo.getUsername())
         drivers = currSponsor.view_leaderboard()
     else:
@@ -353,7 +353,7 @@ def sponsorViewDriver():
 
     currSponsor = Sponsor()
 
-    if userInfo.getRole() == 'admin' or session['sandbox'] == 'sponsor':
+    if session['userInfo']['properties']['role'] == 'admin' or session['sandbox'] == 'sponsor':
         sponsor = currSponsor.get_users()[0][1]
         drivers = currSponsor.view_drivers()
     else:
@@ -468,7 +468,7 @@ def inbox(username):
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
-    if userInfo.getRole() == "driver":
+    if session['userInfo']['properties']['role'] == "driver":
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
@@ -482,7 +482,7 @@ def inbox(username):
             currentDriver.messages_are_seen(username)
 
         return render_template('driver/driverInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
-    if userInfo.getRole() == "sponsor":
+    if session['userInfo']['properties']['role'] == "sponsor":
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
@@ -498,7 +498,7 @@ def inbox(username):
         del currentDriver
         return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
-    if userInfo.getRole() == "admin":
+    if session['userInfo']['properties']['role'] == "admin":
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
@@ -537,10 +537,10 @@ def settings():
                 # Check if no form boxes were filled in
                 if not len(data):
                     flash("Please fill in at least one box")
-                    return render_template(userInfo.getRole() + "/settings.html")
+                    return render_template(session['userInfo']['properties']['role'] + "/settings.html")
                 
                 userInfo.update_info(data)
-                return render_template(userInfo.getRole() + "/settings.html")
+                return render_template(session['userInfo']['properties']['role'] + "/settings.html")
 
             elif 'pwd-submit' in request.form.keys():
                 oldPwd = request.form['old_pass']
@@ -550,7 +550,7 @@ def settings():
                     return render_template(session['userInfo']['properties']['role'] + "/settings.html")
                 pwd = generate_password_hash(request.form['pass'], 'sha256')
                 userInfo.update_info({'pwd': pwd})
-                return render_template(userInfo.getRole() + "/settings.html")
+                return render_template(session['userInfo']['properties']['role'] + "/settings.html")
             elif 'add_new_sponsor_login' in request.form.keys():
                 form = request.form
                 username = form['username']
@@ -582,7 +582,7 @@ def settings():
                 driver.update_noti(notis)
                 return render_template('driver/settings.html', notis = notis)
                 
-        if userInfo.getRole() == "driver":
+        if session['userInfo']['properties']['role'] == "driver":
             driver = Driver()
             driver.populate(session['userInfo']['properties']['user'])
             notis = driver.get_notifications()
@@ -597,7 +597,7 @@ def switchSponsor():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
 
-    if not userInfo.getRole() == ("admin" or "sponsor"):
+    if not session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
         newSponsorid = request.form.get('sponsorSelect')
         sponsorlist = userInfo.view_sponsors()
         points = 0
@@ -614,7 +614,7 @@ def switchSponsor():
 
 @app.route("/sponsorView")
 def sponsorView():
-    if userInfo.getRole() == "admin":
+    if session['userInfo']['properties']['role'] == "admin":
         session['sandbox'] = "sponsor"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
@@ -622,7 +622,7 @@ def sponsorView():
 
 @app.route("/driverView")
 def driverView():
-    if userInfo.getRole() == ("admin" or "sponsor"):
+    if session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
         session['sandbox'] = "driver"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True

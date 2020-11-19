@@ -192,6 +192,7 @@ def logout():
     del userInfo
     userInfo = Driver()
     del session['userInfo']
+    del session['sandbox']
     session.modified = True
     return redirect(url_for('home'))
 

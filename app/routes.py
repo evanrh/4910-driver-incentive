@@ -130,6 +130,7 @@ def home():
                 sponsorId = None
 
 
+            print(session['userInfo']['properties']['selectedSponsor'][0])
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if userInfo.getRole() == "sponsor" or session['sandbox'] == 'sponsor':
@@ -1125,7 +1126,8 @@ def reports():
         sponsorList = Sponsor().get_users()
 
         # Get list of all sponsor names from sponsor tuples
-        sponsorNames = list(map(lambda elem: elem[1], sponsorList))
+        sponsorNames = list(map(lambda elem: elem[0], sponsorList))
+        sponsorIds = list(map(lambda elem: elem[1], sponsorList))
 
         if request.method == 'POST':
 
@@ -1178,10 +1180,10 @@ def reports():
                     cont.write(sponsorHeaders)
 
                     def sponsTot(s):
-                        id = get_table_id(s)[0]
-                        return (s, cont.sponsor_stats(id, (startDate, endDate)))
+                        return (s[0], cont.sponsor_stats(s[1], (startDate, endDate)))
 
-                    sponsorTotals = dict(map(sponsTot, sponsors)) 
+                    sponsorIds = list(filter(lambda elem: elem[0] in sponsors, zip(sponsorNames, sponsorIds)))
+                    sponsorTotals = dict(map(sponsTot, sponsorIds))
                     print(sponsorTotals)
 
 
@@ -1198,10 +1200,10 @@ def reports():
                     cont.write(sponsorHeaders)
 
                     def driverAgg(s):
-                        id = get_table_id(s)[0]
-                        return (s, cont.driver_purchases(id))
+                        return (s[0], cont.driver_purchases(s[1]))
 
-                    sponsorSumms = dict(map(driverAgg, sponsors))
+                    sponsorIds = list(filter(lambda elem: elem[0] in sponsors, zip(sponsorNames, sponsorIds)))
+                    sponsorSumms = dict(map(driverAgg, sponsorIds))
 
                     for sp in sponsorSumms.keys():
                         cont.write((sp, ''))
@@ -1234,12 +1236,13 @@ def sponList():
         now = date.today()
         startDate = datetime.datetime(now.year, 1, 1)
         endDate = datetime.datetime(now.year, 12, 31)
-        sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
+        sponsors = list(map(lambda x: (x[0], x[1]), sponsors))
         results = list(map(lambda x: cont.sponsor_stats(x[1], (startDate, endDate)), sponsors))
         results = list(map(lambda x: dict(map(lambda y: (y[0], int(y[1])), x.items())), results))
         output = list(map(lambda x: {'info': x[0], 'results': x[1]}, zip(sponsors, results)))
         print(output)
         del sponsors
+        del cont
         return json.dumps(output)
     else:
         return json.dumps({})

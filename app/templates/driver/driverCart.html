@@ -45,8 +45,14 @@
                 </table>
             </form>
 
+
             <form action="/checkout">
+                {% if not session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
                 <button class="tfbutton" type='submit' style="width:90px;">Checkout</button>
+                {% else %}
+                <button class="tfbutton" type='submit' style="width:90px;" disabled>Checkout</button>
+                <p>Can't purchase items on this account.</p>
+                {% endif %}
             </form>
 
             {% else %}

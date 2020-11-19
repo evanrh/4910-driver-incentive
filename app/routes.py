@@ -571,10 +571,10 @@ def settings():
                     return render_template('sponsor/settings.html')
 
             elif 'change-notis' in request.form.keys():
+                notis = {}
                 notis['points'] = 1 if 'points' in request.form.keys() else 0
                 notis['orders'] = 1 if 'orders' in request.form.keys() else 0
                 notis['issue'] = 1 if 'issue' in request.form.keys() else 0
-                notis = {}
                 driver = Driver()
                 driver.populate(session['userInfo']['properties']['user'])
                 driver.update_noti(notis)

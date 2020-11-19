@@ -123,7 +123,6 @@ class Admin(AbsUser):
         self.properties['date_join'] = 'NULL'
         self.properties['suspension'] = False
         self.properties['role'] = 'admin'
-        self.properties['sandbox'] = 'NULL'
         self.properties['selectedSponsor'] = [1, 99999999]
 
         self.database = getConnection()
@@ -236,17 +235,11 @@ class Admin(AbsUser):
         self.database.exec(query)
         self.database.commit()
 
-    def setSandbox(self, sandbox):
-        self.properties['sandbox'] = sandbox
-
     def getUsername(self):
         return self.properties['user']
     
     def getRole(self):
         return self.properties['role']
-
-    def getSandbox(self):
-        return self.properties['sandbox']
 
     def getPoints(self):
         return self.properties['points']
@@ -728,7 +721,6 @@ class Sponsor(AbsUser):
         self.properties['date_join'] = 'NULL'
         self.properties['suspension'] = False
         self.properties['role'] = 'sponsor'
-        self.properties['sandbox'] = 'NULL'
         self.properties['points'] = 99999999
         self.properties['selectedSponsor'] = [1, 9999999]
         self.properties['point_value'] = 0.01
@@ -848,19 +840,12 @@ class Sponsor(AbsUser):
             self.database.exec(q_login, q_vals)
         except Exception as e:
             raise Exception(e)
-    
-
-    def setSandbox(self, sandbox):
-        self.properties['sandbox'] = sandbox
 
     def getUsername(self):
         return self.properties['user']
     
     def getRole(self):
         return  self.properties['role']
-
-    def getSandbox(self):
-        return self.properties['sandbox']
 
     def getPoints(self):
         return 999999
@@ -1387,7 +1372,6 @@ class Driver(AbsUser):
         self.properties['date_join'] = 'NULL'
         self.properties['suspension'] = False
         self.properties['role'] = 'driver'
-        self.properties['sandbox'] = 'NULL'
         self.properties['selectedSponsor'] = None
 
         self.database = getConnection()
@@ -1556,9 +1540,6 @@ class Driver(AbsUser):
     def setSponsorView(self, view):
         self.properties['selectedSponsor'] = view
 
-    def setSandbox(self, sandbox):
-        self.properties['sandbox'] = sandbox
-
     def getUsername(self):
         return self.properties['user']
     
@@ -1571,11 +1552,7 @@ class Driver(AbsUser):
     def getID(self):
         return self.properties['id']
 
-    def getSandbox(self):
-        return self.properties['sandbox']
-
     #def isActive(self):
-
 
     def is_suspended(self):
         

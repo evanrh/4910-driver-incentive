@@ -73,7 +73,7 @@
 
                     {% if lasttime.time == None or time.strftime('%d') != lasttime.time.strftime('%d') %}
                     {% set lasttime.time = time %}
-                    <div class="alert alert-info msg-date">
+                    <div class="alert alert-info msg-date" style='padding-top: 10px;'>
                         <strong>{{ time.strftime('%m-%d-%Y')}}</strong>
                     </div>
                     {% endif %}

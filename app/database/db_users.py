@@ -11,18 +11,17 @@ from abc import abstractmethod
 from werkzeug.security import check_password_hash
 
 config = {'host': os.getenv('DB_HOST'), 'database': os.getenv('DB_NAME'), 'user': os.getenv('DB_USER'), 'password': os.getenv('DB_PASS'), 'autocommit': True}
-global pool1 
+global pool1
 pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
 
 def getConnection(ex=0):
+    global pool1
     if ex == 1:
-        connection.close()
-        connection = pool1.get_connection()
-        return connection
-        print(pool1.size())
-
-    print(pool1.size())
-    return pool1.get_connection()
+        pool1.__del__()
+        pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
+    else:
+        #print(pool1.size())
+        return pool1.get_connection()
 
 def getNewConnection():
     return pool1.get_connection()
@@ -545,7 +544,7 @@ class Admin(AbsUser):
         if role == 'driver' or role == 'admin':
             query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title, active FROM sponsor WHERE user = %s'
+            query = 'SELECT sponsor.title, sponsor_logins.active FROM sponsor join sponsor_logins using(sponsor_id) WHERE sponsor_logins.username = %s'
         val = (user, )
         
         try:
@@ -710,7 +709,7 @@ class Admin(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        print(pool1.size())
+        ##print(pool1.size())
         
 
 class Sponsor(AbsUser):
@@ -866,7 +865,7 @@ class Sponsor(AbsUser):
         return 999999
 
     def username_from_id(self, id):
-        sql = "SELECT user FROM sponsor WHERE sponsor_id = %s"
+        sql = "SELECT title FROM sponsor WHERE sponsor_id = %s"
         val = (id, )
 
         try:
@@ -1190,7 +1189,7 @@ class Sponsor(AbsUser):
         if role == 'driver' or role == 'admin':
             query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title, active FROM sponsor WHERE user = %s'
+            query = 'SELECT sponsor.title, sponsor_logins.active FROM sponsor join sponsor_logins using(sponsor_id) WHERE sponsor_logins.username = %s'
         val = (user, )
         
         try:
@@ -1364,7 +1363,7 @@ class Sponsor(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        print(pool1.size())
+        ##print(pool1.size())
         
 
 
@@ -1729,7 +1728,7 @@ class Driver(AbsUser):
         if role == 'driver' or role == 'admin':
             query = 'SELECT first_name, last_name, active FROM ' + role + ' WHERE user = %s'
         else:
-            query = 'SELECT title, active FROM sponsor WHERE user = %s'
+            query = 'SELECT sponsor.title, sponsor_logins.active FROM sponsor join sponsor_logins using(sponsor_id) WHERE sponsor_logins.username = %s'
         val = (user, )
         
         try:
@@ -1938,7 +1937,7 @@ class Driver(AbsUser):
     def __del__(self):
         global pool1
         self.database.close()
-        print(pool1.size())
+        ##print(pool1.size())
         
 
 

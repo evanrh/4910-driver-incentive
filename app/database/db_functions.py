@@ -233,7 +233,6 @@ def getnumproducts(spon_id):
     try:
         cursor = getConnection()
         returnnum = cursor.exec(query, val)
-        cursor.close()
 
     except Exception as e:
         raise Exception(e)
@@ -242,7 +241,7 @@ def getnumproducts(spon_id):
     num = 0
     if returnnum:
         num = returnnum[0][0]
-
+    cursor.close()
     return num
 
 
@@ -261,6 +260,7 @@ def recommend(userid, sid):
     OGproducttup = cursor.exec("SELECT product_id FROM Product_Orders WHERE Sponsor_ID = '"+str(sid)+"' AND Driver_ID ='"+str(userid)+"' ORDER BY TimeStamp DESC")
     #Return nothing if the user hasn't bought anything
     if(len(OGproducttup) < 1 ):
+        cursor.close()
         return ' '
 #   We only need the first element
     OGproductstr = ''.join(map(str, OGproducttup[0]))
@@ -270,12 +270,14 @@ def recommend(userid, sid):
     otherdriveridtup = cursor.exec("SELECT Driver_ID FROM Product_Orders WHERE Driver_ID !='"+str(userid)+"' AND product_id = '"+OGproductstr+"' AND Driver_ID IN (SELECT Driver_ID FROM Product_Orders GROUP BY Driver_ID HAVING COUNT(*) >1) ORDER BY TimeStamp Desc")
 #    print(otherdriveridtup)
     if(len(otherdriveridtup) < 1):
+        cursor.close()
         return ' '
     otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
 #    print(otherdriveridstr)
     #Grap the most recent purchase from the other driver that isn't the OG product
     otherproducttup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sid)+"' AND Product_ID != '"+OGproductstr+"' AND Driver_ID = '"+otherdriveridstr+"' ORDER BY TimeStamp DESC")
     if(len(otherproducttup) <1 ):
+        cursor.close()
         return ' '
     otherproductstr = ''.join(map(str, otherproducttup[0]))
 #    print(otherproductstr)
@@ -307,21 +309,20 @@ def getpopitems(sponid):
 #Grab a list of the most popular items in DESC order for the current sponsor
     cursor = getConnection()
     TopThreeTup = cursor.exec("SELECT Product_ID FROM Product_Orders WHERE Sponsor_ID = '"+str(sponid)+"' GROUP BY Product_ID ORDER BY COUNT(*) DESC")
-    #print(TopThreeTup)
-    #otherdriveridstr = ''.join(map(str, otherdriveridtup[0]))
+#    print(TopThreeTup)
     TopThreeStr = []
     for i in range(0, 3):
         if(i >= len(TopThreeTup)):
             break
         TopThreeStr.append(''.join(map(str, TopThreeTup[i])))
-    #print(TopThreeStr)
+#    print(TopThreeStr)
     for i in range(0, 3):
         if i >= len(TopThreeStr):
             break
         nametup = cursor.exec("SELECT name FROM product WHERE product_id = '"+TopThreeStr[i]+"'")
         TopThreeStr[i] = ''.join(map(str, nametup[0]))
     #Got the names of the top three
-    #print(TopThreeStr)
+#    print(TopThreeStr)
     finallist = [' '] * 3
     for i in range(0,3):
         if(i >= len(TopThreeStr)):
@@ -330,11 +331,12 @@ def getpopitems(sponid):
         if len(temp) > 0:
             finallist[i] = temp[0]
 
-    #print("Printing final list")
-    #print(finallist)
+#    print("Printing final list")
+#    print(finallist)
+#    print("End print")
+    cursor.close()
     if(finallist[0] == ' '):
         return ' '
-    cursor.close()
     return finallist
 
 # Gets a list of products from all sponsors based on search
@@ -438,4 +440,5 @@ if __name__ == "__main__":
     print(if_username_exist('remove'))
     """
     
+
 

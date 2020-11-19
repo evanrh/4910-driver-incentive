@@ -84,7 +84,7 @@ def home():
     global userInfo
     global Message
 
-    if not session.get('logged_in'):
+    if not session.get('logged_in') or not session.get('userInfo'):
         return render_template('landing/login.html')
     else:
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -123,7 +123,8 @@ def home():
                     recommended[0]['price'] = int(recommended[0]['price']/convert)
                 if popitems != ' ':
                     for row in popitems:
-                            row['price'] = int(row['price']/convert)
+                            if row != ' ':
+                                row['price'] = int(row['price']/convert)
             else:
                 sponsorId = None
 
@@ -164,7 +165,7 @@ def do_admin_login():
         current_hash = get_password(username)
         if check_password_hash(current_hash, pwd):
             session['logged_in'] = True
-            
+            session.modified = True
             # Sets the class based on which user role
             id, role = get_table_id(username)
             if role == "admin": 
@@ -178,7 +179,7 @@ def do_admin_login():
 
             # Flask session data to store data for webpage use
             session['userInfo'] = userInfo
-
+            session.modified = True
             flash('Login successful!')
             flash('Logged in as: ' + userInfo.getUsername())
         else:
@@ -193,8 +194,8 @@ def logout():
     del userInfo
     userInfo = Driver()
     del session['userInfo']
+    session.modified = True
     return redirect(url_for('home'))
-
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -441,7 +442,7 @@ def adminPointsLeader():
     sponsors = []
     currSponsor = Sponsor()
     for sponsor in Sponsor().get_users():
-        currSponsor.populate(sponsor[1])
+        currSponsor.populate(sponsor[0])
         sponsors.append(currSponsor.view_leaderboard())
 
     return render_template('admin/adminPointsLeader.html', sponsors=sponsors)
@@ -523,6 +524,7 @@ def settings():
                 userInfo.delete()
                 session['logged_in'] = False
                 flash('Account successfully deleted')
+                session.modified = True
                 return redirect(url_for('home'))
             if 'change-info' in request.form.keys():
                 
@@ -926,7 +928,6 @@ def buynowrecipt():
         got = form['buy']
         results = product_search(got, spid, "None", "priceup" )
 
-    print("got my " + got)
     # Vars
     cartTotal = 0
     success = True

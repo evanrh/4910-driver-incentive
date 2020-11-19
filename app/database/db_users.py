@@ -865,7 +865,7 @@ class Sponsor(AbsUser):
         return 999999
 
     def username_from_id(self, id):
-        sql = "SELECT user FROM sponsor WHERE sponsor_id = %s"
+        sql = "SELECT title FROM sponsor WHERE sponsor_id = %s"
         val = (id, )
 
         try:

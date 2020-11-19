@@ -79,17 +79,6 @@ def get_table_id(user):
     else:
         return id[0][2], 'admin'
 
-
-# Takes in a sponsor id and gets their username
-def getSponsorName(ident):
-    try:
-        cursor = getConnection()
-        name = cursor.exec("SELECT user FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
-        cursor.close()
-        return name
-    except Exception as e:
-            raise Exception(e)
-
 # Takes in a sponsor id and gets their title
 def getSponsorTitle(ident):
     try:

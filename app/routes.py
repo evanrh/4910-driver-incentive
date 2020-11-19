@@ -83,7 +83,7 @@ def home():
     # Using the global class to access data
     global userInfo
     global Message
-    if not session.get('logged_in') or not session.get('userInfo'):
+    if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -468,6 +468,7 @@ def inbox(username):
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
+    # Driver Inbox
     if session['userInfo']['properties']['role'] == "driver":
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
@@ -478,10 +479,17 @@ def inbox(username):
             del system
             messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
+        del currentDriver
+        
         def mark_as_seen(username):
+            currentDriver = Sponsor()
+            currentDriver.populate(session['userInfo']['properties']['user'])
             currentDriver.messages_are_seen(username)
+            del currentDriver
 
         return render_template('driver/driverInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
+
+    # Sponsor Inbox
     if session['userInfo']['properties']['role'] == "sponsor":
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
@@ -493,11 +501,17 @@ def inbox(username):
             del system
             messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
-        def mark_as_seen(username):
-            currentDriver.messages_are_seen(username)
         del currentDriver
+
+        def mark_as_seen(username):
+            currentDriver = Sponsor()
+            currentDriver.populate(session['userInfo']['properties']['user'])
+            currentDriver.messages_are_seen(username)
+            del currentDriver
+
         return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
+    # Admin Inbox
     if session['userInfo']['properties']['role'] == "admin":
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
@@ -508,8 +522,13 @@ def inbox(username):
             del system
             messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
+        del currentDriver
+
         def mark_as_seen(username):
+            currentDriver = Sponsor()
+            currentDriver.populate(session['userInfo']['properties']['user'])
             currentDriver.messages_are_seen(username)
+            del currentDriver
 
         return render_template('admin/adminInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
@@ -520,8 +539,8 @@ def settings():
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
         session['sandbox'] = None
-        permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
+
         if request.method == 'POST':
             if 'delete-account' in request.form.keys():
                 userInfo.delete()
@@ -529,8 +548,8 @@ def settings():
                 flash('Account successfully deleted')
                 session.modified = True
                 return redirect(url_for('home'))
+
             if 'change-info' in request.form.keys():
-                
                 # Filter out form items that are not filled in
                 data = dict(filter(lambda elem: elem[1] != '', request.form.items()))
                 
@@ -573,10 +592,10 @@ def settings():
                     return render_template('sponsor/settings.html')
 
             elif 'change-notis' in request.form.keys():
+                notis = {}
                 notis['points'] = 1 if 'points' in request.form.keys() else 0
                 notis['orders'] = 1 if 'orders' in request.form.keys() else 0
                 notis['issue'] = 1 if 'issue' in request.form.keys() else 0
-                notis = {}
                 driver = Driver()
                 driver.populate(session['userInfo']['properties']['user'])
                 driver.update_noti(notis)
@@ -601,12 +620,12 @@ def switchSponsor():
         newSponsorid = request.form.get('sponsorSelect')
         sponsorlist = userInfo.view_sponsors()
         points = 0
-
         for sponsor in sponsorlist:
             if int(sponsor[0]) == int(newSponsorid):
                 points = sponsor[1]
 
         userInfo.setSponsorView([newSponsorid, points])
+        session['shoppingCart'].clear()
         session['userInfo']['properties']['selectedSponsor'] = [newSponsorid, points]
         session.modified = True
 
@@ -795,7 +814,7 @@ def cancelOrder():
     for item in orderinfo:
         orderTotal += int(float(item[4]) / convert)
     sponsor = Sponsor()
-    name = getSponsorName(spid)
+    name = getSponsorTitle(spid)
     sponsor.populate(name)
     sponsor.add_points(session['userInfo']['properties']['id'], orderTotal)
     session['userInfo']['properties']['selectedSponsor'][1] += orderTotal
@@ -831,7 +850,7 @@ def checkout():
     
     else:
         sponsor = Sponsor()
-        name = getSponsorName(spid)
+        name = getSponsorTitle(spid)
         sponsor.populate(name)
 
         # Subtract the points
@@ -958,7 +977,7 @@ def buynowrecipt():
     
     else:
         sponsor = Sponsor()
-        name = getSponsorName(spid)
+        name = getSponsorTitle(spid)
         sponsor.populate(name)
 
         # Subtract the points

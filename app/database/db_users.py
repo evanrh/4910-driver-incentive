@@ -20,7 +20,7 @@ def getConnection(ex=0):
         pool1.__del__()
         pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
     else:
-        #print(pool1.size())
+        print(pool1.size())
         return pool1.get_connection()
 
 '''
@@ -1485,7 +1485,6 @@ class Driver(AbsUser):
             driver[5] = sponsor_dict
             final_list.append(driver)
 
-        
         return final_list
 
     def view_sponsors(self):
@@ -1645,7 +1644,7 @@ class Driver(AbsUser):
         #select all message that have not yet been read that involve this user
         message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
-
+        print(vals)
         try:
             #do some awesome database magic
             data = self.database.exec(message_query, vals)

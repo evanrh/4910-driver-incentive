@@ -106,7 +106,7 @@ class Connection(pymysql.connections.Connection):
     _reusable_expection = (pymysql.err.ProgrammingError, pymysql.err.IntegrityError, pymysql.err.NotSupportedError)
 
     def __init__(self, *args, **kwargs):
-        pymysql.connections.Connection.__init__(self, *args, **kwargs)
+        self.conn = pymysql.connections.Connection.__init__(self, *args, **kwargs)
         self.args = args
         self.kwargs = kwargs
 
@@ -157,7 +157,6 @@ class Connection(pymysql.connections.Connection):
         return_one: whether want only one row of the result
         exec_many: whether use pymysql's executemany() method
         """
-        cur = self.cursor() if not dictcursor else self.cursor(pymysql.cursors.DictCursor)
         try:
             self.ping()
         except Exception as e:
@@ -166,6 +165,7 @@ class Connection(pymysql.connections.Connection):
             if exec_many:
                 cur.executemany(sql, args)
             else:
+                cur = self.cursor() 
                 cur.execute(sql, args)
         except Exception:
             raise

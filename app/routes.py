@@ -83,7 +83,7 @@ def home():
     # Using the global class to access data
     global userInfo
     global Message
-    if not session.get('logged_in') or not session.get('userInfo'):
+    if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
@@ -128,6 +128,7 @@ def home():
                 sponsorId = None
 
 
+            print(session['userInfo']['properties']['selectedSponsor'][0])
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if session['userInfo']['properties']['role'] == "sponsor" or session['sandbox'] == 'sponsor':
@@ -226,13 +227,13 @@ def signup():
                     newDriver.apply_to_sponsor(int(sponsor))
                 except:
                     flash("No sponsor found!")
+            del newDriver
 
             flash('Account created!')
             return redirect(url_for('home'))
         else:
            flash('Username taken!')
 
-    del newDriver
     return render_template('landing/signup.html')
 
 @app.route("/about")
@@ -468,6 +469,7 @@ def inbox(username):
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
 
+    # Driver Inbox
     if session['userInfo']['properties']['role'] == "driver":
         currentDriver = Driver()
         currentDriver.populate(session['userInfo']['properties']['user'])
@@ -478,10 +480,17 @@ def inbox(username):
             del system
             messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
+        del currentDriver
+        
         def mark_as_seen(username):
+            currentDriver = Sponsor()
+            currentDriver.populate(session['userInfo']['properties']['user'])
             currentDriver.messages_are_seen(username)
+            del currentDriver
 
         return render_template('driver/driverInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
+
+    # Sponsor Inbox
     if session['userInfo']['properties']['role'] == "sponsor":
         currentDriver = Sponsor()
         currentDriver.populate(session['userInfo']['properties']['user'])
@@ -493,11 +502,17 @@ def inbox(username):
             del system
             messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
-        def mark_as_seen(username):
-            currentDriver.messages_are_seen(username)
         del currentDriver
+
+        def mark_as_seen(username):
+            currentDriver = Sponsor()
+            currentDriver.populate(session['userInfo']['properties']['user'])
+            currentDriver.messages_are_seen(username)
+            del currentDriver
+
         return render_template('sponsor/sponsorInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
+    # Admin Inbox
     if session['userInfo']['properties']['role'] == "admin":
         currentDriver = Admin()
         currentDriver.populate(session['userInfo']['properties']['user'])
@@ -508,8 +523,13 @@ def inbox(username):
             del system
             messages = currentDriver.view_messages()
         inbox_list = currentDriver.get_inbox_list()
+        del currentDriver
+
         def mark_as_seen(username):
+            currentDriver = Sponsor()
+            currentDriver.populate(session['userInfo']['properties']['user'])
             currentDriver.messages_are_seen(username)
+            del currentDriver
 
         return render_template('admin/adminInbox.html', messages = messages, selectedUser = username, seen = mark_as_seen, inbox_list = inbox_list)
 
@@ -520,8 +540,8 @@ def settings():
         if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
         session['sandbox'] = None
-        permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
+
         if request.method == 'POST':
             if 'delete-account' in request.form.keys():
                 userInfo.delete()
@@ -529,8 +549,8 @@ def settings():
                 flash('Account successfully deleted')
                 session.modified = True
                 return redirect(url_for('home'))
+
             if 'change-info' in request.form.keys():
-                
                 # Filter out form items that are not filled in
                 data = dict(filter(lambda elem: elem[1] != '', request.form.items()))
                 
@@ -573,10 +593,10 @@ def settings():
                     return render_template('sponsor/settings.html')
 
             elif 'change-notis' in request.form.keys():
+                notis = {}
                 notis['points'] = 1 if 'points' in request.form.keys() else 0
                 notis['orders'] = 1 if 'orders' in request.form.keys() else 0
                 notis['issue'] = 1 if 'issue' in request.form.keys() else 0
-                notis = {}
                 driver = Driver()
                 driver.populate(session['userInfo']['properties']['user'])
                 driver.update_noti(notis)
@@ -590,7 +610,6 @@ def settings():
         else:
             return render_template(session['userInfo']['properties']['role'] + '/settings.html')
 
-
 # App Functions
 @app.route("/switchSponsor", methods=['GET', 'POST'])
 def switchSponsor():
@@ -601,12 +620,12 @@ def switchSponsor():
         newSponsorid = request.form.get('sponsorSelect')
         sponsorlist = userInfo.view_sponsors()
         points = 0
-
         for sponsor in sponsorlist:
             if int(sponsor[0]) == int(newSponsorid):
                 points = sponsor[1]
 
         userInfo.setSponsorView([newSponsorid, points])
+        session['shoppingCart'].clear()
         session['userInfo']['properties']['selectedSponsor'] = [newSponsorid, points]
         session.modified = True
 
@@ -618,7 +637,7 @@ def sponsorView():
         session['sandbox'] = "sponsor"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
-    return render_template('sponsor/sponsorHome.html')
+    return redirect(url_for('home'))
 
 @app.route("/driverView")
 def driverView():
@@ -626,9 +645,7 @@ def driverView():
         session['sandbox'] = "driver"
         permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
-    genres = getgenres()
-    
-    return render_template('driver/driverHome.html', genres = genres)
+    return redirect(url_for('home'))
 
 @app.route("/returnView")
 def returnView():
@@ -795,7 +812,7 @@ def cancelOrder():
     for item in orderinfo:
         orderTotal += int(float(item[4]) / convert)
     sponsor = Sponsor()
-    name = getSponsorName(spid)
+    name = getSponsorTitle(spid)
     sponsor.populate(name)
     sponsor.add_points(session['userInfo']['properties']['id'], orderTotal)
     session['userInfo']['properties']['selectedSponsor'][1] += orderTotal
@@ -831,7 +848,7 @@ def checkout():
     
     else:
         sponsor = Sponsor()
-        name = getSponsorName(spid)
+        name = getSponsorTitle(spid)
         sponsor.populate(name)
 
         # Subtract the points
@@ -958,7 +975,7 @@ def buynowrecipt():
     
     else:
         sponsor = Sponsor()
-        name = getSponsorName(spid)
+        name = getSponsorTitle(spid)
         sponsor.populate(name)
 
         # Subtract the points
@@ -1125,7 +1142,8 @@ def reports():
         sponsorList = Sponsor().get_users()
 
         # Get list of all sponsor names from sponsor tuples
-        sponsorNames = list(map(lambda elem: elem[1], sponsorList))
+        sponsorNames = list(map(lambda elem: elem[0], sponsorList))
+        sponsorIds = list(map(lambda elem: elem[1], sponsorList))
 
         if request.method == 'POST':
 
@@ -1178,10 +1196,10 @@ def reports():
                     cont.write(sponsorHeaders)
 
                     def sponsTot(s):
-                        id = get_table_id(s)[0]
-                        return (s, cont.sponsor_stats(id, (startDate, endDate)))
+                        return (s[0], cont.sponsor_stats(s[1], (startDate, endDate)))
 
-                    sponsorTotals = dict(map(sponsTot, sponsors)) 
+                    sponsorIds = list(filter(lambda elem: elem[0] in sponsors, zip(sponsorNames, sponsorIds)))
+                    sponsorTotals = dict(map(sponsTot, sponsorIds))
                     print(sponsorTotals)
 
 
@@ -1198,10 +1216,10 @@ def reports():
                     cont.write(sponsorHeaders)
 
                     def driverAgg(s):
-                        id = get_table_id(s)[0]
-                        return (s, cont.driver_purchases(id))
+                        return (s[0], cont.driver_purchases(s[1]))
 
-                    sponsorSumms = dict(map(driverAgg, sponsors))
+                    sponsorIds = list(filter(lambda elem: elem[0] in sponsors, zip(sponsorNames, sponsorIds)))
+                    sponsorSumms = dict(map(driverAgg, sponsorIds))
 
                     for sp in sponsorSumms.keys():
                         cont.write((sp, ''))
@@ -1234,12 +1252,13 @@ def sponList():
         now = date.today()
         startDate = datetime.datetime(now.year, 1, 1)
         endDate = datetime.datetime(now.year, 12, 31)
-        sponsors = list(map(lambda x: (x[0], x[2]), sponsors))
+        sponsors = list(map(lambda x: (x[0], x[1]), sponsors))
         results = list(map(lambda x: cont.sponsor_stats(x[1], (startDate, endDate)), sponsors))
         results = list(map(lambda x: dict(map(lambda y: (y[0], int(y[1])), x.items())), results))
         output = list(map(lambda x: {'info': x[0], 'results': x[1]}, zip(sponsors, results)))
         print(output)
         del sponsors
+        del cont
         return json.dumps(output)
     else:
         return json.dumps({})

@@ -1644,7 +1644,7 @@ class Driver(AbsUser):
         #select all message that have not yet been read that involve this user
         message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
-
+        print(vals)
         try:
             #do some awesome database magic
             data = self.database.exec(message_query, vals)

@@ -167,8 +167,9 @@ def get_order_info(order):
     query = 'SELECT Product_ID, rating, TimeStamp, Sponsor_ID, amount, canceled FROM Product_Orders WHERE Order_ID = %s' % order
     try:
         cursor = getConnection()
-        return cursor.exec(query)
+        data =  cursor.exec(query)
         cursor.close()
+        return data
     except Exception as e:
             raise Exception(e)
 

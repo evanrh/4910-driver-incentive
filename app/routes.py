@@ -1047,8 +1047,18 @@ def updateAccount(username):
             data = request.json
             if 'pwd' in data.keys():
                 data['pwd'] = generate_password_hash(data['pwd'], 'sha256')
-            # Data should be formatted in the way update_info expects
-            user.update_info(data)
+            # Sorry Evan...
+            if 'sponsor' in data.keys():
+                driver = Driver()
+                driver.populate(username)
+                driver.apply_to_sponsor(data['sponsor'])
+                sponsor = Sponsor()
+                sponsor.populate(getSponsorTitle(data['sponsor']))
+                sponsor.accept_application(driver.getID())
+                del sponsor, driver, data['sponsor']
+            else:
+                # Data should be formatted in the way update_info expects
+                user.update_info(data)
             return json.dumps({'status': 'OK', 'user': username})
 
     sessRole = session['userInfo']['properties']['role']
@@ -1064,7 +1074,7 @@ def updateAccount(username):
             user = Admin()
         user.populate(username)
         posted(username, user)
-        del user
+        
         return render_template('admin/adminUpdateAccount.html', user=user, role=role)
 
     elif sessRole == 'sponsor':

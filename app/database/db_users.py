@@ -789,7 +789,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
+        query = "SELECT title, sponsor_id, address, phone, email, image, sponsor_logins.date_join FROM sponsor inner join sponsor_logins using(sponsor_id) WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
 
         try:
             out = self.database.exec(query)
@@ -833,8 +833,8 @@ class Sponsor(AbsUser):
 
     def add_new_sponsor_login(self, username, pwd):
         query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'.format(username, self.properties['id'])
-        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s)'
-        q_vals = (username, pwd, self.properties['id'])
+        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s, %s, NOW())'
+        q_vals = (username, pwd, self.properties['id'], 1)
         try:
             self.database.exec(query)
             self.database.exec(q_login, q_vals)

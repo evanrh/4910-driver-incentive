@@ -83,6 +83,7 @@ def home():
     # Using the global class to access data
     global userInfo
     global Message
+    #test()
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
@@ -483,7 +484,7 @@ def inbox(username):
         del currentDriver
         
         def mark_as_seen(username):
-            currentDriver = Sponsor()
+            currentDriver = Driver()
             currentDriver.populate(session['userInfo']['properties']['user'])
             currentDriver.messages_are_seen(username)
             del currentDriver

@@ -428,7 +428,7 @@ class Admin(AbsUser):
             return []
     
     def get_disabled_sponsors(self):
-        sql = 'select sponsor_logins.username, title, sponsor_id, date_join FROM sponsor join sponsor_logins USING(sponsor_id) WHERE sponsor_logins.active = 0'
+        sql = 'select sponsor_logins.username, title, sponsor_id, sponsor_logins.date_join FROM sponsor join sponsor_logins USING(sponsor_id) WHERE sponsor_logins.active = 0'
         
         try:
             data = self.database.exec(sql)
@@ -789,7 +789,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
+        query = "SELECT title, sponsor_id, address, phone, email, image, sponsor_logins.date_join FROM sponsor inner join sponsor_logins using(sponsor_id) WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
 
         try:
             out = self.database.exec(query)
@@ -833,8 +833,8 @@ class Sponsor(AbsUser):
 
     def add_new_sponsor_login(self, username, pwd):
         query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'.format(username, self.properties['id'])
-        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s)'
-        q_vals = (username, pwd, self.properties['id'])
+        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s, %s, NOW())'
+        q_vals = (username, pwd, self.properties['id'], 1)
         try:
             self.database.exec(query)
             self.database.exec(q_login, q_vals)
@@ -872,7 +872,7 @@ class Sponsor(AbsUser):
         if username in title_list:
             username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
 
-        query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
+        query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, sponsor_logins.date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
         vals = (username, )
 
         try:

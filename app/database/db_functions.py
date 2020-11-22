@@ -1,6 +1,12 @@
 import datetime
 from .db_users import getConnection
 
+
+
+def test():
+    conn = getConnection()
+    print(conn.exec("Select concat('KILL ',id) , time from information_schema.processlist where user != 'event_scheduler' and user != 'rdsadmin' and time > 500 order by time desc;"))
+    conn.close()
 #checks to see if the password entered by the user matches password with that username
 #searches through user table for username and role
 #uses role to search through specific table for username and password

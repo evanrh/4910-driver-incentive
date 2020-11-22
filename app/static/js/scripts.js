@@ -355,7 +355,20 @@ $("#update-password").click(function() {
         success: finished
     });
 });
-
+// Add to sponsor
+$("#add-sponsor").click(function() {
+  var driver = document.getElementById("username").innerText;
+  var sponsor = document.getElementById("sponsor").value;
+  var arr = {'sponsor': sponsor};
+  $.ajax({
+      contentType: "application/json; charset=utf-8",
+      dataType: 'json',
+      url: accUpdatePath + driver,
+      type: 'POST',
+      data: JSON.stringify(arr),
+      success: finished
+  })
+});
 // Admin and sponsor sorting routines
 var sort_by_name = (a,b) => {
         return $(a).attr('name').localeCompare($(b).attr('name'));

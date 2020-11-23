@@ -645,7 +645,7 @@ class Admin(AbsUser):
             raise Exception(e)
     
     def getProductInfo(self, id):
-        query = 'SELECT name,price, img_url FROM product WHERE product_id = %s'
+        query = 'SELECT name, price, img_url FROM product WHERE product_id = %s'
         val = (id)
 
         try:
@@ -1493,6 +1493,7 @@ class Driver(AbsUser):
         try:
             username = self.database.exec(query, val)
             #self.database.close()
+
         except Exception as e:
                 raise Exception(e)
 

@@ -163,7 +163,8 @@ $(function() {
       contentType: "charset=utf-8",
       url: '/cancelOrder', 
       type: 'POST', 
-      data: order
+      data: order,
+      success: finished
     })
   });
 });

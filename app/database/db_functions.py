@@ -295,8 +295,9 @@ def Davidsubpoints(userna, amount, spon_id):
 def getprodinfo(pid):
     try:
         cursor = getConnection()
-        return cursor.exec("SELECT name, price, img_url FROM product WHERE product_id = %s" % pid)[0]
+        prodinfo = cursor.exec("SELECT name, price, img_url FROM product WHERE product_id = %s" % pid)[0]
         cursor.close()
+        return prodinfo
     except Exception as e:
         raise Exception(e)
 

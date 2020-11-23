@@ -26,3 +26,7 @@ $(function() {
       })
     });
 });
+
+$(document).ready( function () {
+  $("div.msg-wrap").scrollTop($("div.msg-wrap").prop("scrollHeight"))
+});

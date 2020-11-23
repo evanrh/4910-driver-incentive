@@ -87,8 +87,7 @@ def home():
     if not session.get('logged_in'):
         return render_template('landing/login.html')
     else:
-        if permissionCheck(["driver", "sponsor", "admin"]) == False:
-            return redirect(url_for('home'))
+        permissionCheck(["driver", "sponsor", "admin"])
 
         session.pop('_flashes', None)
 
@@ -128,8 +127,6 @@ def home():
             else:
                 sponsorId = None
 
-
-            print(session['userInfo']['properties']['selectedSponsor'][0])
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if session['userInfo']['properties']['role'] == "sponsor" or session['sandbox'] == 'sponsor':
@@ -275,7 +272,10 @@ def driverManagePurchase():
     now = datetime.datetime.utcnow()
 
     def getProductInfo(id):
-        return Admin().getProductInfo(id)
+        admin = Admin()
+        prodinfo = admin.getProductInfo(id)
+        del admin
+        return prodinfo
     
     purchaseList = []
     # get purchase list
@@ -296,7 +296,10 @@ def driverCart():
     convert = get_point_value(spid)
 
     def getProductInfo(id):
-        return Admin().getProductInfo(id)
+        admin = Admin()
+        prodinfo = admin.getProductInfo(id)
+        del admin
+        return prodinfo
     
     return render_template('driver/driverCart.html', convert = convert, getProductInfo = getProductInfo)
 
@@ -414,9 +417,10 @@ def adminManageAcc():
            flash('Username taken!')
 
     admin = Admin()
+    sponsor = Sponsor()
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
-    sponsorList = Sponsor().get_users()
+    sponsorList = sponsor.get_users()
     sponsorlessDrivers = admin.get_sponsorless_drivers()
     disabledDrivers = admin.get_disabled_drivers()
     disabledSponsors = admin.get_disabled_sponsors()
@@ -428,6 +432,7 @@ def adminManageAcc():
         del currSponsor
         return drivers
     del admin
+    del sponsor
     return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
                                                         suspendedUsers = suspendedUsers, getDriverList = getDriverList, 
                                                         sponsorlessDrivers = sponsorlessDrivers, disabled = (disabledDrivers, disabledSponsors, disabledAdmins))
@@ -690,30 +695,38 @@ def rejectapp():
 
 @app.route("/suspend", methods=["GET","POST"])
 def suspend():
+    admin = Admin()
     user = request.get_data().decode("utf-8") 
     user = user.strip()
-    Admin().suspend_user(user, 9999, 12, 30)
+    admin.suspend_user(user, 9999, 12, 30)
+    del admin
     return ('', 204)
 
 @app.route("/unsuspend", methods=["GET","POST"])
 def unsuspend():
+    admin = Admin()
     user = request.get_data().decode("utf-8") 
     user = user.strip()
-    Admin().cancel_suspension(user)
+    admin.cancel_suspension(user)
+    del admin
     return ('', 204)
 
 @app.route("/remove", methods=["GET","POST"])
 def remove():
+    admin = Admin()
     user = request.get_data().decode("utf-8") 
     user = user.strip()
-    Admin().remove_user(user)
+    admin.remove_user(user)
+    del admin
     return ('', 204)
 
 @app.route("/reactivate", methods=["GET","POST"])
 def reactivate():
+    admin = Admin()
     user = request.get_data().decode("utf-8") 
     user = user.strip()
-    Admin().reactivate_user(user)
+    admin.reactivate_user(user)
+    del admin
     return ('', 204)
 
 @app.route("/removeFromSponsor", methods=["GET","POST"])
@@ -748,6 +761,7 @@ def addpts():
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.add_points(driver_id, int(points[1]))
+    del driver
     del sponsor
     return ('', 204)
 
@@ -829,7 +843,10 @@ def checkout():
         return redirect(url_for('home'))
 
     def getProductInfo(id):
-        return Admin().getProductInfo(id)
+        admin = Admin()
+        prodinfo = admin.getProductInfo(id)
+        del admin
+        return prodinfo
 
     # Vars
     cartTotal = 0
@@ -842,7 +859,7 @@ def checkout():
     convert = get_point_value(spid)
 
     for item in session['shoppingCart']:
-        cartTotal += int((getprodinfo(item)[1]) / convert)
+        cartTotal += int((getProductInfo(item)[1]) / convert)
     
     if cartTotal > session['userInfo']['properties']['selectedSponsor'][1]:
         success = False
@@ -948,7 +965,10 @@ def buynowrecipt():
         return redirect(url_for('home'))
 
     def getProductInfo(id):
-        return Admin().getProductInfo(id)
+        admin = Admin()
+        prodinfo = admin.getProductInfo(id)
+        del admin
+        return prodinfo
     
     #Retooling checkout for single item purchases
     spid = session['userInfo']['properties']['selectedSponsor'][0]

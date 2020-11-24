@@ -264,7 +264,7 @@ def driverNotification():
 
 @app.route("/driverManagePurchase")
 def driverManagePurchase():
-    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+    if permissionCheck(["driver", "sponsor", "admin"]) == False or not session['userInfo']['properties']['selectedSponsor']:
         return redirect(url_for('home'))
 
     spid = session['userInfo']['properties']['selectedSponsor'][0]
@@ -290,7 +290,7 @@ def driverProfile():
 
 @app.route("/driverCart")
 def driverCart():
-    if permissionCheck(["driver", "sponsor", "admin"]) == False:
+    if permissionCheck(["driver", "sponsor", "admin"]) == False or not session['userInfo']['properties']['selectedSponsor']:
         return redirect(url_for('home'))
     spid = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(spid)
@@ -485,7 +485,8 @@ def inbox(username):
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
         if not bool(messages):
-            system = Admin().populate('System')
+            system = Admin()
+            system.populate('System')
             system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
             del system
             messages = currentDriver.view_messages()

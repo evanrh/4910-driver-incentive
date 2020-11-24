@@ -376,6 +376,8 @@ def adminManageAcc():
     if permissionCheck(["admin"]) == False:
         return redirect(url_for('home'))
 
+    admin = Admin()
+
     if request.method == "POST":
        form = request.form
        username = form['user']
@@ -392,7 +394,7 @@ def adminManageAcc():
        email = 'NULL'
        pwd_hash = generate_password_hash(pwd, method='sha256')
        img = 'NULL'
-
+      
        if role == "driver":
            newUser = Driver(fname, mname, lname, username, address, phone, email, pwd_hash, img)
        elif role == "sponsor":
@@ -403,20 +405,20 @@ def adminManageAcc():
        if newUser.check_username_available():
            newUser.add_user()
            if sponsorid != 'Null':
-               Admin().add_to_sponsor(newUser.getID(), sponsorid)
+               admin.add_to_sponsor(newUser.getID(), sponsorid)
            flash('Account created!')
            del newUser
        elif role == "driver":
             newUser.populate(username)
             if sponsorid != 'Null':
-                Admin().add_to_sponsor(newUser.getID(), sponsorid)
+                admin.add_to_sponsor(newUser.getID(), sponsorid)
             else:
                 flash('No sponsor id entered!')
             del newUser
        else:
            flash('Username taken!')
 
-    admin = Admin()
+    
     sponsor = Sponsor()
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
@@ -425,12 +427,14 @@ def adminManageAcc():
     disabledDrivers = admin.get_disabled_drivers()
     disabledSponsors = admin.get_disabled_sponsors()
     disabledAdmins = admin.get_disabled_admins()
+
     def getDriverList(sponsorName):
         currSponsor = Sponsor()
         currSponsor.populate(sponsorName)
         drivers = currSponsor.view_drivers()
         del currSponsor
         return drivers
+
     del admin
     del sponsor
     return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
@@ -1070,13 +1074,11 @@ def updateAccount(username):
                 data['pwd'] = generate_password_hash(data['pwd'], 'sha256')
             # Sorry Evan...
             if 'sponsor' in data.keys():
+                admin = Admin()
                 driver = Driver()
                 driver.populate(username)
-                driver.apply_to_sponsor(data['sponsor'])
-                sponsor = Sponsor()
-                sponsor.populate(getSponsorTitle(data['sponsor']))
-                sponsor.accept_application(driver.getID())
-                del sponsor, driver, data['sponsor']
+                admin.add_to_sponsor(driver.getID(), data['sponsor'])
+                del admin, driver, data['sponsor']
             else:
                 # Data should be formatted in the way update_info expects
                 user.update_info(data)

@@ -66,6 +66,7 @@
             {% endfor %}
             <tr><td><br></td></tr>
             {% for sponsor in sponsorList %}
+                {% set user = sponsor[0] %}
                 {% set title = sponsor[0] %}
                 {% set id = sponsor[1] %}
                 {% set datejoined = sponsor[6] %}
@@ -80,7 +81,7 @@
                 </tr>
 
                 <tr>
-                    <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
+                    <td style="padding-left: 30px;"><!--<button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button>--></td>
                     <td><button name=" {{ title }} " id='remove' style='color:red;'>X</button></td>
                     <td> {{ title }} </td>
                     <td> {{ id }} </td>

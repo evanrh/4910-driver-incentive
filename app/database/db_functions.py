@@ -1,6 +1,12 @@
 import datetime
 from .db_users import getConnection
 
+
+
+def test():
+    conn = getConnection()
+    print(conn.exec("Select concat('KILL ',id) , time from information_schema.processlist where user != 'event_scheduler' and user != 'rdsadmin' and time > 500 order by time desc;"))
+    conn.close()
 #checks to see if the password entered by the user matches password with that username
 #searches through user table for username and role
 #uses role to search through specific table for username and password
@@ -78,17 +84,6 @@ def get_table_id(user):
         return id[0][1], 'sponsor'
     else:
         return id[0][2], 'admin'
-
-
-# Takes in a sponsor id and gets their username
-def getSponsorName(ident):
-    try:
-        cursor = getConnection()
-        name = cursor.exec("SELECT user FROM sponsor WHERE sponsor_id = %s" % ident)[0][0]
-        cursor.close()
-        return name
-    except Exception as e:
-            raise Exception(e)
 
 # Takes in a sponsor id and gets their title
 def getSponsorTitle(ident):
@@ -178,8 +173,9 @@ def get_order_info(order):
     query = 'SELECT Product_ID, rating, TimeStamp, Sponsor_ID, amount, canceled FROM Product_Orders WHERE Order_ID = %s' % order
     try:
         cursor = getConnection()
-        return cursor.exec(query)
+        data =  cursor.exec(query)
         cursor.close()
+        return data
     except Exception as e:
             raise Exception(e)
 
@@ -299,8 +295,9 @@ def Davidsubpoints(userna, amount, spon_id):
 def getprodinfo(pid):
     try:
         cursor = getConnection()
-        return cursor.exec("SELECT name, price, img_url FROM product WHERE product_id = %s" % pid)[0]
+        prodinfo = cursor.exec("SELECT name, price, img_url FROM product WHERE product_id = %s" % pid)[0]
         cursor.close()
+        return prodinfo
     except Exception as e:
         raise Exception(e)
 

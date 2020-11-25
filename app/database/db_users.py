@@ -12,7 +12,7 @@ from werkzeug.security import check_password_hash
 
 config = {'host': os.getenv('DB_HOST'), 'database': os.getenv('DB_NAME'), 'user': os.getenv('DB_USER'), 'password': os.getenv('DB_PASS'), 'autocommit': True}
 global pool1
-pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
+pool1 = ConnectionPool(size = 10, name = 'pool1', **config )
 
 def getConnection(ex=0):
     global pool1
@@ -20,7 +20,7 @@ def getConnection(ex=0):
         pool1.__del__()
         pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
     else:
-        #print(pool1.size())
+        print(pool1.size())
         return pool1.get_connection()
 
 '''
@@ -428,7 +428,7 @@ class Admin(AbsUser):
             return []
     
     def get_disabled_sponsors(self):
-        sql = 'select sponsor_logins.username, title, sponsor_id, date_join FROM sponsor join sponsor_logins USING(sponsor_id) WHERE sponsor_logins.active = 0'
+        sql = 'select sponsor_logins.username, title, sponsor_id, sponsor_logins.date_join FROM sponsor join sponsor_logins USING(sponsor_id) WHERE sponsor_logins.active = 0'
         
         try:
             data = self.database.exec(sql)
@@ -645,7 +645,7 @@ class Admin(AbsUser):
             raise Exception(e)
     
     def getProductInfo(self, id):
-        query = 'SELECT name,price, img_url FROM product WHERE product_id = %s'
+        query = 'SELECT name, price, img_url FROM product WHERE product_id = %s'
         val = (id)
 
         try:
@@ -789,7 +789,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, sponsor_id, address, phone, email, image, date_join FROM sponsor WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
+        query = "SELECT title, sponsor_id, address, phone, email, image, sponsor_logins.date_join FROM sponsor inner join sponsor_logins using(sponsor_id) WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
 
         try:
             out = self.database.exec(query)
@@ -833,8 +833,8 @@ class Sponsor(AbsUser):
 
     def add_new_sponsor_login(self, username, pwd):
         query = 'INSERT INTO users (Username, Sponsor_ID, last_in) VALUES (\'{}\', {}, CURRENT_TIMESTAMP())'.format(username, self.properties['id'])
-        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s)'
-        q_vals = (username, pwd, self.properties['id'])
+        q_login = 'INSERT INTO sponsor_logins VALUES (%s, %s, %s, %s, NOW())'
+        q_vals = (username, pwd, self.properties['id'], 1)
         try:
             self.database.exec(query)
             self.database.exec(q_login, q_vals)
@@ -872,7 +872,7 @@ class Sponsor(AbsUser):
         if username in title_list:
             username = self.database.exec('SELECT username from sponsor_logins where sponsor_id = (SELECT sponsor_id from sponsor WHERE title = %s)', (username, ))[0][0]
 
-        query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
+        query = 'SELECT title, sponsor_logins.username, sponsor_id, address, phone, email, image, sponsor_logins.date_join, point_value FROM sponsor JOIN sponsor_logins USING(sponsor_id) WHERE sponsor_logins.username = %s'
         vals = (username, )
 
         try:
@@ -1485,7 +1485,6 @@ class Driver(AbsUser):
             driver[5] = sponsor_dict
             final_list.append(driver)
 
-        
         return final_list
 
     def view_sponsors(self):
@@ -1494,6 +1493,7 @@ class Driver(AbsUser):
         try:
             username = self.database.exec(query, val)
             #self.database.close()
+
         except Exception as e:
                 raise Exception(e)
 
@@ -1645,7 +1645,7 @@ class Driver(AbsUser):
         #select all message that have not yet been read that involve this user
         message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
-
+        print(vals)
         try:
             #do some awesome database magic
             data = self.database.exec(message_query, vals)

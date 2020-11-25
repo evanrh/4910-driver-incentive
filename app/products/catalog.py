@@ -71,6 +71,17 @@ class CatalogController():
         except Exception as e:
             return False
     
+    def unlist_product(self, product_id):
+        """ Change the available flag of a product to False """
+        sql = "UPDATE product SET available=0 WHERE product_id=%s"
+
+        try:
+            out = self.conn.exec(sql, (product_id, ))
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
     def update_price(self, product_id, sponsor_id):
         """ Update the price of a product in the database from Etsy """
         cont = EtsyController(os.getenv('ETSY_API_KEY'))
@@ -83,27 +94,37 @@ class CatalogController():
             if results:
                 listing_id = results[0][0]
             else:
+                del cont
                 return None
         except Exception as e:
             print(e)
+            del cont
             return None
 
         sql = "UPDATE product SET price = %s WHERE listing_id=%s AND sponsor_id=%s"
 
         item = cont.get_current_price(listing_id)
+
+        # Check if item is no longer available
+        if not item:
+            self.unlist_product(product_id)
+            return None
+
         vals = (item['price'], listing_id, sponsor_id)
 
         # If it runs without error, it is assumed that the price is updated
         try:
             self.conn.exec(sql, vals)
             sql = "SELECT * FROM product WHERE product_id=%s AND sponsor_id=%s"
-            out = self.conn.exec(sql, (listing_id, sponsor_id))
+            out = self.conn.exec(sql, (product_id, sponsor_id))
 
+            del cont
             return out[0] if out else None
 
 
         except Exception as e:
             print(e)
+            del cont
             return None
 
     def __del__(self):

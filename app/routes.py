@@ -89,8 +89,6 @@ def home():
     else:
         permissionCheck(["driver", "sponsor", "admin"])
 
-        session.pop('_flashes', None)
-
         # Messages to be displayed in banner
         inbox_list = userInfo.get_inbox_list()
         if 'System' in inbox_list and len(inbox_list) == 1:
@@ -118,7 +116,9 @@ def home():
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)
-                if recommended != ' ':
+                
+                # Added left side of and to check if an empty list is returned
+                if recommended and recommended != ' ':
                     recommended[0]['price'] = int(recommended[0]['price']/convert)
                 if popitems != ' ':
                     for row in popitems:
@@ -973,8 +973,11 @@ def productpage():
 
         # Update price and then re-search
         cont = CatalogController()
-        cont.update_price(results[0]['id'], sponsorId)
+        rc = cont.update_price(results[0]['id'], sponsorId)
         del cont
+        if not rc:
+            flash('Item not available!')
+            return redirect(url_for('home'))
 
         results = product_search(got, sponsorId, "None", "priceup" )
 

@@ -51,6 +51,6 @@ class EtsyController():
         results = self.conn.getListing(listing_id=pid)
 
         if results[0]['state'] != 'active':
-            return {'price': 100000000}
+            return None
         else:
             return {'price': results[0]['price']}

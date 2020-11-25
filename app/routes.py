@@ -1083,6 +1083,12 @@ def sponsorSearch():
         results = cont.get_products_keywords(search)
         return render_template('sponsor/sponsorResults.html', results=results) 
 
+# Sponsor view of catalog
+@app.route('/catalog', methods=['GET','POST'])
+def sponsorCatalog():
+    if session['userInfo']['properties']['role'] == 'sponsor':
+        pass
+
 # Admin view sponsor catalog
 @app.route('/catalog/<sponsor>', methods=['GET', 'POST'])
 def catalog(sponsor):

@@ -9,7 +9,6 @@ class EtsyController():
         self.limit = 25
 
     def get_products_keywords(self, keywords=''):
-        # TODO Parse results for relevant information
         # Get product name, description, tags, and URL
         results = self.conn.findAllListingActive(keywords=keywords, limit=self.limit, includes="Images")
 
@@ -41,3 +40,17 @@ class EtsyController():
         results = self.conn.getListing(listing_id=pid)
         results = json.loads(results)
         return results
+
+    def get_url(self, pid=''):
+        result = self.conn.getListing(listing_id=pid)
+        return result[0]['url'] if result and result[0]['state'] != 'unavailable' else ''
+
+    def get_current_price(self, pid):
+        """ Grab current price of an item from Etsy by using its listing id """
+        needed_elems = ['title', 'price', 'url', 'listing_id']
+        results = self.conn.getListing(listing_id=pid)
+
+        if results[0]['state'] != 'active':
+            return {'price': 100000000}
+        else:
+            return {'price': results[0]['price']}

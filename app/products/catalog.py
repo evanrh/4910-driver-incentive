@@ -1,5 +1,7 @@
 import json
+import os
 from ..database.db_users import getConnection
+from .etsy_driver import EtsyController
 
 class CatalogController():
     """ Definition of a catalog item found in api_routes"""
@@ -68,6 +70,42 @@ class CatalogController():
             print(num)
         except Exception as e:
             return False
+    
+    def update_price(self, product_id, sponsor_id):
+        """ Update the price of a product in the database from Etsy """
+        cont = EtsyController(os.getenv('ETSY_API_KEY'))
+
+        # Find item in database and get its listing id
+        listing_id = 0
+        try:
+            q = "SELECT listing_id FROM product WHERE product_id=%s AND sponsor_id=%s"
+            results = self.conn.exec(q, (product_id, sponsor_id))
+            if results:
+                listing_id = results[0][0]
+            else:
+                return None
+        except Exception as e:
+            print(e)
+            return None
+
+        sql = "UPDATE product SET price = %s WHERE listing_id=%s AND sponsor_id=%s"
+
+        item = cont.get_current_price(listing_id)
+        vals = (item['price'], listing_id, sponsor_id)
+
+        # If it runs without error, it is assumed that the price is updated
+        try:
+            self.conn.exec(sql, vals)
+            sql = "SELECT * FROM product WHERE product_id=%s AND sponsor_id=%s"
+            out = self.conn.exec(sql, (listing_id, sponsor_id))
+
+            return out[0] if out else None
+
+
+        except Exception as e:
+            print(e)
+            return None
+
     def __del__(self):
         global pool1
         self.conn.close()

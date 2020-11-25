@@ -37,9 +37,11 @@ $(function() {
     var user =  $(this).attr("name")
     $.ajax({ 
       contentType: "charset=utf-8",
+      dataType: 'json',
       url: '/suspend', 
       type: 'POST', 
-      data: user
+      data: user,
+      success:finished
     })
   });
 });
@@ -367,7 +369,7 @@ $("#add-sponsor").click(function() {
       url: accUpdatePath + driver,
       type: 'POST',
       data: JSON.stringify(arr),
-      success: finished
+      success: document.getElementById('sponsor').value = ''
   })
 });
 // Admin and sponsor sorting routines
@@ -401,3 +403,29 @@ $("#sort").on('input',() => {
         });
     });
 });
+
+function searchAccs() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("searchaccs");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("accounts");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[2];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i-1].style.display = "";
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+    else {
+      tr[i].style.display = "none";
+    }
+  }
+}

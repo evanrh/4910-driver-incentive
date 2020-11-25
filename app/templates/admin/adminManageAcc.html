@@ -36,7 +36,8 @@
 
 <div class="driver-table">
     <form id="view-drivers">
-        <table>
+        <input type="text" class="tftextinput" id="searchaccs" onkeyup="searchAccs()" placeholder="Search for users..">
+        <table id="accounts">
             <tr>
                 <th class='heading'>Admins</th>
                 <th>Delete</th>
@@ -50,7 +51,6 @@
 
             {% for admin in adminList %}
             <tr>
-                
                 <td style="padding-left: 30px;"><button name="{{ admin[3] }}" id='edit'><a href="{{ url_for('updateAccount', username=admin[3]) }}">Edit</a></button></td>
                 <td><button name=" {{ admin[3] }} " id='remove' style='color:red;'>X</button></td>
                 <td> {{ admin[3] }} </td>
@@ -241,7 +241,7 @@
             </tr>
             {% endfor %}
         {% endif %}
-    </table>
-</form>
+        </table>
+    </form>
 </div>
 {% endblock %}

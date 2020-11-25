@@ -118,7 +118,7 @@ def home():
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)
-                if recommended != ' ':
+                if len(recommended) > 0 and recommended != ' ':
                     recommended[0]['price'] = int(recommended[0]['price']/convert)
                 if popitems != ' ':
                     for row in popitems:
@@ -178,7 +178,6 @@ def do_admin_login():
             session['userInfo'] = userInfo
             session.modified = True
             flash('Login successful!')
-            flash('Logged in as: ' + userInfo.getUsername())
         else:
             flash('Incorrect login credentials!')
     return redirect(url_for('home'))
@@ -244,7 +243,6 @@ def driverPointsLeader():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
     elif not session['userInfo']['properties']['selectedSponsor']:
-        flash("No sponsor selected!")
         return redirect(url_for('home'))
 
     currSponsor = Sponsor()
@@ -991,6 +989,8 @@ def buynowrecipt():
     
     #Retooling checkout for single item purchases
     spid = session['userInfo']['properties']['selectedSponsor'][0]
+    results = []
+
     if request.method == 'POST':
         form = request.form
         got = form['buy']
@@ -1045,12 +1045,13 @@ def thanks():
         return redirect(url_for('home'))
 
     userId = session['userInfo']['properties']['id']
+
     if request.method == "POST":
         form = request.form
         num = form['review']
         pid = form['product']
+        updateproductorder(userId, pid, num)
 
-    updateproductorder(userId, pid, num)
     return render_template('driver/driverThanks.html')
 
 @app.route("/productAJAX", methods=["POST"])
@@ -1062,6 +1063,7 @@ def productAJAX():
 # IMPORTANT: Route becoming deprecated
 # Evan: I changed the location of the edit button to use updateAccount so that it can be shared by
 # both the admins and the sponsors
+'''
 @app.route("/updateDriver/<username>", methods=["GET","POST"])
 def updateDriver(username):
     """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
@@ -1083,6 +1085,7 @@ def updateDriver(username):
         return json.dumps({'status': 'OK', 'user': username})
 
     return render_template("sponsor/sponsorEditDriver.html", user=driverObj)
+'''
 
 @app.route('/updateAccount/<username>', methods=['GET','POST'])
 def updateAccount(username):

@@ -97,7 +97,7 @@
     </form>
 
     {% set trunc = 200 %}
-    {% if resultrec != ' ' %}
+    {% if resultrec != ' ' and resultrec|length > 0 %}
         <h2> Recommended </h2>
         <p>This item was a recommended just for you!</p>
 

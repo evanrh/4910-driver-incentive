@@ -784,7 +784,7 @@ class Sponsor(AbsUser):
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, sponsor_id, address, phone, email, image, sponsor_logins.date_join FROM sponsor inner join sponsor_logins using(sponsor_id) WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
+        query = "SELECT title, sponsor_id, address, phone, email, image, sponsor_logins.date_join, sponsor_logins.username FROM sponsor inner join sponsor_logins using(sponsor_id) WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
 
         try:
             out = self.database.exec(query)

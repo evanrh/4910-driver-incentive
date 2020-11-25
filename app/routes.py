@@ -426,6 +426,7 @@ def adminManageAcc():
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
     sponsorList = sponsor.get_users()
+    print(sponsorList[0])
     sponsorlessDrivers = admin.get_sponsorless_drivers()
     disabledDrivers = admin.get_disabled_drivers()
     disabledSponsors = admin.get_disabled_sponsors()

@@ -12,7 +12,7 @@ from werkzeug.security import check_password_hash
 
 config = {'host': os.getenv('DB_HOST'), 'database': os.getenv('DB_NAME'), 'user': os.getenv('DB_USER'), 'password': os.getenv('DB_PASS'), 'autocommit': True}
 global pool1
-pool1 = ConnectionPool(size = 10, name = 'pool1', **config )
+pool1 = ConnectionPool(size = 5, name = 'pool1', **config )
 
 def getConnection(ex=0):
     global pool1
@@ -104,9 +104,6 @@ class AbsUser(ABC):
     def delete(self):
         """ Deletes the user from the database """
 
-
-        
-        
 class Admin(AbsUser):
     def __init__(self, fname='NULL', mname='NULL', lname='NULL', user='NULL', 
                  phone='NULL', email='NULL', pwd='NULL', image='NULL'):
@@ -171,7 +168,6 @@ class Admin(AbsUser):
 
         out = self.database.exec(query)
         #self.database.close()
-        print(out)
         return out[0][0] == 0 or out == None
 
     #updates the info of the admin in the database. 
@@ -768,7 +764,6 @@ class Sponsor(AbsUser):
 
         out = self.database.exec(query) 
         #self.database.close()
-        print(out)
         return out[0][0] == 0 or out == None
 
     def update_info(self, data: dict):
@@ -1394,7 +1389,6 @@ class Driver(AbsUser):
         self.properties['active'] = 1
         query = 'INSERT INTO driver VALUES (\'{fname}\', \'{mname}\', \'{lname}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', NOW(), \'{END}\', \'{image}\', \'{active}\')'.format(**self.properties)
         noti = 'INSERT INTO notification VALUES (\'{}\', 1, 1, 1)'.format(self.properties['user'])
-        print(query)
 
         try:
             self.database.exec(query)
@@ -1416,7 +1410,6 @@ class Driver(AbsUser):
 
         out = self.database.exec(query) 
         #self.database.close()
-        print(out)
         return out[0][0] == 0 or out == None
 
     def get_current_id(self):
@@ -1645,7 +1638,7 @@ class Driver(AbsUser):
         #select all message that have not yet been read that involve this user
         message_query = 'SELECT * FROM messages WHERE (target = %s AND seent = 0) OR (sender = %s AND seens = 0) '
         vals = (self.properties['user'], self.properties['user'])
-        print(vals)
+
         try:
             #do some awesome database magic
             data = self.database.exec(message_query, vals)

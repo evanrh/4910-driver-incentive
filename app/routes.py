@@ -89,8 +89,6 @@ def home():
     else:
         permissionCheck(["driver", "sponsor", "admin"])
 
-        session.pop('_flashes', None)
-
         # Messages to be displayed in banner
         inbox_list = userInfo.get_inbox_list()
         if 'System' in inbox_list and len(inbox_list) == 1:
@@ -118,7 +116,9 @@ def home():
                 numproducts = getnumproducts(sponsorId)
                 popitems = getpopitems(sponsorId)
                 convert = get_point_value(sponsorId)
-                if recommended != ' ':
+                
+                # Added left side of and to check if an empty list is returned
+                if recommended and recommended != ' ':
                     recommended[0]['price'] = int(recommended[0]['price']/convert)
                 if popitems != ' ':
                     for row in popitems:
@@ -178,7 +178,6 @@ def do_admin_login():
             session['userInfo'] = userInfo
             session.modified = True
             flash('Login successful!')
-            flash('Logged in as: ' + userInfo.getUsername())
         else:
             flash('Incorrect login credentials!')
     return redirect(url_for('home'))
@@ -244,7 +243,6 @@ def driverPointsLeader():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
         return redirect(url_for('home'))
     elif not session['userInfo']['properties']['selectedSponsor']:
-        flash("No sponsor selected!")
         return redirect(url_for('home'))
 
     currSponsor = Sponsor()
@@ -294,6 +292,11 @@ def driverCart():
         return redirect(url_for('home'))
     spid = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(spid)
+
+    # Update price in cart view
+    cont = CatalogController()
+    _ = map(lambda item: cont.update_price(item), session['shoppingCart'])
+    del cont
 
     def getProductInfo(id):
         admin = Admin()
@@ -423,6 +426,7 @@ def adminManageAcc():
     suspendedUsers = admin.get_suspended_users()
     adminList = admin.get_users()
     sponsorList = sponsor.get_users()
+    print(sponsorList[0])
     sponsorlessDrivers = admin.get_sponsorless_drivers()
     disabledDrivers = admin.get_disabled_drivers()
     disabledSponsors = admin.get_disabled_sponsors()
@@ -537,7 +541,7 @@ def inbox(username):
         del currentDriver
 
         def mark_as_seen(username):
-            currentDriver = Sponsor()
+            currentDriver = Admin()
             currentDriver.populate(session['userInfo']['properties']['user'])
             currentDriver.messages_are_seen(username)
             del currentDriver
@@ -844,9 +848,6 @@ def cancelOrder():
 
 @app.route("/checkout", methods=["GET","POST"])
 def checkout():
-    if permissionCheck(["driver", "sponsor", "admin"]) == False:
-        return redirect(url_for('home'))
-
     def getProductInfo(id):
         admin = Admin()
         prodinfo = admin.getProductInfo(id)
@@ -862,6 +863,11 @@ def checkout():
     uid = session['userInfo']['properties']['id']
     spid = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(spid)
+
+    # Update price of all items in cart
+    cont = CatalogController()
+    _ = list(map(lambda item: cont.update_price(item, spid), session['shoppingCart']))
+    del cont
 
     for item in session['shoppingCart']:
         cartTotal += int((getProductInfo(item)[1]) / convert)
@@ -961,6 +967,16 @@ def productpage():
         got = form['productname']
         results = product_search(got, sponsorId, "None", "priceup" )
 
+        # Update price and then re-search
+        cont = CatalogController()
+        rc = cont.update_price(results[0]['id'], sponsorId)
+        del cont
+        if not rc:
+            flash('Item not available!')
+            return redirect(url_for('home'))
+
+        results = product_search(got, sponsorId, "None", "priceup" )
+
 #    print(results[0]['name'])
         return render_template('driver/driverProduct.html',convert = convert, results = results[0])
 
@@ -977,10 +993,19 @@ def buynowrecipt():
     
     #Retooling checkout for single item purchases
     spid = session['userInfo']['properties']['selectedSponsor'][0]
+    results = []
+
     if request.method == 'POST':
         form = request.form
         got = form['buy']
         results = product_search(got, spid, "None", "priceup" )
+
+        # Update price and get product again
+        cont = CatalogController()
+        cont.update_price(results[0]['id'], spid)
+        del cont
+
+        results = product_search(got, spid, "None", "priceup")
 
     # Vars
     cartTotal = 0
@@ -1024,12 +1049,13 @@ def thanks():
         return redirect(url_for('home'))
 
     userId = session['userInfo']['properties']['id']
+
     if request.method == "POST":
         form = request.form
         num = form['review']
         pid = form['product']
+        updateproductorder(userId, pid, num)
 
-    updateproductorder(userId, pid, num)
     return render_template('driver/driverThanks.html')
 
 @app.route("/productAJAX", methods=["POST"])
@@ -1041,6 +1067,7 @@ def productAJAX():
 # IMPORTANT: Route becoming deprecated
 # Evan: I changed the location of the edit button to use updateAccount so that it can be shared by
 # both the admins and the sponsors
+'''
 @app.route("/updateDriver/<username>", methods=["GET","POST"])
 def updateDriver(username):
     """ Render page for a sponsor to update their drivers. Driver to be updated is the endpoint of the URL.
@@ -1062,6 +1089,7 @@ def updateDriver(username):
         return json.dumps({'status': 'OK', 'user': username})
 
     return render_template("sponsor/sponsorEditDriver.html", user=driverObj)
+'''
 
 @app.route('/updateAccount/<username>', methods=['GET','POST'])
 def updateAccount(username):
@@ -1133,6 +1161,36 @@ def sponsorSearch():
         results = cont.get_products_keywords(search)
         return render_template('sponsor/sponsorResults.html', results=results) 
 
+# Sponsor view of catalog
+@app.route('/catalog', methods=['GET','POST'])
+def sponsorCatalog():
+    print(session['userInfo']['properties'])
+    if session['userInfo']['properties']['role'] == 'sponsor':
+        cont = CatalogController()
+        etsyCont = EtsyController(os.getenv('ETSY_API_KEY'))
+        search = None
+        if request.method == 'POST':
+            if request.json:
+                data = request.json
+                listing = data['listing_id']
+                val = cont.remove(session['userInfo']['properties']['id'], listing)
+                del cont
+                message = {'message': 'Item removed' if val else 'Item not removed'}
+                return json.dumps(message)
+            else:
+                search = request.form['search']
+
+        items = cont.fetch_catalog_items(session['userInfo']['properties']['id'], search)
+        items['items'] = list(map(lambda elem: dict((*elem.items(), ('url', etsyCont.get_url(elem['listing_id'])))), items['items']))
+        print(items)
+        del cont
+        del etsyCont
+        rate = session['userInfo']['properties']['point_value'] or 0.01
+        return render_template('sponsor/sponsorCatalog.html', results=items['items'], conversion=rate)
+    else:
+        flash('Access not allowed')
+        return redirect(url_for('home'))
+
 # Admin view sponsor catalog
 @app.route('/catalog/<sponsor>', methods=['GET', 'POST'])
 def catalog(sponsor):
@@ -1149,6 +1207,7 @@ def catalog(sponsor):
                 data = request.json
                 listing = data['listing_id']
                 val = cont.remove(sid, listing)
+                del cont
                 message = {'message': 'Item removed' if val else 'Item not removed'}
                 return json.dumps(message)
 

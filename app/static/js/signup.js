@@ -13,12 +13,13 @@ function checkPassComplexity()
         pwd.style.backgroundColor = good_color;
         message.style.color = good_color;
         message.innerHTML = "<p>Password is strong!</p>";
+        submit.disabled = false;
     }
     else
     {
         pwd.style.backgroundColor = bad_color;
         message.style.color = bad_color;
-        message.innerHTML = "<p>Password needs to contain 1 Number, 1 Uppercase, 1 Lowercase, and 1 Special Character (!@#$%)</p>";
+        message.innerHTML = "<p>Password needs to be between 8-20 characters and contain <br> 1 number, 1 uppercase, 1 lowercase, and 1 special character (!@#$%)</p>";
         submit.disabled = true;
     }
 }

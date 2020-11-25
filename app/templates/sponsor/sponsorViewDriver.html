@@ -1,6 +1,7 @@
 {% extends "sponsor/sponsorBase.html" %}
 {% block sponsorContent %}
 <h1>View Drivers</h1>
+<h2>Join Code: {{ session['userInfo']['properties']['id'] }} </h2>
 <div class="driver-table">
     <form id="view-drivers">
         <table style="border-spacing:5px;">
@@ -48,6 +49,7 @@
                 {% endfor %}
         </table>
 
+        {% if applications %}
         <table style="border-spacing:5px;">
             <tr>
                 <td class='driverRow'>Applications</td>
@@ -74,6 +76,7 @@
             </tr>
             {% endfor %}
         </table>
+        {% endif %}
     </form>
 </div>
 {% endblock %}

@@ -844,9 +844,6 @@ def cancelOrder():
 
 @app.route("/checkout", methods=["GET","POST"])
 def checkout():
-    if permissionCheck(["driver", "sponsor", "admin"]) == False:
-        return redirect(url_for('home'))
-
     def getProductInfo(id):
         admin = Admin()
         prodinfo = admin.getProductInfo(id)

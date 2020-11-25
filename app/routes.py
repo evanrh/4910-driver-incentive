@@ -540,7 +540,7 @@ def inbox(username):
         del currentDriver
 
         def mark_as_seen(username):
-            currentDriver = Sponsor()
+            currentDriver = Admin()
             currentDriver.populate(session['userInfo']['properties']['user'])
             currentDriver.messages_are_seen(username)
             del currentDriver

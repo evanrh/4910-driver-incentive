@@ -24,7 +24,7 @@
                         </form>
 
                         <select class="dropdown-content" id="sponsorSelect" name="sponsorSelect" form="sponsorform" size="{{session['userInfo']['properties']['sponsors']|length}}">
-                            {% if not session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
+                            {% if not session['userInfo']['properties']['role'] == "admin" or session['userInfo']['properties']['role'] == "sponsor" %}
                             <option hidden disabled selected value> Select</option>
                             {% for sponsor in session['userInfo']['properties']['sponsors'] %}
                                 {% if not sponsor[0] == session['userInfo']['properties']['selectedSponsor'][0] %}
@@ -38,7 +38,7 @@
                     </div>
                 </div>
                 
-                {% if session['userInfo']['properties']['role'] == ("admin" or "sponsor") %}
+                {% if session['userInfo']['properties']['role'] == "admin" or session['userInfo']['properties']['role'] == "sponsor" %}
                 <div class="dropdown">
                     <img class="dropbtn" src="{{url_for('static', filename='img/viewChange.png')}}" style="width:50px;padding-top:10px;" title="Change View">
                     <div class="dropdown-content">

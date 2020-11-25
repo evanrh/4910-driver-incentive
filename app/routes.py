@@ -631,7 +631,7 @@ def switchSponsor():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
 
-    if not session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
+    if not session['userInfo']['properties']['role'] == "admin" or session['userInfo']['properties']['role'] == "sponsor":
         newSponsorid = request.form.get('sponsorSelect')
         sponsorlist = userInfo.view_sponsors()
         points = 0
@@ -648,24 +648,24 @@ def switchSponsor():
 
 @app.route("/sponsorView")
 def sponsorView():
+    permissionCheck(["driver", "sponsor", "admin"])
     if session['userInfo']['properties']['role'] == "admin":
         session['sandbox'] = "sponsor"
-        permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     return redirect(url_for('home'))
 
 @app.route("/driverView")
 def driverView():
-    if session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
+    permissionCheck(["driver", "sponsor", "admin"])
+    if session['userInfo']['properties']['role'] == "admin" or session['userInfo']['properties']['role'] == "sponsor":
         session['sandbox'] = "driver"
-        permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     return redirect(url_for('home'))
 
 @app.route("/returnView")
 def returnView():
-    session['sandbox'] = "NULL"
     permissionCheck(["driver", "sponsor", "admin"])
+    session['sandbox'] = "NULL"
     session.modified = True
     return redirect(url_for('home'))
 

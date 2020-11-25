@@ -15,7 +15,7 @@ import os
 def generate_auth_token(sponsor_username, expiration = 3600):
     s = Serializer(app.config['SECRET_KEY'], expires_in = expiration)
     db = getConnection()
-    query = "SELECT sponsor_id FROM sponsor WHERE user=%s"
+    query = "SELECT sponsor.sponsor_id FROM sponsor JOIN sponsor_logins ON sponsor.sponsor_id=sponsor_logins.sponsor_id WHERE username=%s"
     results = db.exec(query, (sponsor_username, ))
     del db
     if results:

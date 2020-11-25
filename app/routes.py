@@ -295,6 +295,11 @@ def driverCart():
     spid = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(spid)
 
+    # Update price in cart view
+    cont = CatalogController()
+    _ = map(lambda item: cont.update_price(item), session['shoppingCart'])
+    del cont
+
     def getProductInfo(id):
         admin = Admin()
         prodinfo = admin.getProductInfo(id)
@@ -863,6 +868,11 @@ def checkout():
     spid = session['userInfo']['properties']['selectedSponsor'][0]
     convert = get_point_value(spid)
 
+    # Update price of all items in cart
+    cont = CatalogController()
+    _ = list(map(lambda item: cont.update_price(item, spid), session['shoppingCart']))
+    del cont
+
     for item in session['shoppingCart']:
         cartTotal += int((getProductInfo(item)[1]) / convert)
     
@@ -961,6 +971,13 @@ def productpage():
         got = form['productname']
         results = product_search(got, sponsorId, "None", "priceup" )
 
+        # Update price and then re-search
+        cont = CatalogController()
+        cont.update_price(results[0]['id'], sponsorId)
+        del cont
+
+        results = product_search(got, sponsorId, "None", "priceup" )
+
 #    print(results[0]['name'])
         return render_template('driver/driverProduct.html',convert = convert, results = results[0])
 
@@ -981,6 +998,13 @@ def buynowrecipt():
         form = request.form
         got = form['buy']
         results = product_search(got, spid, "None", "priceup" )
+
+        # Update price and get product again
+        cont = CatalogController()
+        cont.update_price(results[0]['id'], spid)
+        del cont
+
+        results = product_search(got, spid, "None", "priceup")
 
     # Vars
     cartTotal = 0
@@ -1136,8 +1160,32 @@ def sponsorSearch():
 # Sponsor view of catalog
 @app.route('/catalog', methods=['GET','POST'])
 def sponsorCatalog():
+    print(session['userInfo']['properties'])
     if session['userInfo']['properties']['role'] == 'sponsor':
-        pass
+        cont = CatalogController()
+        etsyCont = EtsyController(os.getenv('ETSY_API_KEY'))
+        search = None
+        if request.method == 'POST':
+            if request.json:
+                data = request.json
+                listing = data['listing_id']
+                val = cont.remove(session['userInfo']['properties']['id'], listing)
+                del cont
+                message = {'message': 'Item removed' if val else 'Item not removed'}
+                return json.dumps(message)
+            else:
+                search = request.form['search']
+
+        items = cont.fetch_catalog_items(session['userInfo']['properties']['id'], search)
+        items['items'] = list(map(lambda elem: dict((*elem.items(), ('url', etsyCont.get_url(elem['listing_id'])))), items['items']))
+        print(items)
+        del cont
+        del etsyCont
+        rate = session['userInfo']['properties']['point_value'] or 0.01
+        return render_template('sponsor/sponsorCatalog.html', results=items['items'], conversion=rate)
+    else:
+        flash('Access not allowed')
+        return redirect(url_for('home'))
 
 # Admin view sponsor catalog
 @app.route('/catalog/<sponsor>', methods=['GET', 'POST'])
@@ -1155,6 +1203,7 @@ def catalog(sponsor):
                 data = request.json
                 listing = data['listing_id']
                 val = cont.remove(sid, listing)
+                del cont
                 message = {'message': 'Item removed' if val else 'Item not removed'}
                 return json.dumps(message)
 

@@ -5,6 +5,7 @@ from werkzeug.wrappers import Response
 from datetime import date
 from io import StringIO, BytesIO
 from decimal import Decimal
+from functools import reduce
 from app.database.db_functions import *
 from app.database.db_users import *
 from app.database.db_connection import *
@@ -130,7 +131,17 @@ def home():
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if session['userInfo']['properties']['role'] == "sponsor" or session['sandbox'] == 'sponsor':
-            return render_template('sponsor/sponsorHome.html', head = Message)
+            # Tally up expenses for sponsor
+            cont = ReportController()
+            now = date.today()
+            sid = session['userInfo']['properties']['id']
+            start = datetime.datetime(now.year, 1, 1)
+            end = datetime.datetime(now.year, 12, 31)
+            stats = cont.sponsor_stats(sid, (start, end))
+            del cont
+            expenses = reduce(lambda x,y: x + y, stats.values())
+
+            return render_template('sponsor/sponsorHome.html', head = Message, expenses=expenses)
 
         if session['userInfo']['properties']['role'] == "admin":
             sponsors = Sponsor().get_users()
@@ -866,7 +877,7 @@ def checkout():
 
     # Update price of all items in cart
     cont = CatalogController()
-    _ = list(map(lambda item: cont.update_price(item, spid), session['shoppingCart']))
+    _ = list(map(lambda item: cont.update_price(item ), session['shoppingCart']))
     del cont
 
     for item in session['shoppingCart']:
@@ -969,7 +980,7 @@ def productpage():
 
         # Update price and then re-search
         cont = CatalogController()
-        rc = cont.update_price(results[0]['id'], sponsorId)
+        rc = cont.update_price(results[0]['id'])
         del cont
         if not rc:
             flash('Item not available!')
@@ -1002,7 +1013,7 @@ def buynowrecipt():
 
         # Update price and get product again
         cont = CatalogController()
-        cont.update_price(results[0]['id'], spid)
+        cont.update_price(results[0]['id'])
         del cont
 
         results = product_search(got, spid, "None", "priceup")

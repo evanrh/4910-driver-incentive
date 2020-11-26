@@ -47,6 +47,19 @@ class CatalogController():
             print(e)
             return {'items': []}
 
+    def fetch_all_items(self):
+        sql = "SELECT product_id FROM product"
+
+        try:
+            out = self.conn.exec(sql)
+            items = [x[0] for x in out]
+            return {'items': items}
+
+        except Exception as e:
+            print(e)
+            return {'items': []}
+
+
     def remove(self, sponsor_id, item_id):
         sql = "DELETE FROM product WHERE sponsor_id=%s and listing_id=%s"
         vals = (sponsor_id, item_id)
@@ -82,15 +95,15 @@ class CatalogController():
             print(e)
             return False
 
-    def update_price(self, product_id, sponsor_id):
+    def update_price(self, product_id):
         """ Update the price of a product in the database from Etsy """
         cont = EtsyController(os.getenv('ETSY_API_KEY'))
 
         # Find item in database and get its listing id
         listing_id = 0
         try:
-            q = "SELECT listing_id FROM product WHERE product_id=%s AND sponsor_id=%s"
-            results = self.conn.exec(q, (product_id, sponsor_id))
+            q = "SELECT listing_id FROM product WHERE product_id=%s"
+            results = self.conn.exec(q, (product_id, ))
             if results:
                 listing_id = results[0][0]
             else:
@@ -101,7 +114,7 @@ class CatalogController():
             del cont
             return None
 
-        sql = "UPDATE product SET price = %s WHERE listing_id=%s AND sponsor_id=%s"
+        sql = "UPDATE product SET price = %s WHERE product_id=%s"
 
         item = cont.get_current_price(listing_id)
 
@@ -110,13 +123,13 @@ class CatalogController():
             self.unlist_product(product_id)
             return None
 
-        vals = (item['price'], listing_id, sponsor_id)
+        vals = (item['price'], product_id)
 
         # If it runs without error, it is assumed that the price is updated
         try:
             self.conn.exec(sql, vals)
-            sql = "SELECT * FROM product WHERE product_id=%s AND sponsor_id=%s"
-            out = self.conn.exec(sql, (product_id, sponsor_id))
+            sql = "SELECT * FROM product WHERE product_id=%s"
+            out = self.conn.exec(sql, (product_id, ))
 
             del cont
             return out[0] if out else None

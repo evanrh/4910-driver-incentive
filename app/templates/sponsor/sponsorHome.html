@@ -3,6 +3,7 @@
 {% set limits = [25, 50, 100] %}
 <div class = "header-banner">{{head}} </div>
 <h1 style='padding-top: 20px;'>Product Catalog</h1>
+<p>Current expenses: {{ "$%.2f"|format(expenses) }}</p>
 <h2>View/Edit</h2>
 <a href="{{ url_for('sponsorCatalog') }}"><button id="showCatalog" type="button" class="tfbutton">View</button></a>
 <h2>Add New Items</h2>

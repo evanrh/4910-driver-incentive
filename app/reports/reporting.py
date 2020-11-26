@@ -30,6 +30,9 @@ class ReportController():
 
         try:
             orders = self.conn.exec(sql, vals)
+
+            # This long line creates a dictionary of every month for a given sponsor and sums all the purchases for that month
+            # Kind of a long convoluted way to do it, but it's fun to try and do things with lambdas and functional methods
             results = dict(map(lambda i: (i, reduce(lambda x,y: x + y, map(lambda o: o[-1], filter(lambda order: order[1].month == i, orders)), 0)), range(start,end+1)))
             return results
 

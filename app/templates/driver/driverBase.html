@@ -27,7 +27,7 @@
                             {% if not session['userInfo']['properties']['role'] == "admin" or session['userInfo']['properties']['role'] == "sponsor" %}
                             <option hidden disabled selected value> Select</option>
                             {% for sponsor in session['userInfo']['properties']['sponsors'] %}
-                                {% if not sponsor[0] == session['userInfo']['properties']['selectedSponsor'][0] %}
+                                {% if sponsor[0] != session['userInfo']['properties']['selectedSponsor'][0] %}
                                 <option value="{{ sponsor [0] }}">{{ getSponsorTitle(sponsor[0]) }}</option>
                                 {% else %}
                                 <option value="{{ sponsor [0] }}" selected>{{ getSponsorTitle(sponsor[0]) }}</option>

@@ -1,5 +1,6 @@
 import requests as r
 
+# These need to be changed to an active admin account in the system, along with the actual URI of the project
 USER = 'changeme'
 PWD = 'example!'
 URL = 'http://localhost:5000/admin/api'

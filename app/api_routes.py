@@ -17,6 +17,7 @@ def generate_auth_token(sponsor_username, expiration = 3600):
     db = getConnection()
     query = "SELECT sponsor.sponsor_id FROM sponsor JOIN sponsor_logins ON sponsor.sponsor_id=sponsor_logins.sponsor_id WHERE username=%s"
     results = db.exec(query, (sponsor_username, ))
+    db.close()
     del db
     if results:
         return s.dumps({'id': results[0][0]})

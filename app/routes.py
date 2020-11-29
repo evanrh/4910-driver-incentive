@@ -188,7 +188,6 @@ def do_admin_login():
             # Flask session data to store data for webpage use
             session['userInfo'] = userInfo
             session.modified = True
-            flash('Login successful!')
         else:
             flash('Incorrect login credentials!')
     return redirect(url_for('home'))
@@ -1073,7 +1072,48 @@ def thanks():
 def productAJAX():
     data = request.json
     search = data['search']
-    return json.dumps(get_products_by_name(search))
+    print(session['userInfo']['properties']['selectedSponsor'][0])
+    return json.dumps(get_products_by_name(search, session['userInfo']['properties']['selectedSponsor'][0]))
+
+@app.route("/purchaseItem", methods=["POST"])
+def purchaseItem():
+    def getProductInfo(id):
+        admin = Admin()
+        prodinfo = admin.getProductInfo(id)
+        del admin
+        return prodinfo
+
+    # Vars
+    ordernum = get_next_order_id()
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    convert = get_point_value(spid)
+
+    data = request.get_data().decode("utf-8").split("&")
+    sponsor = data[0].split("=")[1]
+    user = data[1].split("=")[1]
+    search = data[2].split("=")[1].replace("+", " ")
+    driver = Driver()
+    driver.populate(user)
+    uid = driver.getID()
+
+    item_id = product_search(search, spid, "None", "priceup")[0]['id']
+
+    amount = int((getProductInfo(item_id)[1]) / convert)
+    if amount > driver.getPoints(spid):
+        flash("Insufficient Points")
+    else:
+        sponsor = Sponsor()
+        name = getSponsorTitle(spid)
+        sponsor.populate(name)
+
+        # Subtract the points
+        sponsor.add_points(uid, -amount)
+        amount = getProductInfo(item_id)[1]
+        add_new_order(uid, item_id, '3', spid, amount, ordernum)
+        del sponsor
+        flash("Purchase Successful")
+    del driver
+    return redirect(url_for('sponsorViewDriver'))
 
 # IMPORTANT: Route becoming deprecated
 # Evan: I changed the location of the edit button to use updateAccount so that it can be shared by

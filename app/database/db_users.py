@@ -1539,8 +1539,8 @@ class Driver(AbsUser):
     def getRole(self):
         return self.properties['role']
 
-    def getPoints(self):
-        return 0
+    def getPoints(self, spid):
+        return self.properties['sponsors'].get(str(spid))
     
     def getID(self):
         return self.properties['id']

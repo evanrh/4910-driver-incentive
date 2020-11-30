@@ -442,6 +442,13 @@ def adminManageAcc():
     disabledDrivers = admin.get_disabled_drivers()
     disabledSponsors = admin.get_disabled_sponsors()
     disabledAdmins = admin.get_disabled_admins()
+    spon_list = list()
+    title_list = list()
+    for spon in sponsorList:
+        title = spon[0]
+        if title not in title_list:
+            spon_list.append(spon)
+            title_list.append(title)
 
     def getDriverList(sponsorName):
         currSponsor = Sponsor()
@@ -452,7 +459,7 @@ def adminManageAcc():
 
     del admin
     del sponsor
-    return render_template('admin/adminManageAcc.html', sponsorList = sponsorList, adminList = adminList, 
+    return render_template('admin/adminManageAcc.html', sponsorList = spon_list, adminList = adminList, 
                                                         suspendedUsers = suspendedUsers, getDriverList = getDriverList, 
                                                         sponsorlessDrivers = sponsorlessDrivers, disabled = (disabledDrivers, disabledSponsors, disabledAdmins))
 

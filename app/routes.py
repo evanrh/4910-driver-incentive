@@ -1172,6 +1172,8 @@ def updateAccount(username):
                 # Data should be formatted in the way update_info expects
                 user.update_info(data)
             return json.dumps({'status': 'OK', 'user': username})
+        else:
+            return None
 
     sessRole = session['userInfo']['properties']['role']
 
@@ -1185,7 +1187,10 @@ def updateAccount(username):
         else:
             user = Admin()
         user.populate(username)
-        posted(username, user)
+        out = posted(username, user)
+        if out:
+            print(out)
+            return out
         
         return render_template('admin/adminUpdateAccount.html', user=user, role=role)
 

@@ -100,8 +100,7 @@ $(function() {
 });
 
 // Add points
-$(function() {
-  $(document).on('click', '#addpoints', function(e) {
+$('#addpoints').on('click', function(e) {
     var user =  $(this).attr("name")
     var sponsor = $(this).attr('class');
     var points = document.getElementById("addpoints" + user + sponsor).value;
@@ -109,10 +108,10 @@ $(function() {
       contentType: "application/x-www-form-urlencoded",
       url: '/addpts', 
       type: 'POST', 
-      data:{'user': user, 'points': points, 'sponsor': sponsor}
+      data:{'user': user, 'points': points, 'sponsor': sponsor},
+      success: finished
     })
   });
-});
 
 // reject application
 $(function() {
@@ -272,24 +271,21 @@ var finished = function(response) {
     window.location.reload();
 };
 var accUpdatePath = "/updateAccount/";
-$(function() {
-    $(document).on('click', '#update-email', function(e) {
+$('#update-email').on('click', function(e) {
         var driver = document.getElementById("username").innerText;
         var email = document.getElementById("email").value;
         var arr = {'email': email};
-        $.ajax({
+        var aj = $.ajax({
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             url: accUpdatePath + driver,
             type: 'POST',
             data: JSON.stringify(arr),
             success: finished
-        })
-    });
+        });
 });
 // Update user names
-$(function() {
-    $(document).on('click', '#update-names', function(e) {
+$('#update-names').on('click', function(e) {
         var driver = document.getElementById("username").innerText;
         var first_name = document.getElementById("first_name").value;
         var mid_name = document.getElementById("mid_name").value;
@@ -304,11 +300,9 @@ $(function() {
             data: JSON.stringify(arr),
             success: finished
         })
-    });
 });
 // Update address
-$(function() {
-    $(document).on('click', '#update-address', function(e) {
+$('#update-address').on('click', function(e) {
         var driver = document.getElementById("username").innerText;
         var address = document.getElementById("address").value;
         var arr = {'address': address};
@@ -320,11 +314,9 @@ $(function() {
             data: JSON.stringify(arr),
             success: finished
         })
-    });
 });
 // Update phone number
-$(function() {
-    $(document).on('click', '#update-phone', function(e) {
+$('#update-phone').on('click', function(e) {
         var driver = document.getElementById("username").innerText;
         var phone = document.getElementById("phone").value;
         var arr = {'phone': phone};
@@ -336,7 +328,6 @@ $(function() {
             data: JSON.stringify(arr),
             success: finished
         })
-    });
 });
 // Update user password
 $("#update-password").click(function() {

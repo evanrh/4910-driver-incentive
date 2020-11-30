@@ -772,19 +772,28 @@ class Sponsor(AbsUser):
 
         q_list = []
         for key in data.keys():
-            q_list.append("{} = %s".format(key))
+            if key != 'pwd':
+                q_list.append("{} = %s".format(key))
 
-        query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
+        query += ", ".join(q_list) + " WHERE sponsor_id=\"{}\"".format(self.properties['id'])
+
+        if 'pwd' in data.keys():
+            val = data['pwd']
+            del data['pwd']
+            q = "UPDATE sponsor_logins SET password = %s WHERE username = %s"
+            vals = (val, self.properties['user'])
+            self.database.exec(q, vals)
 
         try:
-            self.database.exec(query, args=tuple(data.values()))
+            if data:
+                self.database.exec(query, args=tuple(data.values()))
             #self.database.close()
 
         except Exception as e:
             raise Exception(e)
 
     def get_users(self):
-        query = "SELECT title, sponsor_id, address, phone, email, image, sponsor_logins.date_join, sponsor_logins.username FROM sponsor inner join sponsor_logins using(sponsor_id) WHERE (SELECT COUNT(*) from sponsor_logins where active = 1 and sponsor_id = sponsor.sponsor_id) > 0"
+        query = "SELECT title, sponsor_id, address, phone, email, image, sponsor_logins.date_join, sponsor_logins.username FROM sponsor inner join sponsor_logins using(sponsor_id) WHERE sponsor_logins.active = 1"
 
         try:
             out = self.database.exec(query)

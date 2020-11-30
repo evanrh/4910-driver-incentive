@@ -634,7 +634,14 @@ def settings():
                 driver = Driver()
                 driver.populate(session['userInfo']['properties']['user'])
                 driver.update_noti(notis)
+                del driver
                 return render_template('driver/settings.html', notis = notis)
+            elif 'join_code_button' in request.form.keys():
+                driver = Driver()
+                driver.populate(session['userInfo']['properties']['user'])
+                id = request.form['join_code']
+                driver.apply_to_sponsor(id)
+                del driver
                 
         if session['userInfo']['properties']['role'] == "driver":
             driver = Driver()

@@ -2,7 +2,18 @@
 {% block sponsorContent %}
 <h1>View Drivers</h1>
 <h2>Join Code: {{ session['userInfo']['properties']['id'] }} </h2>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul class="flashes" style="padding:5px;margin:0;">
+    {% for message in messages %}
+    <div class="message_flash" style="padding:0;margin:0;color: rgb(214, 41, 41);">{{ message }}</div>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
 <div class="driver-table">
+
     <form id="view-drivers">
         <table style="border-spacing:5px;">
             <tr>
@@ -16,6 +27,7 @@
                 <td class='driverRow'>Add Points</td>
                 <td class='driverRow'>Send Message</td>
                 <td class='driverRow'>Date Joined</td>
+                <td class='driverRow'>Buy Item</td>
             </tr>
 
                 {% for driver in drivers %}
@@ -45,6 +57,10 @@
                             <button class="{{ session['userInfo']['properties']['user'] }}" name='{{ user }}' id='sendmessage'>Send</button>
                         </td>
                         <td> {{ datejoined }} </td>
+                        <td>  
+                            <input name="{{ user }}" class="search" id="purchaseitem{{ user }}{{ sponsor }}" placeholder='Search Product'>
+                            <button class="{{ sponsor }}" name='{{ user }}' id='purchaseitem'>Purchase</button>
+                        </td>
                     </tr>
                 {% endfor %}
         </table>
@@ -79,4 +95,41 @@
         {% endif %}
     </form>
 </div>
+{% endblock %}
+{% block footer %}
+    <script type="text/javascript">
+        $(".search").keyup(function(e) {
+            var search = $(this).val();
+            var id = $(this).attr('id');
+            if (search.length == 0)
+                return;
+            $.ajax({
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                url: '/productAJAX',
+                type: 'POST',
+                data: JSON.stringify({'search': search}),
+                success: function(args) {
+                    $('#'+id).autocomplete({
+                        source: args
+                    })}
+                })
+            });
+
+        // Purchase Item
+        $(function() {
+        $(document).on('click', '#purchaseitem', function(e) {
+            var sponsor =  $(this).attr("class")
+            var user = $(this).attr('name');
+            var search = document.getElementById("purchaseitem" + user + sponsor).value;
+            $.ajax({ 
+            contentType: "charset=utf-8",
+            url: '/purchaseItem', 
+            type: 'POST', 
+            data: {'sponsor': sponsor, 'user': user, 'search': search},
+            success: finished
+            })
+        });
+        });
+    </script>
 {% endblock %}

@@ -17,6 +17,7 @@ def generate_auth_token(sponsor_username, expiration = 3600):
     db = getConnection()
     query = "SELECT sponsor.sponsor_id FROM sponsor JOIN sponsor_logins ON sponsor.sponsor_id=sponsor_logins.sponsor_id WHERE username=%s"
     results = db.exec(query, (sponsor_username, ))
+    db.close()
     del db
     if results:
         return s.dumps({'id': results[0][0]})
@@ -141,12 +142,46 @@ class SponsorAPIAuth(Resource):
         else:
             return {'message': 'Sponsor name not found'}, 400
 
+product = admin_api.model('Product', {
+    'id': fields.Integer
+})
+
+product_list = admin_api.model('Product_List', {
+    'ids': fields.List(fields.Integer)
+})
+
+@admin_api.route('/products')
+@admin_api.doc(security='apikey')
+class AdminProductAPI(Resource):
+
+    @token_required
+    def get(self):
+        cont = CatalogController()
+        items = cont.fetch_all_items()
+        return items
+
+    @admin_api.expect(product_list)
+    @token_required
+    def put(self):
+        data = api.payload
+        cont = CatalogController()
+
+        _ = list(map(lambda id: cont.update_price(id), data['ids']))
+        del cont
+        return {'message': 'success'}
+
 @admin_api.route('/auth')
 class AdminAPIAuth(Resource):
     @admin_api.expect(admin_api.model('Credentials', {'username': fields.String, 'password': fields.String}))
     def post(self):
         data = api.payload
-        uid, role = get_table_id(data['username'])
+        print(data)
+        try:
+            uid, role = get_table_id(data['username'])
+        except Exception as e:
+            print(e)
+            return {'message': 'Unauthorized'}, 401
+
         if role != 'admin':
             return {'message': 'Unauthorized'}, 401
 

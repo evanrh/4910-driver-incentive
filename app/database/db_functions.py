@@ -337,10 +337,14 @@ def getpopitems(sponid):
     return finallist
 
 # Gets a list of products from all sponsors based on search
-def get_products_by_name(search):
+def get_products_by_name(search, id="ANY"):
     cursor = getConnection()
-    query = "SELECT name FROM product WHERE name REGEXP(%s)"
-    val = cursor.exec(query, (search, ))
+    if id == "ANY":
+        query = "SELECT name FROM product WHERE name REGEXP(%s) and available=1"
+        val = cursor.exec(query, (search, ))
+    else:
+        query = "SELECT name FROM product WHERE name REGEXP(%s) and sponsor_id=%s and available=1"
+        val = cursor.exec(query, (search, id, ))
     matches = list(map(lambda x: x[0], val))
     cursor.close()
     return matches

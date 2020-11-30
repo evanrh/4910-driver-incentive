@@ -43,7 +43,7 @@ class EtsyController():
 
     def get_url(self, pid=''):
         result = self.conn.getListing(listing_id=pid)
-        return result[0]['url'] if result and result[0]['state'] != 'unavailable' else ''
+        return result[0]['url'] if result and result[0]['state'] == 'active' else ''
 
     def get_current_price(self, pid):
         """ Grab current price of an item from Etsy by using its listing id """

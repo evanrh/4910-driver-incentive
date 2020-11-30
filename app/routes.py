@@ -5,6 +5,7 @@ from werkzeug.wrappers import Response
 from datetime import date
 from io import StringIO, BytesIO
 from decimal import Decimal
+from functools import reduce
 from app.database.db_functions import *
 from app.database.db_users import *
 from app.database.db_connection import *
@@ -130,7 +131,17 @@ def home():
             return render_template('driver/driverHome.html', head = Message, genres = genres, resultrec = recommended, numprod = numproducts, popular = popitems, curspon= sponsorId)
 
         if session['userInfo']['properties']['role'] == "sponsor" or session['sandbox'] == 'sponsor':
-            return render_template('sponsor/sponsorHome.html', head = Message)
+            # Tally up expenses for sponsor
+            cont = ReportController()
+            now = date.today()
+            sid = session['userInfo']['properties']['id']
+            start = datetime.datetime(now.year, 1, 1)
+            end = datetime.datetime(now.year, 12, 31)
+            stats = cont.sponsor_stats(sid, (start, end))
+            del cont
+            expenses = reduce(lambda x,y: x + y, stats.values())
+
+            return render_template('sponsor/sponsorHome.html', head = Message, expenses=expenses)
 
         if session['userInfo']['properties']['role'] == "admin":
             sponsors = Sponsor().get_users()
@@ -177,7 +188,6 @@ def do_admin_login():
             # Flask session data to store data for webpage use
             session['userInfo'] = userInfo
             session.modified = True
-            flash('Login successful!')
         else:
             flash('Incorrect login credentials!')
     return redirect(url_for('home'))
@@ -631,7 +641,7 @@ def switchSponsor():
     if permissionCheck(["driver", "sponsor", "admin"]) == False:
             return redirect(url_for('home'))
 
-    if not session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
+    if not session['userInfo']['properties']['role'] == "admin" or session['userInfo']['properties']['role'] == "sponsor":
         newSponsorid = request.form.get('sponsorSelect')
         sponsorlist = userInfo.view_sponsors()
         points = 0
@@ -648,24 +658,24 @@ def switchSponsor():
 
 @app.route("/sponsorView")
 def sponsorView():
+    permissionCheck(["driver", "sponsor", "admin"])
     if session['userInfo']['properties']['role'] == "admin":
         session['sandbox'] = "sponsor"
-        permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     return redirect(url_for('home'))
 
 @app.route("/driverView")
 def driverView():
-    if session['userInfo']['properties']['role'] == ("admin" or "sponsor"):
+    permissionCheck(["driver", "sponsor", "admin"])
+    if session['userInfo']['properties']['role'] == "admin" or session['userInfo']['properties']['role'] == "sponsor":
         session['sandbox'] = "driver"
-        permissionCheck(["driver", "sponsor", "admin"])
         session.modified = True
     return redirect(url_for('home'))
 
 @app.route("/returnView")
 def returnView():
-    session['sandbox'] = "NULL"
     permissionCheck(["driver", "sponsor", "admin"])
+    session['sandbox'] = "NULL"
     session.modified = True
     return redirect(url_for('home'))
 
@@ -866,7 +876,7 @@ def checkout():
 
     # Update price of all items in cart
     cont = CatalogController()
-    _ = list(map(lambda item: cont.update_price(item, spid), session['shoppingCart']))
+    _ = list(map(lambda item: cont.update_price(item ), session['shoppingCart']))
     del cont
 
     for item in session['shoppingCart']:
@@ -969,7 +979,7 @@ def productpage():
 
         # Update price and then re-search
         cont = CatalogController()
-        rc = cont.update_price(results[0]['id'], sponsorId)
+        rc = cont.update_price(results[0]['id'])
         del cont
         if not rc:
             flash('Item not available!')
@@ -1002,7 +1012,7 @@ def buynowrecipt():
 
         # Update price and get product again
         cont = CatalogController()
-        cont.update_price(results[0]['id'], spid)
+        cont.update_price(results[0]['id'])
         del cont
 
         results = product_search(got, spid, "None", "priceup")
@@ -1062,7 +1072,48 @@ def thanks():
 def productAJAX():
     data = request.json
     search = data['search']
-    return json.dumps(get_products_by_name(search))
+    print(session['userInfo']['properties']['selectedSponsor'][0])
+    return json.dumps(get_products_by_name(search, session['userInfo']['properties']['selectedSponsor'][0]))
+
+@app.route("/purchaseItem", methods=["POST"])
+def purchaseItem():
+    def getProductInfo(id):
+        admin = Admin()
+        prodinfo = admin.getProductInfo(id)
+        del admin
+        return prodinfo
+
+    # Vars
+    ordernum = get_next_order_id()
+    spid = session['userInfo']['properties']['selectedSponsor'][0]
+    convert = get_point_value(spid)
+
+    data = request.get_data().decode("utf-8").split("&")
+    sponsor = data[0].split("=")[1]
+    user = data[1].split("=")[1]
+    search = data[2].split("=")[1].replace("+", " ")
+    driver = Driver()
+    driver.populate(user)
+    uid = driver.getID()
+
+    item_id = product_search(search, spid, "None", "priceup")[0]['id']
+
+    amount = int((getProductInfo(item_id)[1]) / convert)
+    if amount > driver.getPoints(spid):
+        flash("Insufficient Points")
+    else:
+        sponsor = Sponsor()
+        name = getSponsorTitle(spid)
+        sponsor.populate(name)
+
+        # Subtract the points
+        sponsor.add_points(uid, -amount)
+        amount = getProductInfo(item_id)[1]
+        add_new_order(uid, item_id, '3', spid, amount, ordernum)
+        del sponsor
+        flash("Purchase Successful")
+    del driver
+    return redirect(url_for('sponsorViewDriver'))
 
 # IMPORTANT: Route becoming deprecated
 # Evan: I changed the location of the edit button to use updateAccount so that it can be shared by

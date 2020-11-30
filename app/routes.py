@@ -940,8 +940,7 @@ def sendto():
         user = Driver()
     
     username = sender[1].strip('+')
-
-    if Admin().username_exist(receiver) and not message == "":
+    if username_exist(receiver[1]) and not message == "":
         user.populate(username)
         user.send_message(receiver[1].strip('+'), message[1].replace('+', " "))
 

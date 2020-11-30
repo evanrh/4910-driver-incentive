@@ -739,7 +739,7 @@ class Sponsor(AbsUser):
         self.properties['id'] = self.get_next_id()
         self.properties['active'] = 1
         self.properties['END'] = 'NULL'
-        query = 'INSERT INTO sponsor VALUES (\'{title}\', \'{user}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{pwd}\', \'{image}\', NOW(), \'{END}\', 0.01, \'{active}\')'.format(**self.properties)
+        query = 'INSERT INTO sponsor VALUES (\'{title}\', \'{id}\', \'{address}\', \'{phone}\', \'{email}\', \'{image}\', NOW(), \'{END}\', 0.01)'.format(**self.properties)
 
         # Filter properties to be all except selectedSponsor because list issue
         #params = dict(filter(lambda x: x[0] != 'selectedSponsor', self.properties.items()))

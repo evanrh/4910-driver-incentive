@@ -10,8 +10,7 @@ $("#report").click(function(){
   $("#hide2").toggle();
 });
 
-$(function() {
-    $(document).on('click', '#sendTomessage', function(e) {
+$('#sendTomessage').on('click', function(e) {
       var user =  $(this).attr("name")
       var recipient = document.getElementById("recipient").value;
       var message = document.getElementById("composeMessage").value;
@@ -25,7 +24,6 @@ $(function() {
         }
       })
     });
-});
 
 $(document).ready( function () {
   $("div.msg-wrap").scrollTop($("div.msg-wrap").prop("scrollHeight"))

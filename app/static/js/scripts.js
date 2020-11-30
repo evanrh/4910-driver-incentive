@@ -100,9 +100,10 @@ $(function() {
 });
 
 // Add points
-$('#addpoints').on('click', function(e) {
-    var user =  $(this).attr("name")
-    var sponsor = $(this).attr('class');
+$('.addpt').on('click', function(e) {
+    console.log(this.dataset);
+    var user =  $(this).attr("name");
+    var sponsor = this.dataset.sponsor;
     var points = document.getElementById("addpoints" + user + sponsor).value;
     $.ajax({ 
       contentType: "application/x-www-form-urlencoded",

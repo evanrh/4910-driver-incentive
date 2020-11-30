@@ -96,7 +96,11 @@
                         </a>
                         <div class="media-body">
                             <small class="pull-left time"><i class="fa fa-clock-o"></i> {{ time.strftime('%I:%M %p') }} </small>
+                            {% if not session['userInfo']['properties']['role'] == "sponsor" %}
                             <h5 class="media-heading" style="text-align: right;">{{ session['userInfo']['properties']['fname'] + " " + session['userInfo']['properties']['lname'] }}</h5>
+                            {% else %}
+                            <h5 class="media-heading" style="text-align: right;">{{ session['userInfo']['properties']['title'] }}</h5>
+                            {% endif %}
                             <small class="col-md-10 text-muted align-right">{{ message }}</small>
                         </div>
                     </div>

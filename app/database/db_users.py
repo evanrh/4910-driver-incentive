@@ -772,12 +772,21 @@ class Sponsor(AbsUser):
 
         q_list = []
         for key in data.keys():
-            q_list.append("{} = %s".format(key))
+            if key != 'pwd':
+                q_list.append("{} = %s".format(key))
 
-        query += ", ".join(q_list) + " WHERE user=\"{}\"".format(self.properties['user'])
+        query += ", ".join(q_list) + " WHERE sponsor_id=\"{}\"".format(self.properties['id'])
+
+        if 'pwd' in data.keys():
+            val = data['pwd']
+            del data['pwd']
+            q = "UPDATE sponsor_logins SET password = %s WHERE username = %s"
+            vals = (val, self.properties['user'])
+            self.database.exec(q, vals)
 
         try:
-            self.database.exec(query, args=tuple(data.values()))
+            if data:
+                self.database.exec(query, args=tuple(data.values()))
             #self.database.close()
 
         except Exception as e:

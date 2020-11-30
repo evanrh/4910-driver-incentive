@@ -200,6 +200,7 @@ def logout():
     del session['userInfo']
     del session['sandbox']
     session.modified = True
+    userInfo = Driver()
     return redirect(url_for('home'))
 
 @app.route("/signup", methods=["GET", "POST"])

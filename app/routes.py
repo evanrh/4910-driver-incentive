@@ -792,7 +792,6 @@ def addpts():
     driver_username = user[1].strip('+')
     driver.populate(driver_username)
     driver_id = driver.getID()
-
     sponsor = Sponsor()
     sponsor.populate(sponsorname[1])
     sponsor.add_points(driver_id, int(points[1]))

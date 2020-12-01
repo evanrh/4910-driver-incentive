@@ -100,6 +100,21 @@ $(function() {
 });
 
 // Add points
+$(function() {
+  $(document).on('click', '#addpoints', function(e) {
+    var user =  $(this).attr("name")
+    var sponsor = $(this).attr('class');
+    var points = document.getElementById("addpoints" + user + sponsor).value;
+    $.ajax({ 
+      contentType: "application/x-www-form-urlencoded",
+      url: '/addpts', 
+      type: 'POST', 
+      data:{'user': user, 'points': points, 'sponsor': sponsor}
+    })
+  });
+});
+
+// Add points
 $('.addpt').on('click', function(e) {
     console.log(this.dataset);
     var user =  $(this).attr("name");

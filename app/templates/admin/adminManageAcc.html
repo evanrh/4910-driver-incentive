@@ -121,7 +121,7 @@
                         {% set datejoined = driver[5] %}
                         <tr>
                             <td style="padding-left: 30px;"><button name="{{ user }}" id='edit'><a href="{{ url_for('updateAccount', username=user) }}">Edit</a></button></td>
-                            <td><button class="{{ sponsor[0] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
+                            <td><button class="{{ sponsor[7] }}" name=" {{ user }} " id='removeFromSponsor' style='color:red;'>X</button></td>
                             <td> {{ user }} </td>
                             <td> {{ first  }} </td>
                             <td> {{ last }} </td>
@@ -132,8 +132,13 @@
                             {% endif %}
                             <td> {{ points }} </td>
                             <td>
+<<<<<<< HEAD
                                 <input name="{{ user }}" id='addpoints{{ user }}{{ sponsor[0] }}' placeholder='Add Pts'>
                                 <button type="button" class="addpt {{ sponsor }}" data-sponsor="{{ sponsor[0] }}"  name='{{ user }}' id='addpoints'>+</button>
+=======
+                                <input name="{{ user }}" id='addpoints{{ user }}{{ sponsor[7] }}' placeholder='Add Pts'>
+                                <button type="button" class="addpt" data-sponsor="{{ sponsor[7] }}" class="{{ sponsor[7] }}" name='{{ user }}'>+</button>
+>>>>>>> a3d986822371a6c05208d9e3b222f42b15abc42b
                             </td>
                             <td>
                                 <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>

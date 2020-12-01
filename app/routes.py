@@ -474,10 +474,19 @@ def adminNotifications():
 def adminPointsLeader():
     if permissionCheck(["admin"]) == False:
         return redirect(url_for('home'))
+
+    currSponsor = Sponsor()
+    sponsorList = currSponsor.get_users()
+    spon_list = list()
+    title_list = list()
+    for spon in sponsorList:
+        title = spon[0]
+        if title not in title_list:
+            spon_list.append(spon)
+            title_list.append(title)
         
     sponsors = []
-    currSponsor = Sponsor()
-    for sponsor in Sponsor().get_users():
+    for sponsor in spon_list:
         currSponsor.populate(sponsor[0])
         sponsors.append(currSponsor.view_leaderboard())
     del currSponsor

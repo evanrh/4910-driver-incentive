@@ -306,7 +306,8 @@ def driverCart():
 
     # Update price in cart view
     cont = CatalogController()
-    _ = map(lambda item: cont.update_price(item), session['shoppingCart'])
+    if 'shoppingCart' in session:
+       _ = map(lambda item: cont.update_price(item), session['shoppingCart'])
     del cont
 
     def getProductInfo(id):
@@ -552,7 +553,8 @@ def inbox(username):
         currentDriver.populate(session['userInfo']['properties']['user'])
         messages = currentDriver.view_messages()
         if not bool(messages):
-            system = Admin().populate('System')
+            system = Admin()
+            system.populate('System')
             system.send_message(session['userInfo']['properties']['user'], "Welcome to Reward App!")
             del system
             messages = currentDriver.view_messages()
@@ -783,10 +785,13 @@ def removeFromSponsor():
 
 @app.route("/addpts", methods=["GET","POST"])
 def addpts():
+    print(request.get_data())
     data = request.get_data().decode("utf-8").split("&")
     user = data[0].split("=")
     points = data[1].split("=")
     sponsorname = data[2].split("=")
+    sponsorname[1] = sponsorname[1].replace('+',' ')
+    print(sponsorname)
 
     driver = Driver()
     driver_username = user[1].strip('+')

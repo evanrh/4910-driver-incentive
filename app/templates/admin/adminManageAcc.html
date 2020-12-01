@@ -133,7 +133,7 @@
                             <td> {{ points }} </td>
                             <td>
                                 <input name="{{ user }}" id='addpoints{{ user }}{{ sponsor[0] }}' placeholder='Add Pts'>
-                                <button class="{{ sponsor[0] }}" name='{{ user }}' id='addpoints'>+</button>
+                                <button type="button" class="addpt {{ sponsor }}" data-sponsor="{{ sponsor[0] }}"  name='{{ user }}' id='addpoints'>+</button>
                             </td>
                             <td>
                                 <input name="{{ user }}" id="sendmessage{{ user }}{{ session['userInfo']['properties']['user'] }}" placeholder='Message'>

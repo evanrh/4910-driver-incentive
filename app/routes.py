@@ -587,6 +587,12 @@ def settings():
         session['sandbox'] = None
         session.modified = True
 
+        notis = None
+        if session['userInfo']['properties']['role'] == "driver":
+            driver = Driver()
+            driver.populate(session['userInfo']['properties']['user'])
+            notis = driver.get_notifications()
+
         if request.method == 'POST':
             if 'delete-account' in request.form.keys():
                 userInfo.delete()
@@ -602,20 +608,20 @@ def settings():
                 # Check if no form boxes were filled in
                 if not len(data):
                     flash("Please fill in at least one box")
-                    return render_template(session['userInfo']['properties']['role'] + "/settings.html")
+                    return render_template(session['userInfo']['properties']['role'] + "/settings.html", notis=notis)
                 
                 userInfo.update_info(data)
-                return render_template(session['userInfo']['properties']['role'] + "/settings.html")
+                return render_template(session['userInfo']['properties']['role'] + "/settings.html", notis=notis)
 
             elif 'pwd-submit' in request.form.keys():
                 oldPwd = request.form['old_pass']
                 currentHash = get_password(session['userInfo']['properties']['user'])
                 if not check_password_hash(currentHash, oldPwd):
                     flash("Wrong old password!")
-                    return render_template(session['userInfo']['properties']['role'] + "/settings.html")
+                    return render_template(session['userInfo']['properties']['role'] + "/settings.html", notis=notis)
                 pwd = generate_password_hash(request.form['pass'], 'sha256')
                 userInfo.update_info({'pwd': pwd})
-                return render_template(session['userInfo']['properties']['role'] + "/settings.html")
+                return render_template(session['userInfo']['properties']['role'] + "/settings.html", notis=notis)
             elif 'add_new_sponsor_login' in request.form.keys():
                 form = request.form
                 username = form['username']
@@ -625,17 +631,17 @@ def settings():
                 if sponsor.check_username_available():
                     if password != confirm_password:
                         flash("Passwords do not match!")
-                        return render_template('sponsor/settings.html')
+                        return render_template('sponsor/settings.html', notis=notis)
                     else:
                         pwd = generate_password_hash(password, method='sha256')
                         sponsor.populate(session['userInfo']['properties']['user'])
                         sponsor.add_new_sponsor_login(username, pwd)
                         del sponsor
                         flash("New login successfully created")
-                        return render_template('sponsor/settings.html')
+                        return render_template('sponsor/settings.html', notis=notis)
                 else:
                     flash("Username already taken")
-                    return render_template('sponsor/settings.html')
+                    return render_template('sponsor/settings.html', notis=notis)
 
             elif 'change-notis' in request.form.keys():
                 notis = {}
@@ -660,7 +666,7 @@ def settings():
             notis = driver.get_notifications()
             return render_template('driver/settings.html', notis = notis)
         else:
-            return render_template(session['userInfo']['properties']['role'] + '/settings.html')
+            return render_template(session['userInfo']['properties']['role'] + '/settings.html', notis=notis)
 
 # App Functions
 @app.route("/switchSponsor", methods=['GET', 'POST'])
@@ -677,7 +683,8 @@ def switchSponsor():
                 points = sponsor[1]
 
         userInfo.setSponsorView([newSponsorid, points])
-        session['shoppingCart'].clear()
+        if 'shoppingCart' in session:
+           session['shoppingCart'].clear()
         session['userInfo']['properties']['selectedSponsor'] = [newSponsorid, points]
         session.modified = True
 

@@ -1012,7 +1012,8 @@ class Sponsor(AbsUser):
         query = 'select user from driver where driver_id = %s'
         val = (driver_id, )
         username = self.database.exec(query, val)[0][0]
-        system = Admin().populate('System')
+        system = Admin()
+        system.populate('System')
         system.send_message(username, '{} has reviewed and denied your request.'.format(self.properties['user']))
 
     #add points to the driver, enter their driver_id and amount of points you want to give them
